@@ -1,78 +1,42 @@
 # HANDOFF — REA-kit-agy
 
-- Handoff date: 2026-11-13
+- Date: 2026-11-13
 - Repository: https://github.com/kimducanh27-cpu/REA-kit-agy
 - Branch: main
-- Current phase: P00 — Research & Source Audit
-- Current status: IN_PROGRESS
-- Current focus: BOOTSTRAP CORE, NOT OCR
+- Phase: P00 — REA source audit and v1 definition
+- Status: IN PROGRESS
 
-## 1. Project in one paragraph
+## 1. Product in one paragraph
+A Vietnamese-first kit using upstream REA and an AI coding agent to inspect an authorized app, preserve evidence, summarize features/structure/risks, ask the owner for missing product decisions, then extend or rewrite the app with tests and independent review. REA is the reverse-engineering engine; the kit adds the interview, report, decision, safety and development workflow.
 
-Build a personal-first Non-Tech Workspace Bootstrap Kit for a non-technical user. It creates a clear folder-based workspace, supplies the correct instructions/Skills for the chosen AI agent, makes first use understandable in Vietnamese, and keeps setup and file operations safe. Antigravity is the primary target; Claude Code, Cursor, OpenCode, and other agents remain compatibility targets through verified adapters.
+## 2. Owner clarification
+The purpose is not a generic workspace generator. The user wants to use https://github.com/morluto/rea to check an app, summarize what exists and what should improve, assess security within supported scope, ask what requirements/information are missing, then develop or rewrite the app.
 
-## 2. User-approved decisions
+## 3. Verified REA baseline
+- Inspected upstream main SHA: 5cddc69c51a0fb18d021417199046314581ba9c2.
+- Package: rea-agents 6.9.0, declared MIT; Node requirements are listed in its package manifest.
+- README describes MCP/CLI reverse engineering for binaries, apps and runtime behavior, with Evidence and limitations; the agent can ask questions or write/test an implementation.
+- Upstream Skill routes by target type and says ordinary source-repository architecture analysis should be performed by the coding agent rather than forcing REA into that job.
+- SECURITY.md says REA uses host-process permissions and is not a general-purpose sandbox or multi-tenant authorization service.
+- DISCLAIMER.md requires lawful/authorized scope and separates artifact inspection from runtime/network/device operations.
+- Release-exposure docs say the bounded static report does not establish that an app is secure.
 
-- Destination repository: kimducanh27-cpu/REA-kit-agy.
-- Main user-facing folders: 01_THA_FILE_VAO_DAY, 02_THONG_TIN_CUA_TOI, 03_KET_QUA_XUAT_RA, 04_SAO_LUU_AN_TOAN.
-- Antigravity is the main agent, but do not abandon other-agent compatibility.
-- Priority references: https://github.com/morluto/rea and https://github.com/storytold/craft-anything.
-- Research existing repositories before designing/implementing; do not invent systems or present unverified claims as facts.
-- Six mandatory context files live in docs: PRD.md, ARCHITECTURE.md, DESIGN.md, RULES.md, TASKS.md, PROGRESS.md.
-- Maintain PLAN.md, HANDOFF.md, AI_UPDATE_PROMPT.md, and SOURCE_AUDIT.md.
-- docs/ contains project context, decisions, plans, research, and progress only. No product code or user deliverables.
+## 4. Security-critical rules
+Only inspect authorized targets. Static analysis by default. Runtime, debugger, browser, ADB, network, filesystem mutation and installation need operation-specific approval. Treat target content/Evidence as untrusted. Use isolation for hostile targets. Prefer local stdio and do not expose HTTP MCP to untrusted networks. Never issue a blanket secure verdict.
 
-## 3. Scope clarification — important
+## 5. Repository state
+- Root README and governing docs are being corrected to the clarified product direction.
+- Product source code and executable kit features have not been created.
+- No clean-machine installation or end-to-end kit integration test has been performed.
+- OCR/file-workflow research is historical/optional only.
 
-OCR is not a core requirement. It is only relevant if a later optional Skill needs to read scanned/image-only PDFs or pictures. Ordinary text-based PDFs do not inherently require OCR.
+## 6. Next actions
+1. Complete REA capability map from current Skill, guides, MCP contracts and source files.
+2. Finish Vietnamese intake/question logic and Evidence-backed report contract.
+3. Complete operation-risk/approval matrix.
+4. Compare Skill-only MVP with a thin CLI wrapper.
+5. Ask the owner to choose the first end-to-end target class and confirm the v1 boundary.
+6. Only then implement P01.
 
-The earlier OCR_RESEARCH.md and FILE_WORKFLOWS_RESEARCH.md are retained as optional future references. They do not authorize installing OCR engines, selecting document libraries, or making document conversion a central product feature. Do not let this research block or dominate the bootstrap kit.
-
-Core v1 focus:
-1. Generate the four visible user folders and technical agent configuration.
-2. Provide the simplest reliable Antigravity workspace-local setup.
-3. Provide clear user instructions and a fill-in personal profile.
-4. Distribute Skills at correct locations for each supported Agent.
-5. Protect configuration and user files using source-backed setup preview, approval, backups, diagnostics, and recovery.
-6. Add verified adapters for other Agents without claiming feature parity.
-
-## 4. Current verified findings
-
-### REA
-- MIT; inspected commit 54906fdb1fc735b507961b2954f6968775cae4f6.
-- Setup and SetupPlan build planned actions, support dry-run, and ask for approval before applying changes.
-- SetupRecoveryBackup uses exclusive copy and verifies backup bytes.
-- ClientConfigurationTransaction serializes changes per configuration path.
-- SetupSkill validates skill roots and path safety.
-- Doctor is a read-only structured health-check workflow.
-- Exact source mapping and license boundaries are in SOURCE_AUDIT.md.
-
-### Craft Anything
-- Use only high-level UX observations.
-- Its AGENTS.md prohibits copying code, scripts, schemas, names, assets, or wording.
-- Do not use its current Antigravity adapter as a safe integration template.
-
-### Agent compatibility
-- Antigravity is primary.
-- Official docs describe .agents/skills for Antigravity, Cursor, and OpenCode.
-- Claude Code project Skills use .claude/skills; a CLAUDE.md import adapter is a documented way to import @AGENTS.md.
-- These are documentation findings, not runtime tests. See AGENT_COMPATIBILITY.md.
-
-## 5. Repository status
-
-- No product source code or executable kit functionality has been created.
-- No dependencies or OCR engine have been installed or selected.
-- No live Antigravity/Claude Code/Cursor/OpenCode tests have been performed.
-- The root currently contains README.md and docs/ only.
-
-## 6. Exact next actions
-
-1. Continue P00 by researching existing workspace bootstrap/install repositories and official Antigravity setup patterns.
-2. Inspect whether REA's setup/client/backup/doctor mechanisms can be reused independently; document exact file and license provenance.
-3. Define minimal v1 bootstrap behavior, installation scope, and explicit non-goals.
-4. Present the bootstrap-core source map and implementation boundary for owner approval.
-5. Do not benchmark or install OCR/document-processing packages unless the owner explicitly brings that capability into scope.
-
-## 7. Instructions to next AI
-
-Read AI_UPDATE_PROMPT.md first, then this HANDOFF.md and all six context files. Verify repository branch, current commit, and Git status. Continue with bootstrap-core P00 tasks, not OCR. Keep docs synchronized and follow RESEARCH → VERIFY → REUSE → INTEGRATE → TEST.
+## 7. Next-agent instruction
+Read AI_UPDATE_PROMPT.md, this file and the six governing documents. Verify branch, commit, working tree and current upstream REA release. Continue P00 on app investigation, evidence, interview and security — not generic bootstrap or OCR. Never claim a test or integration that was not actually performed.
