@@ -1,51 +1,65 @@
 ---
 name: rea-build
-description: Lập kế hoạch kiến trúc, triển khai mã nguồn ứng dụng vào thư mục 05_MA_NGUON_PHAT_TRIEN, kiểm thử chức năng và viết tài liệu hướng dẫn chạy app sau khi người dùng đã duyệt đặc tả yêu cầu. Kích hoạt khi người dùng chạy Prompt 4 hoặc yêu cầu phát triển/viết lại app.
+description: Triển khai mã nguồn Web App Zero-Install vào thư mục 05_MA_NGUON_PHAT_TRIEN, thẩm định chất lượng độc lập theo chuẩn Anthropic (REVIEW.md), thực hiện smoke test, hard verify đối chiếu 1-1 và đóng gói bàn giao sản phẩm hoàn thiện. Phụ trách Phase 04 (Implementation) và Phase 05 (Validation) theo docs/WORKFLOW_LIFECYCLE.md.
 ---
 
-# KỸ NĂNG: PHÁT TRIỂN & VIẾT LẠI ỨNG DỤNG (REA-BUILD)
+# KỸ NĂNG: PHÁT TRIỂN, KIỂM ĐỊNH & BÀN GIAO SẢN PHẨM (REA-BUILD)
 
-Kỹ năng chuyên biệt cho giai đoạn sinh mã nguồn, thẩm định chất lượng và kiểm thử, tuân thủ hợp đồng thẩm định tại `REVIEW.md` và mô hình **Anthropic Code Review Pipeline** (*"How the Claude Code team does code review"*).
+Kỹ năng chuyên biệt cho **Phase 04 (Implementation)** và **Phase 05 (Validation)** theo khung chuẩn 6 Phase · 14 Bước tại `docs/WORKFLOW_LIFECYCLE.md`.
+Tuân thủ nghiêm ngặt hợp đồng thẩm định tại `REVIEW.md` và mô hình **Anthropic Code Review Pipeline** (*"How the Claude Code team does code review"*).
 
 ---
 
-## 1. QUY TRÌNH TRIỂN KHAI 5 BƯỚC
+## 1. PHÂN CÔNG THEO 2 GIAI ĐOẠN
 
-1. **Kiểm tra điều kiện tiên quyết, Tiêu chuẩn Review & Bài học quá khứ**:
-   - Đọc file đặc tả yêu cầu đã chốt trong `03_KET_QUA_KIEM_TRA/`. (Nếu chưa có: Nhắc người dùng chạy `rea-interview` trước).
-   - **Bắt buộc đọc `REVIEW.md`**: Nắm vững tiêu chí kiểm toán độc lập 4 tầng, bộ lọc dẹp nhiễu và phân tầng rủi ro.
-   - **Đọc `.agents/state/learned_rules.json` (Incidents to Evals)**: Nạp danh sách các quy tắc phòng ngừa từ các lỗi từng xảy ra trong quá khứ để không bao giờ tái phạm.
-   - **Áp dụng hợp đồng `02_YEU_CAU_CUA_TOI/design.md` đủ 3 tầng**:
-     * *Tầng 1 (Tokens)*: Bảng màu, typography, radius đưa vào CSS `:root` và Tailwind classes.
-     * *Tầng 2 (Components)*: Style chuẩn cho nút, thẻ, ô nhập liệu, header.
-     * *Tầng 3 (UI States)*: 4 trạng thái bắt buộc: Loading, Empty, Success, Error Recovery.
+### GIAI ĐOẠN 1: PHASE 04 · IMPLEMENTATION (Bước 09 & 10)
 
-2. **Tự động sao lưu Snapshot trước khi sửa code (Automated Rollback Snapshot)**:
-   - Nếu trong `05_MA_NGUON_PHAT_TRIEN/` đã có file mã nguồn cũ: Tự động copy toàn bộ vào thư mục `05_MA_NGUON_PHAT_TRIEN/.backup/YYYYMMDD_HHmmss/`.
-   - Đảm bảo người dùng luôn có thể nhấp đúp file **`HOAN_TAC.bat`** để quay về phiên bản ổn định gần nhất.
+#### Bước 09: REA Build (Phát Triển Mã Nguồn Chuẩn Zero-Install)
+1. **Kiểm tra điều kiện tiên quyết**: Đọc `03_KET_QUA_KIEM_TRA/KE_HOACH_TRIEN_KHAI.md` và `02_YEU_CAU_CUA_TOI/design.md`. (Bắt buộc Cổng 03 đã mở).
+2. **Lá chắn hoàn tác tự động**: Tự động lưu snapshot mã nguồn cũ vào `05_MA_NGUON_PHAT_TRIEN/.backup/YYYYMMDD_HHmmss/` trước khi sửa code. Đảm bảo nút **`HOAN_TAC.bat`** luôn sẵn sàng.
+3. **Nạp bài học quá khứ (Incidents to Evals)**: Đọc `.agents/state/learned_rules.json` để không tái phạm lỗi cũ.
+4. **Triển khai mã nguồn**:
+   - Ưu tiên Web App độc lập (`index.html`, `styles.css`, `app.js`) chạy trực tiếp trên trình duyệt, zero-install.
+   - Bắt buộc tuân thủ Design Tokens từ `design.md` và đủ 4 trạng thái UI: `Loading`, `Empty`, `Success`, `Error`.
+   - **Bản xem trước Staged Preview**: Khi sửa đổi/nâng cấp, xuất ra `05_MA_NGUON_PHAT_TRIEN/preview.html` trước khi ghi đè `index.html`.
 
-3. **Triển khai mã nguồn & Bản xem trước theo giai đoạn (Staged Preview)**:
-   - **Khi Viết mới (Rewrite — Lean Build)**: Triển khai trực tiếp vào `05_MA_NGUON_PHAT_TRIEN/index.html`.
-   - **Khi Nâng cấp / Sửa lỗi (Staged Preview)**:
-     * Xuất ra file `05_MA_NGUON_PHAT_TRIEN/preview.html` để người dùng mở xem thử song song, giữ nguyên `index.html` đang chạy ổn định.
-     * Chỉ khi người dùng xác nhận nghiệm thu đạt yêu cầu, AI mới chuyển nội dung từ `preview.html` sang `index.html` chính thức.
-   - **Học từ sự cố (Incidents to Evals)**: Khi người dùng yêu cầu sửa lỗi hoặc vừa bấm hoàn tác, AI phân tích nguyên nhân gốc rễ và tự động bổ sung 1 quy tắc mới vào `.agents/state/learned_rules.json`.
+#### Bước 10: Build QA / Code Review (Thẩm Định Độc Lập & Kiểm Soát Rủi Ro)
+1. **Thẩm định 2 trục độc lập** theo `REVIEW.md`:
+   - Trục Tiêu chuẩn (Standards): Đối chiếu Design Tokens và 4 trạng thái UI.
+   - Trục Đặc tả (Spec): Đối chiếu tiêu chí hoàn thành trong `dac-ta-yeu-cau-da-chot.md`.
+2. **Bộ lọc dẹp nhiễu (High-Signal Filter)**: Không bắt bẻ phong cách viết mã râu ria, chỉ tập trung vào lỗi thật.
+3. Chạy script kiểm tra: `powershell -ExecutionPolicy Bypass -File .\.agents\scripts\verify_code.ps1`.
+4. **Quy tắc hội tụ (Review Convergence)**: Tối đa 2 vòng tự sửa lỗi cú pháp.
+5. **Chốt chặn phân tầng rủi ro**:
+   - `LOW RISK`: UI/Text tĩnh ➔ Tự động duyệt sau khi syntax test OK.
+   - `MEDIUM RISK`: Logic form, dữ liệu local ➔ Báo cáo checklist tính năng.
+   - `HIGH RISK` / `SYNTAX ERROR`: Lỗi cú pháp hoặc gọi mạng ngoài không báo trước ➔ **CHẶN ĐỨNG**. Tuyệt đối không cho sang Phase 05.
+6. Xuất báo cáo kiểm thử vào `03_KET_QUA_KIEM_TRA/KET_QUA_KIEM_THU.md` theo `templates/04-TEST-RESULT-TEMPLATE.md`.
+7. **MỞ CỔNG 04 (`gate_04_build_qa_passed = true`)**: Cập nhật `active_case.json` và `docs/PROGRESS.md`.
 
-4. **Cổng kiểm soát chất lượng 4 tầng & Thẩm định độc lập (Anthropic Model)**:
-   - *Triết lý: Dùng công cụ xác định cho lỗi xác định; dùng AI độc lập cho phần suy luận; phân tầng rủi ro để con người nghiệm thu đúng trọng tâm.*
-   - **Tầng 1 (Kiến trúc)**: Kiểm tra cấu trúc ranh giới Web độc lập, không phụ thuộc môi trường ngoài.
-   - **Tầng 2 (Công cụ xác định)**: Chạy script `powershell -ExecutionPolicy Bypass -File .agents/scripts/verify_code.ps1`. Bắt buộc đạt Exit Code 0.
-   - **Tầng 3 (Thẩm định độc lập — Independent AI Reviewer)**:
-     * Áp dụng **Bộ lọc dẹp nhiễu (High-Signal Filter)** theo `REVIEW.md`: Chỉ báo cáo vi phạm hợp đồng (Spec, Design Tokens, 4 UI States, rò rỉ secret). Nghiêm cấm bắt bẻ phong cách viết mã râu ria làm phiền người non-tech.
-     * **Quy tắc hội tụ (Review Convergence)**: Builder Agent chỉ được phép tự sửa **tối đa 2 vòng**. Nếu sau 2 vòng vẫn lỗi thì dừng lại báo cáo điểm nghẽn, tuyệt đối không lặp vô tận đốt token.
-   - **Tầng 4 (Phân tầng rủi ro & Nghiệm thu)**:
-     * Phân loại rủi ro: **Thấp** (UI/text), **Vừa** (Form/logic local), **Cao** (API ngoài/secret).
-     * Xuất file **`05_MA_NGUON_PHAT_TRIEN/KET_QUA_KIEM_THU.md`** theo mẫu `templates/04-TEST-RESULT-TEMPLATE.md`.
+---
 
-5. **Tạo tài liệu hướng dẫn chạy 1 trang & Cập nhật trạng thái**:
-   - Tạo file `05_MA_NGUON_PHAT_TRIEN/HUONG_DAN_CHAY_APP.md` đúng 1 trang theo mẫu `templates/03-RUN-GUIDE-TEMPLATE.md`.
-   - Cập nhật tiến độ vào `docs/PROGRESS.md` và `docs/HANDOFF.md`.
-   - Cập nhật file `.agents/state/active_case.json`:
-     * `build_status`: `"SUCCESS"`
-     * `current_phase`: `"BUILD_COMPLETED"`
-     * `last_updated`: Thời gian hiện tại.
+### GIAI ĐOẠN 2: PHASE 05 · VALIDATION (Bước 11, 12 & 13)
+
+#### Bước 11: Run App / Smoke Test (Khởi Chạy & Kiểm Thử Nhanh)
+1. Hướng dẫn người dùng nhấp đúp file `05_MA_NGUON_PHAT_TRIEN/index.html` để chạy app trên trình duyệt.
+2. Kiểm tra nhanh luồng chính (Happy Path) xem giao diện có mượt mà, không giật lag.
+
+#### Bước 12: Hard Verify (Đối Chiếu 1-1 Với App Gốc)
+1. Đối chiếu trực tiếp với app gốc (hoặc ảnh chụp tại `01_THA_APP_VAO_DAY/baseline/`).
+2. Lập bảng đối chiếu trực quan 3 cột:
+   - Cột 1: Khớp 100% (Y hệt bản gốc).
+   - Cột 2: Khác biệt có chủ đích (Đã thống nhất tại Bước 06).
+   - Cột 3: Nâng cấp mới (Cải tiến UX/Bảo mật).
+3. Điền theo mẫu `templates/08-HARD-VERIFY-TEMPLATE.md` và xuất vào:
+   👉 `03_KET_QUA_KIEM_TRA/BAO_CAO_NGHIEM_THU_HARD_VERIFY.md`.
+4. **MỞ CỔNG 05 (`gate_05_hard_verify_passed = true`)**: Khi người dùng xác nhận nghiệm thu đạt yêu cầu.
+   *(Nếu bị từ chối: Tạo `FIX_PLAN_v2.md` và lùi về Bước 09 để sửa chữa cục bộ).*
+
+#### Bước 13: Release & Handoff (Đóng Gói & Bàn Giao Trọn Gói)
+1. Viết bản giải thích đời thường (Plain-Language Explainer) trả lời 3 câu hỏi (Làm gì, Tại sao, Cách dùng).
+2. Hướng dẫn sử dụng nút `HOAN_TAC.bat` khi gặp sự cố.
+3. Ký nhận trách nhiệm vận hành ("You Land It, You Own It").
+4. Điền theo mẫu `templates/09-HANDOFF-BUNDLE-TEMPLATE.md` và xuất vào:
+   👉 `05_MA_NGUON_PHAT_TRIEN/BAN_GIAO_SAN_PHAM.md`.
+5. **MỞ CỔNG 06 (`gate_06_handoff_signed = true`)**: Hoàn tất dự án. Đồng bộ hóa toàn bộ thông tin vào `docs/PROGRESS.md` và `docs/HANDOFF.md`.

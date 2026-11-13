@@ -1,33 +1,26 @@
-# PROMPT 01: QUÉT & KIỂM TRA ỨNG DỤNG (TAB 01 — SCAN & INVENTORY)
+# PROMPT 01: QUÉT & TIẾP NHẬN ỨNG DỤNG (TAB 01 — SCAN / DISCOVERY)
 
-*Dán đoạn lệnh này sau khi đã thả file vào thư mục `01_THA_APP_VAO_DAY/`.*
+*Lưu ý: Bộ kit đã chuẩn hóa sang quy trình 6 Phase. File này tương đương với [01-TAB-DISCOVERY.md](01-TAB-DISCOVERY.md).*
+
+---
 
 ```markdown
-# Tab 01 — Application Intake, Evidence Scan & Screen Inventory
+# Tab 01 — Phase 01: Discovery (Bước 01: App Intake & Bước 02: Reference Baseline)
 
-Read the active Skill at `.agents/skills/rea-scan/SKILL.md` in full. The Skill is the governing process contract.
-The underlying analysis engine is `.agents/skills/reverse-engineer-anything/SKILL.md`.
+Read and follow `AGENTS.md` and `docs/WORKFLOW_LIFECYCLE.md`.
+Activate Skill `rea-scan` and `reverse-engineer-anything`.
 
-You are the Application Intake Inspector. Work only in Stage 01. Do not modify files outside authorized output paths.
+You are executing **PHASE 01 · DISCOVERY**:
 
-## First: verify input and safety preconditions
-1. Inspect directory `01_THA_APP_VAO_DAY/`:
-   - If empty: Notify the user in Vietnamese with guidance on supported formats (APK, ASAR, ZIP, EXE, Web URL).
-   - If >1 file: Present a Multi-file Inventory table (Name, Size, Predicted Format) and request user prioritization before scanning.
-2. Once the target file is confirmed, create an immutable, exact copy into `04_SAO_LUU_AN_TOAN/`. Verify copy size and integrity before any analysis.
+### BƯỚC 01: APP INTAKE / PREFLIGHT
+1. Kiểm tra `01_THA_APP_VAO_DAY/`. Xác định file đầu vào.
+2. Tự động sao lưu an toàn sang `04_SAO_LUU_AN_TOAN/`.
+3. Cập nhật `active_case.json`: `target_name`, `target_type`, `current_phase = "PHASE_01_DISCOVERY"`.
 
-## Analysis and target routing
-3. Route the target according to its artifact type using REA engine tools:
-   - **Android APK**: `inspect_android_package`. Fall back to static ZIP resource inspection if Java/JADX is unavailable.
-   - **Electron / JS ASAR**: `analyze_javascript_application` or `npx -y rea-agents analyze-javascript-application <path> --json`.
-   - **Native Binary**: `open_binary` and `inspect_artifact`. Fall back to header/metadata inspection if Ghidra is missing.
-   - **Web / Browser Target**: `list_browser_targets` / observation.
-   - **Plain Source Code**: Use standard agent source reading tools (do not force REA on plain source).
-4. Extract the **Functional Screen Inventory** and **UI State Matrix** (Loading, Empty, Success, Error) conforming to `templates/01-REPORT-TEMPLATE.md`.
-5. Redact all secret credentials, private tokens, passwords, and sensitive keys to `[REDACTED]`.
+### BƯỚC 02: REFERENCE BASELINE
+1. Thử chạy app gốc, chụp màn hình và ghi nhận danh mục màn hình.
+2. **Fallback**: Nếu không có runtime/máy ảo, tự động bóc tách tài nguyên tĩnh và đánh dấu `SKIPPED (Tĩnh)`.
+3. Đóng CỔNG 01 (`gates.gate_01_baseline_verified = true`). Đồng bộ `docs/PROGRESS.md`.
 
-## Required templates and output paths
-- Report template: `templates/01-REPORT-TEMPLATE.md` → `03_KET_QUA_KIEM_TRA/YYYY-MM-DD_HHmm_bao-cao-hien-trang.md`
-- Extracted design tokens: `03_KET_QUA_KIEM_TRA/design-system-cu.md` (colors, fonts, layout found in old app)
-- State persistence: Update `.agents/state/active_case.json` with target details, report path, and set `current_phase = "SCAN_COMPLETED"`.
+Báo cáo kết quả bằng tiếng Việt đời thường và hướng dẫn dán tiếp `prompts/02-TAB-REVERSE-ENGINEERING.md`.
 ```

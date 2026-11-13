@@ -43,7 +43,7 @@ Checked: **2026-11-13**. Primary upstream source is pinned to the exact commit S
 
 ## 3. Upstream Standards cho Khâu Build, Fix, UI & Flow Inventory
 
-Để đảm bảo chất lượng kỹ thuật mà không tự bịa quy trình, bộ kit tham chiếu 4 chuẩn upstream mở sau:
+Để đảm bảo chất lượng kỹ thuật mà không tự bịa quy trình, bộ kit tham chiếu các chuẩn upstream mở sau:
 
 1. **Chuẩn Sửa Lỗi (Fix App)**: `caveman/surgical-patch`
    * Nguyên tắc: Sửa lỗi ở phạm vi hẹp nhất có trách nhiệm (Narrowest responsible layer), bảo toàn 100% hành vi xung quanh, có bằng chứng trước và sau khi vá lỗi. Bắt buộc vượt qua `verify_code.ps1`.
@@ -59,10 +59,17 @@ Checked: **2026-11-13**. Primary upstream source is pinned to the exact commit S
 
 5. **Chuẩn Thẩm Định Mã Nguồn AI (Anthropic Code Review Pipeline)**: `Anthropic Claude Code Team` (*"How the Claude Code team does code review"*)
    * Nguyên tắc:
-     - Tách biệt vai trò Builder và Independent Reviewer trong Fresh Context (`prompts/05-TAB-REVIEW.md`) để tránh thiên kiến xác nhận của AI.
+     - Tách biệt vai trò Builder và Independent Reviewer trong Fresh Context (`prompts/05-TAB-REVIEW.md` / `05-TAB-VALIDATION.md`) để tránh thiên kiến xác nhận của AI.
      - Quy chuẩn thẩm định tập trung tại `REVIEW.md` với Bộ lọc dẹp nhiễu (High-Signal Filter, cấm bắt bẻ phong cách).
      - Bắt buộc xuất "Bản giải thích cho người dùng" (Explainers Over Diffs) thay vì bắt người non-tech đọc git diff.
      - Phân tầng rủi ro tự động (Automated Risk Classifier trong `verify_code.ps1`: LOW / MEDIUM / HIGH).
      - Giới hạn cứng vòng lặp tự sửa (Review Convergence: tối đa 2 vòng) chống lặp vô tận đốt token.
      - Chốt chặn trách nhiệm con người ("You Land It, You Own It" Accountability Sign-off).
      - Chốt chặn an toàn tối hậu bằng cơ chế Rollback tự động (`HOAN_TAC.bat`, snapshot `.backup/`, và bộ nhớ học từ sự cố `learned_rules.json`).
+
+6. **Chuẩn Vòng Đời Phát Triển & Dịch Ngược (Workflow Lifecycle)**: `docs/WORKFLOW_LIFECYCLE.md`
+   * Nguyên tắc:
+     - Chuẩn hóa toàn diện hành trình từ tiếp nhận đến bàn giao thành 6 Phase · 14 Bước nguyên tử.
+     - Khóa cứng 6 Cổng kiểm soát chất lượng (Quality Gates): Gate 01 Baseline ➔ Gate 02 Audit ➔ Gate 03 Spec Frozen ➔ Gate 04 Build QA ➔ Gate 05 Hard Verify ➔ Gate 06 Handoff Signed.
+     - Cơ chế sửa sai an toàn (Reject / Retry Loop): Đánh số `_v2`, không xóa lịch sử cũ, lùi trạng thái về đúng bước cần khắc phục.
+     - Tự động phục hồi phiên làm việc (Auto-Resume) qua `health_check.ps1` và `prompts/00-SESSION-CONTINUITY.md`.

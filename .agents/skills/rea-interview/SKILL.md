@@ -1,48 +1,51 @@
 ---
 name: rea-interview
-description: Phỏng vấn làm rõ yêu cầu người dùng sau khi đã có báo cáo phân tích từ rea-scan và file 02_YEU_CAU_CUA_TOI/ho-so-va-muc-tieu.md. Xác định tính năng còn thiếu, nhu cầu nâng cấp, rà soát bảo mật và chốt hướng phát triển (nâng cấp app cũ hay viết lại app mới). Kích hoạt khi người dùng chạy Prompt 3.
+description: Phỏng vấn làm rõ yêu cầu người dùng sau khi đã có báo cáo phân tích từ rea-scan, sổ Unknowns và file 02_YEU_CAU_CUA_TOI/ho-so-va-muc-tieu.md. Chốt Design System 3 tầng, đặc tả sản phẩm và chia nhỏ kế hoạch triển khai nguyên tử. Phụ trách Phase 03 (Product Definition) theo docs/WORKFLOW_LIFECYCLE.md.
 ---
 
-# KỸ NĂNG: PHỎNG VẤN & LÀM RÕ YÊU CẦU (REA-INTERVIEW)
+# KỸ NĂNG: ĐỊNH HÌNH SẢN PHẨM & KẾ HOẠCH TRIỂN KHAI (REA-INTERVIEW)
 
-Kỹ năng chuyên biệt cho giai đoạn đối thoại yêu cầu, đối chiếu chuẩn quy trình `docs/INTAKE_QUESTION_LOGIC.md`.
-
----
-
-## 1. NGUYÊN TẮC PHỎNG VẤN
-- Không hỏi dồn dập nhiều câu cùng lúc; chia thành từng nhóm câu hỏi ngắn.
-- Không hỏi những thông tin đã được nêu rõ trong báo cáo hoặc trong file `02_YEU_CAU_CUA_TOI/ho-so-va-muc-tieu.md`.
-- Đưa ra gợi ý sẵn (gạch đầu dòng hoặc lựa chọn trắc nghiệm) để người non-tech dễ trả lời.
+Kỹ năng chuyên biệt cho **Phase 03 (Product Definition)** theo khung chuẩn 6 Phase · 14 Bước tại `docs/WORKFLOW_LIFECYCLE.md`.
+Phụ trách từ khâu đối thoại yêu cầu, đóng băng đặc tả đến lập kế hoạch triển khai nguyên tử để chuyển giao cho Phase 04.
 
 ---
 
-## 2. QUY TRÌNH PHỎNG VẤN 4 BƯỚC
+## 1. QUY TRÌNH THỰC HIỆN 3 BƯỚC
 
-1. **Bước 1: Làm rõ tính năng còn thiếu (Missing Features)**:
-   - Đối chiếu tính năng hiện có trong báo cáo với mong muốn của người dùng.
-   - Hỏi cụ thể: *"App hiện có [Tính năng A, B]. Bạn muốn bổ sung tính năng nào cụ thể tiếp theo?"*
+### BƯỚC 06: REA INTERVIEW (Phỏng Vấn Người Dùng)
+1. Đọc đồng thời 3 nguồn tài liệu:
+   - `02_YEU_CAU_CUA_TOI/ho-so-va-muc-tieu.md` (mong muốn cá nhân)
+   - `03_KET_QUA_KIEM_TRA/bao-cao-hien-trang.md` (hiện trạng ứng dụng gốc)
+   - `03_KET_QUA_KIEM_TRA/UNKNOWNS_AND_COVERAGE.md` (các điểm mù và rủi ro)
+2. Đặt từ 3 đến 5 câu hỏi tiếng Việt đời thường, có sẵn gợi ý lựa chọn (A/B/C):
+   - **Tương đồng hay Tối giản**: Muốn giữ nguyên luồng app cũ hay tinh gọn lại?
+   - **Xử lý Unknowns**: Các chức năng bị mã hóa/chưa rõ có cần thay thế bằng chuẩn Web hay mock data không?
+   - **Giao diện & Trải nghiệm**: Chọn bảng màu nhận diện thương hiệu hay làm mới theo phong cách hiện đại?
+   - **Ranh giới bảo mật**: App có cần kết nối server ngoài hay chạy 100% cục bộ (Zero-Install)?
 
-2. **Bước 2: Nhu cầu nâng cấp công nghệ & giao diện (UI Design Tokens & design.md)**:
-   - Đánh giá xem công nghệ cũ có cần hiện đại hóa không (chuyển sang Web/HTML5).
-   - **Hỏi rõ về Giao diện (UI)**:
-     > *"Về giao diện, bạn muốn: (A) Tái sử dụng bảng màu & phong cách Design Tokens từ app cũ, hay (B) Tạo file `02_YEU_CAU_CUA_TOI/design.md` mới hoàn toàn (phong cách Hiện đại tối giản, Dark Mode, Dashboard)?"*
-   - Sau khi người dùng chọn, AI lưu hoặc cập nhật file `02_YEU_CAU_CUA_TOI/design.md` làm hợp đồng thiết kế.
+### BƯỚC 07: SPEC & DESIGN GATE (Hợp Đồng Giao Diện & Đặc Tả Đóng Băng)
+1. **Thiết lập Design System 3 tầng** tại `02_YEU_CAU_CUA_TOI/design.md`:
+   - Tầng 1: Primitive Tokens (Màu sắc, Font, Spacing, Radius, Shadow).
+   - Tầng 2: Semantic Components (Button, Card, Form Input, Header, Modal).
+   - Tầng 3: 4 Trạng thái giao diện bắt buộc (`Loading`, `Empty`, `Success`, `Error`).
+2. **Đóng băng đặc tả sản phẩm** theo `templates/02-SPEC-TEMPLATE.md` vào:
+   👉 `03_KET_QUA_KIEM_TRA/dac-ta-yeu-cau-da-chot.md`.
+   Bao gồm: Luồng nghiệp vụ, danh sách màn hình, tiêu chí nghiệm thu (Acceptance Criteria).
 
-3. **Bước 3: Rà soát bảo mật & Ranh giới dữ liệu (Security Scope)**:
-   - Hỏi về quyền riêng tư dữ liệu, phân quyền tài khoản (admin/user), và những gì app KHÔNG được phép làm.
-
-4. **Bước 4: Chốt hướng đi phát triển (Build Route Decision)**:
-   - Đưa ra 2 lựa chọn rõ ràng kèm ưu/nhược điểm:
-     * **Hướng A (Nâng cấp tiếp)**: Giữ nguyên mã nguồn cũ và viết thêm module mới. (Nhanh, tận dụng code cũ).
-     * **Hướng B (Viết lại hoàn toàn - Rebuild/Rewrite)**: Viết app mới dựa trên logic đã phân tích từ REA. (Sạch sẽ, công nghệ mới, loại bỏ rác cũ).
+### BƯỚC 08: IMPLEMENTATION PLAN (Kế Hoạch Triển Khai Nguyên Tử)
+1. Chia nhỏ toàn bộ dự án thành các nhiệm vụ nguyên tử (Atomic Tasks) độc lập.
+2. Xác định rõ quan hệ phụ thuộc (Dependency Graph) và thứ tự thực hiện từ UI tĩnh đến Logic nghiệp vụ.
+3. Xuất file kế hoạch theo `templates/07-IMPLEMENTATION-PLAN-TEMPLATE.md` vào:
+   👉 `03_KET_QUA_KIEM_TRA/KE_HOACH_TRIEN_KHAI.md`.
+4. **CỔNG 03 (Quality Gate 03: `gate_03_spec_frozen`)**:
+   - Yêu cầu người dùng duyệt kế hoạch và đặc tả.
+   - Khi được phê duyệt:
+     * Cập nhật `active_case.json`: `gates.gate_03_spec_frozen = true`, `current_phase = "PHASE_03_PRODUCT_DEFINITION"`, `current_step = "08_IMPLEMENTATION_PLAN"`.
+     * Đồng bộ bảng tiến độ trong `docs/PROGRESS.md`.
+   - **Vòng lặp sửa sai (Reject Loop)**: Nếu người dùng không đồng ý, tạo bản `SPEC_v2.md` và lùi về Bước 06/07 để phỏng vấn lại. Tuyệt đối không xóa tài liệu cũ.
 
 ---
 
-## 3. KẾT QUẢ ĐẦU RA
-1. Ghi nhận toàn bộ quyết định của người dùng vào file:
-   `03_KET_QUA_KIEM_TRA/YYYY-MM-DD_HHmm_dac-ta-yeu-cau-da-chot.md`
-   để làm căn cứ triển khai cho kỹ năng `rea-build`.
-2. Cập nhật file `.agents/state/active_case.json`:
-   - `spec_approved`: `true`
-   - `current_phase`: `"SPEC_APPROVED"`
-   - `last_updated`: Thời gian hiện tại.
+## 2. NGUYÊN TẮC GIAO TIẾP
+- Ngôn ngữ: 100% tiếng Việt thân thiện, không dùng thuật ngữ kỹ thuật khó hiểu.
+- Không hỏi dồn dập; nếu người dùng trả lời ngắn, AI tự hoàn thiện chi tiết theo hướng an toàn nhất và xin xác nhận.

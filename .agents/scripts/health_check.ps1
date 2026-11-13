@@ -52,7 +52,7 @@ if (Test-Path ".agents\rules\rea-workflow.md") {
 }
 
 # 5. Kiểm tra Bộ nhớ ngữ cảnh (docs/) & Bộ nhớ sự cố (state/)
-$docs = @("docs\PRD.md", "docs\ARCHITECTURE.md", "docs\PROGRESS.md", "docs\HANDOFF.md", "docs\PLAN.md")
+$docs = @("docs\PRD.md", "docs\ARCHITECTURE.md", "docs\PROGRESS.md", "docs\HANDOFF.md", "docs\PLAN.md", "docs\WORKFLOW_LIFECYCLE.md")
 $allDocsOk = $true
 foreach ($doc in $docs) {
     if (-not (Test-Path $doc)) { $allDocsOk = $false }
@@ -100,4 +100,21 @@ if ($score -eq $total) {
 } else {
     Write-Host " KẾT QUẢ: CẦN KIỂM TRA LẠI ($score/$total)" -ForegroundColor Yellow
 }
+
+# Hiển thị Tự động phục hồi phiên (Auto-Resume Banner)
+if (Test-Path ".agents\state\active_case.json") {
+    try {
+        $case = Get-Content ".agents\state\active_case.json" -Raw -Encoding UTF8 | ConvertFrom-Json
+        if ($case) {
+            Write-Host ""
+            Write-Host "--- TIẾN ĐỘ DỰ ÁN (LIFECYCLE STATUS) ---" -ForegroundColor Yellow
+            Write-Host " Phase hiện tại : $($case.current_phase)" -ForegroundColor White
+            Write-Host " Bước hiện tại  : $($case.current_step)" -ForegroundColor White
+            Write-Host " Trạng thái Gate: $($case.current_gate_status)" -ForegroundColor White
+            Write-Host " Hướng dẫn tiếp : $($case.next_prompt_guide)" -ForegroundColor Cyan
+            Write-Host "----------------------------------------" -ForegroundColor Yellow
+        }
+    } catch {}
+}
+
 Write-Host "==========================================================" -ForegroundColor Cyan

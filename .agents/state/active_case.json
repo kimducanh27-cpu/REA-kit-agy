@@ -2,11 +2,35 @@
   "case_id": null,
   "target_name": null,
   "target_type": null,
-  "current_phase": "IDLE",
+  "current_phase": "PHASE_00_FOUNDATION",
+  "current_step": "00_PROJECT_BOOTSTRAP",
+  "current_gate_status": "GATE_00_READY",
+  "next_prompt_guide": "Dán 'prompts/01-TAB-DISCOVERY.md' để bắt đầu tiếp nhận app và đo kiểm baseline.",
+  "revision": 1,
   "backup_verified": false,
-  "report_path": null,
-  "spec_approved": false,
-  "build_status": null,
-  "last_updated": "2026-11-13T16:12:00+07:00",
-  "notes": "Hệ thống trạng thái tự động ghi nhớ tiến độ theo chuẩn AutoGPT/MetaGPT"
+  "gates": {
+    "gate_01_baseline_verified": false,
+    "gate_02_audit_passed": false,
+    "gate_03_spec_frozen": false,
+    "gate_04_build_qa_passed": false,
+    "gate_05_hard_verify_passed": false,
+    "gate_06_handoff_signed": false
+  },
+  "artifacts": {
+    "baseline_evidence": null,
+    "unknowns_and_coverage": null,
+    "frozen_spec": null,
+    "implementation_plan": null,
+    "build_qa_report": null,
+    "hard_verify_report": null,
+    "handoff_bundle": null
+  },
+  "metrics": {
+    "coverage_score": null,
+    "unknowns_count": 0,
+    "risk_level": "LOW",
+    "review_convergence_rounds": 0
+  },
+  "last_updated": "2026-11-13T17:35:00+07:00",
+  "notes": "Hệ thống máy trạng thái 6 Phase · 14 Bước theo chuẩn Anthropic & EGM"
 }
