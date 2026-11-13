@@ -4,6 +4,25 @@
 - Overall: P01 IN PROGRESS (Non-tech Workspace Scaffold & REA Inspector Skill)
 - Product direction: REA-powered App Investigation & Development Kit
 
+## 2026-11-13 — Tách 3 Modular Skills, Vẽ 4 Sơ đồ Mermaid & Bộ 5 Prompt Tự Dán
+
+### Completed
+- Hoàn thành phiên Grilling thống nhất kiến trúc: Chốt phân tách modular skills và bộ prompt tự dán.
+- Chuyển đổi từ monolithic skill sang bộ 3 Skills độc lập theo đúng chuẩn Agent Skills:
+  - `.agents/skills/rea-scan/SKILL.md`: Quét file đầu vào, sao lưu sang `04_`, gọi REA/source và xuất báo cáo vào `03_`.
+  - `.agents/skills/rea-interview/SKILL.md`: Phỏng vấn làm rõ yêu cầu, xác định tính năng thiếu và chốt hướng phát triển.
+  - `.agents/skills/rea-build/SKILL.md`: Lập kế hoạch, triển khai code vào `05_`, kiểm thử và xuất hướng dẫn chạy.
+- Vẽ và tích hợp 4 sơ đồ Mermaid trực quan vào hệ thống tài liệu:
+  - Sơ đồ 1 (Luồng thư mục): Tích hợp trực tiếp tại `HUONG_DAN_SU_DUNG.md` và `docs/ARCHITECTURE.md`.
+  - Sơ đồ 2 (Định tuyến REA): Tích hợp tại `docs/ARCHITECTURE.md`.
+  - Sơ đồ 3 (Phỏng vấn & Rẽ nhánh): Tích hợp tại `docs/ARCHITECTURE.md`.
+  - Sơ đồ 4 (Cổng an toàn & Cấp quyền): Tích hợp tại `docs/ARCHITECTURE.md`.
+- Đóng gói trọn bộ 5 Prompt tự dán (sẵn nút Copy) vào `HUONG_DAN_SU_DUNG.md` và `docs/PROMPTS.md`.
+- Cập nhật script `health_check.ps1` kiểm tra bộ 3 skills độc lập; chạy lại kiểm thử đạt 5/5 PASSED.
+
+### In Progress
+- Tiếp nhận ứng dụng mẫu đầu tiên vào `01_THA_APP_VAO_DAY/` để kiểm thử quy trình thực tế.
+
 ## 2026-11-13 — Non-tech Workspace Scaffolding & REA Inspector Integration
 
 ### Completed

@@ -91,3 +91,83 @@ See SECURITY_REVIEW_MODEL.md and upstream SECURITY.md / DISCLAIMER.md.
 - **Status:** PROPOSED. Neither delivery model is approved. Do not create a wrapper, package, server or dependency until the owner approves the v1 boundary and a demonstrated gap justifies it.
 
 Other deferred choices: case schema; Evidence persistence; supplementary source/dependency/UI security tools; GUI; multi-agent orchestration. Add no framework, server, database or dependency without a demonstrated need and source-backed comparison.
+
+## 9. Sơ đồ kiến trúc & Quy trình (Mermaid Visual Architecture)
+
+### 9.1 Sơ đồ luồng người dùng & thư mục (User & Folder Dataflow)
+
+```mermaid
+flowchart LR
+    subgraph Input["1. ĐẦU VÀO"]
+        A["01_THA_APP_VAO_DAY<br/>(File APK, ASAR, ZIP, Web)"]
+        B["02_YEU_CAU_CUA_TOI<br/>(Hồ sơ & mục tiêu cá nhân)"]
+    end
+
+    subgraph Safety["AN TOÀN BẢO TOÀN"]
+        C["04_SAO_LUU_AN_TOAN<br/>(Bản sao lưu bất khả xâm phạm)"]
+    end
+
+    subgraph Engine["XỬ LÝ TRUNG TÂM"]
+        D["Coding Agent + REA Engine<br/>(Skills: rea-scan, rea-interview, rea-build)"]
+    end
+
+    subgraph Output["2. ĐẦU RA"]
+        E["03_KET_QUA_KIEM_TRA<br/>(Báo cáo hiện trạng & đặc tả)"]
+        F["05_MA_NGUON_PHAT_TRIEN<br/>(Mã nguồn app nâng cấp / viết lại)"]
+    end
+
+    A -->|1. Tự động sao lưu| C
+    A -->|2. Quét & trích xuất| D
+    B -->|3. Đọc mong muốn| D
+    D -->|4. Xuất báo cáo & hỏi| E
+    E -.->|5. Người dùng trả lời| D
+    D -->|6. Viết code & test| F
+```
+
+### 9.2 Sơ đồ định tuyến công cụ REA (Target Routing Architecture)
+
+```mermaid
+flowchart TD
+    Start["Nhận diện file trong 01_THA_APP_VAO_DAY/"] --> Type{Loại ứng dụng?}
+    Type -->|File .apk| Android["inspect_android_package (REA)"]
+    Type -->|Gói .asar / Thư mục JS| Electron["analyze_javascript_application (REA)"]
+    Type -->|File .zip / .exe / Binary| Binary["open_binary + inspect_artifact (REA)"]
+    Type -->|Website / Link web| Web["list_browser_targets / capture_browser_scenario (REA)"]
+    Type -->|Mã nguồn đầy đủ| Source["Đọc mã nguồn trực tiếp (Agent Tools)"]
+    Android --> Report["Thu thập Evidence & Xuất báo cáo vào 03_KET_QUA_KIEM_TRA/"]
+    Electron --> Report
+    Binary --> Report
+    Web --> Report
+    Source --> Report
+```
+
+### 9.3 Sơ đồ phỏng vấn & Lựa chọn hướng phát triển (Interview & Build Route)
+
+```mermaid
+flowchart TD
+    Report["Báo cáo hiện trạng (03_)"] --> Q1["1. App còn thiếu tính năng gì?"]
+    Q1 --> Q2["2. Cần nâng cấp công nghệ/giao diện ra sao?"]
+    Q2 --> Q3["3. Yêu cầu bảo mật & dữ liệu thế nào?"]
+    Q3 --> Decision{Lựa chọn hướng phát triển?}
+    Decision -->|Hướng A: Có mã nguồn tốt| Branch["Nâng cấp tiếp trên app cũ (Branch mới)"]
+    Decision -->|Hướng B: Công nghệ cũ / Chỉ có binary| Rewrite["Viết lại hoàn toàn app mới (Rebuild/Rewrite)"]
+    Branch --> Build["Triển khai mã nguồn vào 05_MA_NGUON_PHAT_TRIEN/"]
+    Rewrite --> Build
+```
+
+### 9.4 Sơ đồ cổng kiểm soát an toàn & Cấp quyền (Security Gates)
+
+```mermaid
+flowchart TD
+    Scan["Phân tích tĩnh (Static Inspection)"] -->|Mặc định được phép| Safe["Đọc cấu trúc, manifest, chuỗi text"]
+    Safe --> NeedRuntime{Cần can thiệp sâu?}
+    NeedRuntime -->|Chạy thử app / Debug / Instrument| Gate1{"Xin phép: Runtime Execution?"}
+    NeedRuntime -->|Kết nối ADB / Thiết bị thật| Gate2{"Xin phép: ADB / Device Access?"}
+    NeedRuntime -->|Gửi request mạng / Bắt traffic| Gate3{"Xin phép: Network & CDP Capture?"}
+    Gate1 -->|Người dùng duyệt CÓ| RunAction["Thực thi có kiểm soát"]
+    Gate2 -->|Người dùng duyệt CÓ| RunAction
+    Gate3 -->|Người dùng duyệt CÓ| RunAction
+    Gate1 -.->|Người dùng từ chối KHÔNG| Abort["Dừng lại, chỉ dùng phân tích tĩnh"]
+    Gate2 -.->|Người dùng từ chối KHÔNG| Abort
+    Gate3 -.->|Người dùng từ chối KHÔNG| Abort
+```

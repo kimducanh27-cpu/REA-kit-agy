@@ -30,12 +30,17 @@ if ((Test-Path "AGENTS.md") -and (Test-Path "HUONG_DAN_SU_DUNG.md")) {
     Write-Host "[!] (2/5) Thiếu AGENTS.md hoặc HUONG_DAN_SU_DUNG.md." -ForegroundColor Red
 }
 
-# 3. Kiểm tra Kỹ năng Antigravity (Skills)
-if (Test-Path ".agents\skills\rea-app-inspector\SKILL.md") {
-    Write-Host "[OK] (3/5) Kỹ năng REA-app-inspector đã được nạp đúng chuẩn." -ForegroundColor Green
+# 3. Kiểm tra Kỹ năng Antigravity (3 Skills độc lập)
+$skills = @("rea-scan", "rea-interview", "rea-build")
+$allSkillsOk = $true
+foreach ($sk in $skills) {
+    if (-not (Test-Path ".agents\skills\$sk\SKILL.md")) { $allSkillsOk = $false }
+}
+if ($allSkillsOk) {
+    Write-Host "[OK] (3/5) Bộ 3 kỹ năng REA (Scan, Interview, Build) đã nạp đủ." -ForegroundColor Green
     $score++
 } else {
-    Write-Host "[!] (3/5) Không tìm thấy kỹ năng trong .agents\skills." -ForegroundColor Red
+    Write-Host "[!] (3/5) Thiếu một trong 3 kỹ năng trong .agents\skills." -ForegroundColor Red
 }
 
 # 4. Kiểm tra Luật an toàn (Rules)

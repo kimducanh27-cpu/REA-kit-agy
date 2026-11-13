@@ -22,11 +22,14 @@ A Vietnamese-first kit using upstream REA (https://github.com/morluto/rea) and G
   - `HUONG_DAN_SU_DUNG.md` (1-page quick start cheat sheet)
   - `KIEM_TRA.bat` (1-click health check launcher for Windows)
 - Antigravity integration:
-  - `.agents/skills/rea-app-inspector/SKILL.md` (Core 4-step workflow: Check -> Report -> Interview -> Build)
+  - 3 modular skills: `.agents/skills/rea-scan/`, `.agents/skills/rea-interview/`, `.agents/skills/rea-build/`
   - `.agents/rules/rea-workflow.md` (Antigravity YAML rule for security and data integrity)
   - `.agents/scripts/health_check.ps1` (Tested: 5/5 components verified ready)
   - `.agents/state/` (Tracking internal app processing status)
   - Windows hidden attribute applied to `.agents/` (`attrib +h`)
+- Diagram and Prompt Playbook:
+  - 4 Mermaid diagrams integrated in `HUONG_DAN_SU_DUNG.md` and `docs/ARCHITECTURE.md`
+  - 5 Ready-to-paste prompts in `HUONG_DAN_SU_DUNG.md` and `docs/PROMPTS.md`
 - Privacy and git tracking:
   - `.gitignore` configured to prevent user apps, private code, and reports from leaking to git.
 
