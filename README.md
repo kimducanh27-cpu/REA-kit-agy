@@ -65,17 +65,18 @@ REA-kit-agy/
 
 ## 3. Bộ 3 Kỹ năng độc lập (Modular Skills)
 
-1. **`rea-scan`**: Nhận diện file đầu vào, sao lưu sang `04_`, gọi công cụ REA/mã nguồn phù hợp, tự động che mờ API keys thành `[REDACTED]`, và xuất báo cáo hiện trạng vào `03_`.
-2. **`rea-interview`**: Đọc báo cáo và `02/ho-so-va-muc-tieu.md`, phỏng vấn người dùng (thiếu gì, cần nâng gì, bảo mật ra sao), và xuất file đặc tả yêu cầu đã chốt.
-3. **`rea-build`**: Triển khai mã nguồn vào `05_`, tự động chạy kiểm thử cú pháp (`KET_QUA_KIEM_THU.md`), và xuất hướng dẫn chạy app 1 trang.
+1. **`rea-scan`**: Nhận diện file đầu vào, sao lưu sang `04_`, gọi công cụ REA/mã nguồn phù hợp, tự động che mờ API keys thành `[REDACTED]`, trích xuất **Screen Inventory & State Matrix** (theo chuẩn app-adr-ui), và xuất báo cáo hiện trạng vào `03_`.
+2. **`rea-interview`**: Đọc báo cáo và `02/ho-so-va-muc-tieu.md`, phỏng vấn người dùng (thiếu gì, cần nâng gì, bảo mật ra sao), chốt hợp đồng thiết kế **Design System 3 tầng (`design.md`)**, và xuất file đặc tả yêu cầu đã chốt.
+3. **`rea-build`**: Triển khai mã nguồn vào `05_` tuân thủ nghiêm ngặt **Design System 3 tầng & 4 trạng thái UI (Loading, Empty, Success, Error)**, chạy kiểm chứng 4 tầng (`verify_code.ps1`), và xuất hướng dẫn chạy app 1 trang.
 
 ---
 
-## 4. Ba chốt chặn bảo vệ người dùng non-tech
+## 4. Bốn chốt chặn bảo vệ chất lượng & người dùng non-tech
 
 * **Zero-Install Runtime**: Khi viết lại app mới (Rewrite), Agent ưu tiên xuất ra **Web App độc lập (HTML/CSS/JS)** để người dùng chỉ cần nhấp đúp chuột là mở chạy ngay trên trình duyệt mà không cần cài Node.js hay Python.
 * **Provider Fallback Gate**: Nếu máy người dùng thiếu Java/JADX hoặc Ghidra, Agent tự động chuyển sang đọc tài nguyên tĩnh nhẹ nhàng, không quăng lỗi crash terminal.
-* **Verification Gate**: Bắt buộc Agent phải tự chạy lệnh kiểm tra cú pháp và xuất file `KET_QUA_KIEM_THU.md` trước khi báo hoàn thành.
+* **Design System 3 Tầng**: Mọi giao diện đều được quản lý bằng `design.md` (Tokens ➔ Components ➔ 4 Trạng thái UI), đảm bảo app không bao giờ bị đơ hoặc trắng trang.
+* **Cổng kiểm chứng 4 tầng**: Dùng công cụ xác định cho lỗi xác định (`verify_code.ps1`), bắt buộc đạt Exit Code 0 và xuất file `05_MA_NGUON_PHAT_TRIEN/KET_QUA_KIEM_THU.md` trước khi báo hoàn thành.
 
 ---
 

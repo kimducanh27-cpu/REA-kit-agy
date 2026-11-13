@@ -38,6 +38,8 @@ A Vietnamese-first kit using upstream REA (https://github.com/morluto/rea) and G
 - Audited GitHub Standards:
   - Secret redaction (`[REDACTED]`) filter in reports (morluto/rea)
   - Multi-file inventory check before scan (ChatDev)
+  - Screen Inventory & State Matrix (app-adr-ui)
+  - Design System 3-tier contract & 4 UI states (Tokens, Components, Loading/Empty/Success/Error)
   - Zero-install runtime & mandatory verification gate (verify-and-stop)
 - Privacy and git tracking:
   - `.gitignore` configured to prevent user apps, private code, and reports from leaking to git.

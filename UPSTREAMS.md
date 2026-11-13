@@ -39,9 +39,9 @@ Checked: **2026-11-13**. Primary upstream source is pinned to the exact commit S
 
 ---
 
-## 3. Upstream Standards cho Khâu Build, Fix & UI Tokens
+## 3. Upstream Standards cho Khâu Build, Fix, UI & Flow Inventory
 
-Để đảm bảo chất lượng kỹ thuật mà không tự bịa quy trình, bộ kit tham chiếu 3 chuẩn upstream mở sau:
+Để đảm bảo chất lượng kỹ thuật mà không tự bịa quy trình, bộ kit tham chiếu 4 chuẩn upstream mở sau:
 
 1. **Chuẩn Sửa Lỗi (Fix App)**: `caveman/surgical-patch`
    * Nguyên tắc: Sửa lỗi ở phạm vi hẹp nhất có trách nhiệm (Narrowest responsible layer), bảo toàn 100% hành vi xung quanh, có bằng chứng trước và sau khi vá lỗi. Bắt buộc vượt qua `verify_code.ps1`.
@@ -50,4 +50,7 @@ Checked: **2026-11-13**. Primary upstream source is pinned to the exact commit S
    * Nguyên tắc: Triển khai đúng phạm vi chốt trong bản đặc tả đóng băng (Frozen Spec), có điều kiện dừng rõ ràng, ngăn chặn triệt để tình trạng over-building hoặc tự ý phình tính năng.
 
 3. **Chuẩn Thiết Kế Giao Diện & Tokens (UI Design)**: `ui-ux-pro-max/ui-styling` & Design Systems
-   * Nguyên tắc: Hợp đồng giao diện điều khiển bằng `design.md`. Ánh xạ tokens thành CSS Variables (`:root`) và Tailwind CSS CDN utility classes, loại bỏ hoàn toàn việc hardcode mã màu tùy tiện. Single-file web zero-install.
+   * Nguyên tắc: Hợp đồng giao diện 3 tầng điều khiển bằng `design.md`. Ánh xạ tokens thành CSS Variables (`:root`) và Tailwind CSS CDN utility classes, loại bỏ hoàn toàn việc hardcode mã màu tùy tiện. Single-file web zero-install.
+
+4. **Chuẩn Kiến Trúc Màn Hình & Trạng Thái UI**: `kimducanh27-cpu/app-adr-ui` (`templates/04-APP-FLOW/04-SCREEN-INVENTORY.md` & `06-STATE-AND-EXCEPTION-MATRIX.md`)
+   * Nguyên tắc: Tách bạch rõ ranh giới các bước: Không vẽ UI khi chưa có `Screen Inventory` và `State Matrix`. Giao diện phải định nghĩa trước 4 trạng thái (`Loading`, `Empty`, `Success`, `Error Recovery`) để không bao giờ bị đơ hoặc trắng trang.

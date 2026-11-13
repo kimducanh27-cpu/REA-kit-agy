@@ -29,13 +29,14 @@ Kỹ năng chuyên biệt cho giai đoạn tiếp nhận và phân tích tĩnh �
 
 4. **Khử trùng dữ liệu & Xuất báo cáo vào `03_KET_QUA_KIEM_TRA/`**:
    - **Bảo mật**: Tự động che mờ (redact) toàn bộ API keys, access tokens, mật khẩu hoặc dữ liệu cá nhân tìm thấy thành `[REDACTED]`.
-   - Đặt tên file theo chuẩn: `YYYY-MM-DD_HHmm_bao-cao-hien-trang.md`.
-   - Nội dung báo cáo gồm 5 phần:
+   - Đặt tên file theo chuẩn: `YYYY-MM-DD_HHmm_bao-cao-hien-trang.md` theo mẫu `templates/01-REPORT-TEMPLATE.md`.
+   - Nội dung báo cáo gồm 6 phần:
      1. Thông tin chung ứng dụng (loại tệp, framework, phiên bản).
      2. Bản đồ chức năng đã xác minh (Feature Map).
-     3. Đánh giá rủi ro bảo mật có phạm vi (Scoped Security Review: quyền hạn, endpoints, cấu hình thiếu an toàn).
-     4. Giới hạn phân tích và các phần chưa rõ (Unknowns).
-     5. Trích xuất tài nguyên giao diện (UI Tokens / Palette): Ghi nhận màu sắc, font chữ phát hiện vào `03_KET_QUA_KIEM_TRA/design-system-cu.md`.
+     3. **Danh mục màn hình (Screen Inventory) & Ma trận trạng thái (State Matrix)**: Bóc tách danh mục màn hình, điều kiện kích hoạt và 4 trạng thái UI (Loading, Empty, Success, Error).
+     4. Đánh giá rủi ro bảo mật có phạm vi (Scoped Security Review: quyền hạn, endpoints, cấu hình thiếu an toàn).
+     5. Giới hạn phân tích và các phần chưa rõ (Unknowns).
+     6. Trích xuất tài nguyên giao diện (UI Tokens / Palette): Ghi nhận màu sắc, font chữ phát hiện vào `03_KET_QUA_KIEM_TRA/design-system-cu.md`.
 
 5. **Ghi nhớ trạng thái (State Persistence)**:
    - Tự động cập nhật file `.agents/state/active_case.json` với tên file mục tiêu, định dạng, đường dẫn báo cáo và chuyển phase sang `SCAN_COMPLETED`.

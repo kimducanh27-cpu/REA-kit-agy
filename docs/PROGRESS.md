@@ -4,6 +4,23 @@
 - Overall: P01 IN PROGRESS (Non-tech Workspace Scaffold & REA Inspector Skill)
 - Product direction: REA-powered App Investigation & Development Kit
 
+## 2026-11-13 — Chuẩn Hóa Design System 3 Tầng & Tích Hợp Screen Inventory (Tham Chiếu app-adr-ui)
+
+### Completed
+- Đối chiếu và áp dụng hai chuẩn thiết kế kiến trúc then chốt từ repository `kimducanh27-cpu/app-adr-ui`:
+  1. **Nâng cấp Hợp đồng Giao diện thành Design System 3 Tầng (`design.md`)**:
+     - *Tầng 1 (Tokens)*: Màu sắc, font chữ, bán kính bo góc, đổ bóng, spacing.
+     - *Tầng 2 (Components)*: Quy chuẩn style nhất quán cho Button, Card, Form Input, Dialog/Modal, Header/Navbar.
+     - *Tầng 3 (UI States)*: Quy chuẩn bắt buộc cho 4 trạng thái giao diện: Loading (skeleton/spinner), Empty (biểu tượng + CTA tạo mới), Success (toast thông báo), Error Recovery (thông báo lỗi + nút Thử lại + giữ nguyên input người dùng).
+     - Cập nhật khung mẫu `templates/05-DESIGN-TOKEN-TEMPLATE.md` và file người dùng `02_YEU_CAU_CUA_TOI/design.md`.
+  2. **Tích hợp Screen Inventory & State Matrix vào quy trình quét (`rea-scan`)**:
+     - Cập nhật `templates/01-REPORT-TEMPLATE.md` bổ sung Mục 3: Bảng danh mục màn hình chức năng (`Screen Inventory`) và Ma trận trạng thái (`State Matrix`).
+     - Cập nhật `.agents/skills/rea-scan/SKILL.md` yêu cầu bóc tách màn hình và 4 trạng thái UI khi phân tích app đầu vào.
+     - Cập nhật `.agents/skills/rea-build/SKILL.md` bắt buộc tuân thủ 3 tầng thiết kế và 4 trạng thái giao diện.
+  3. **Đồng bộ Upstream & Meta-Bootstrap**:
+     - Cập nhật `UPSTREAMS.md` bổ sung chuẩn Screen Inventory & State Matrix từ `kimducanh27-cpu/app-adr-ui`.
+     - Đồng bộ `README.md` và siêu lệnh `prompts/BOOTSTRAP_KIT.md`.
+
 ## 2026-11-13 — Tích Hợp UI Design Tokens, Hợp Đồng design.md & Chuẩn Surgical Patch / Lean Build
 
 ### Completed

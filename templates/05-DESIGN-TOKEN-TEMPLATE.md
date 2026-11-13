@@ -1,16 +1,16 @@
-# HỢP ĐỒNG THIẾT KẾ GIAO DIỆN & DESIGN TOKENS (DESIGN.MD)
-*(File điều khiển giao diện toàn bộ ứng dụng — Người non-tech chỉ cần sửa mã màu/font ở đây để đổi theme)*
+# HỢP ĐỒNG THIẾT KẾ GIAO DIỆN & DESIGN SYSTEM 3 TẦNG (DESIGN.MD)
+*(File điều khiển giao diện toàn bộ ứng dụng — Người non-tech chỉ cần sửa mã màu/font/quy chuẩn ở đây để đổi toàn bộ theme)*
 
 ---
 
-## 1. PHONG CÁCH CHỦ ĐẠO (DESIGN THEME)
-- **Tên phong cách:** [Chọn: Hiện đại tối giản (Modern Clean) / Bảng điều khiển (Dashboard) / Chuyên nghiệp (Corporate) / Công nghệ tối (Dark Tech)]
+## TẦNG 1: THIẾT KẾ CƠ SỞ & DESIGN TOKENS (FOUNDATIONS)
+
+### 1. Phong cách chủ đạo (Design Theme)
+- **Tên phong cách:** [Hiện đại tối giản (Modern Clean) / Bảng điều khiển (Dashboard) / Chuyên nghiệp (Corporate) / Công nghệ tối (Dark Tech)]
 - **Chế độ hiển thị:** [Light Mode (Mặc định) / Dark Mode / Tự động theo hệ điều hành]
 
----
-
-## 2. BẢNG MÀU HỆ THỐNG (COLOR PALETTE TOKENS)
-*Toàn bộ mã nguồn sẽ tự động đọc các biến này thay vì hardcode mã màu:*
+### 2. Bảng màu hệ thống (Color Tokens)
+*Toàn bộ mã nguồn đọc các biến này, tuyệt đối không hardcode mã màu:*
 
 ```css
 :root {
@@ -31,28 +31,72 @@
   --color-accent: #10b981;          /* Xanh lá: Thành công, nút hoàn thành */
   --color-danger: #ef4444;          /* Đỏ: Nút xóa, cảnh báo rủi ro */
   --color-warning: #f59e0b;         /* Vàng: Cảnh báo cần chú ý */
+  --color-info: #0284c7;            /* Xanh dương nhạt: Thông tin chỉ dẫn */
 }
 ```
 
----
-
-## 3. PHÔNG CHỮ & KÍCH THƯỚC (TYPOGRAPHY TOKENS)
+### 3. Phông chữ & Kích thước (Typography)
 ```css
 :root {
   --font-main: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-size-sm: 14px;
   --font-size-base: 16px;
+  --font-size-lg: 20px;
+  --font-size-xl: 24px;
   --line-height-base: 1.5;
 }
 ```
 
----
-
-## 4. BO GÓC & ĐỔ BÓNG (RADIUS & ELEVATION)
+### 4. Bo góc & Đổ bóng (Radius & Elevation)
 ```css
 :root {
   --radius-sm: 6px;                 /* Bo góc nút bấm nhỏ, ô nhập liệu */
   --radius-md: 12px;                /* Bo góc thẻ card, bảng biểu */
   --radius-lg: 20px;                /* Bo góc modal, khung lớn */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
   --shadow-card: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
 }
 ```
+
+---
+
+## TẦNG 2: QUY CHUẨN COMPONENTS DÙNG CHUNG (SHARED COMPONENT STYLES)
+*Mọi nút bấm, khung nhập liệu, thẻ hiển thị trên các màn hình phải tuân theo cấu trúc mẫu:*
+
+1. **Nút bấm chính (Primary Button)**:
+   - Nền: `var(--color-primary)`, Chữ: trắng, Bo góc: `var(--radius-sm)`, Padding: 10px 20px.
+   - Hover: `var(--color-primary-hover)`, chuyển động mượt `transition: 0.2s`.
+2. **Nút phụ / Nút thứ cấp (Secondary Button)**:
+   - Nền: trong suốt hoặc `var(--color-surface)`, Viền: 1px solid `var(--color-border)`, Chữ: `var(--color-text-main)`.
+3. **Thẻ nội dung (Card Container)**:
+   - Nền: `var(--color-surface)`, Bo góc: `var(--radius-md)`, Viền: 1px solid `var(--color-border)`, Đổ bóng: `var(--shadow-card)`, Padding: 24px.
+4. **Ô nhập liệu (Input Field)**:
+   - Nền: `var(--color-surface)`, Viền: 1px solid `var(--color-border)`, Bo góc: `var(--radius-sm)`, Padding: 10px 14px.
+   - Focus: Viền đổi sang `var(--color-primary)` kèm vòng sáng nhẹ (ring).
+5. **Thanh điều hướng / Đầu trang (Navbar / Header)**:
+   - Nền: `var(--color-surface)`, Đường kẻ dưới: 1px solid `var(--color-border)`, Chiều cao: 64px, Hiển thị logo, tiêu đề và điều hướng chính.
+
+---
+
+## TẦNG 3: QUY CHUẨN 4 TRẠNG THÁI GIAO DIỆN (UI STATE PATTERNS)
+*(Tham chiếu app-adr-ui: Giao diện không bao giờ được phép để màn hình trắng hoặc đơ khi tải dữ liệu)*
+
+### 1. Trạng thái Đang tải (Loading State)
+- **Quy chuẩn**: Hiển thị hiệu ứng khung xương nhấp nháy (Skeleton Loading) hoặc biểu tượng xoay (Spinner) ở vị trí thao tác.
+- **Yêu cầu**: Nút bấm đang gửi dữ liệu phải bị vô hiệu hóa (`disabled`) kèm chữ "Đang xử lý..." để chống bấm nhiều lần.
+
+### 2. Trạng thái Trống (Empty State)
+- **Quy chuẩn**: Khi bảng biểu hoặc danh sách chưa có dữ liệu, tuyệt đối không để trống màn hình.
+- **Yêu cầu bắt buộc 3 thành phần**:
+  1. Biểu tượng minh họa trực quan (hộp rỗng / tài liệu trống).
+  2. Dòng mô tả ngắn gọn: *"Chưa có dữ liệu nào ở đây."*
+  3. Một nút bấm hành động chính (Call-To-Action) dẫn người dùng đến bước tạo mới ngay.
+
+### 3. Trạng thái Thành công (Success Feedback)
+- **Quy chuẩn**: Thông báo nổi (Toast Notification) hoặc biểu tượng dấu tích xanh kèm nhãn rõ ràng: *"Đã lưu thành công!"*.
+- **Yêu cầu**: Tự động biến mất sau 3 giây hoặc người dùng có thể bấm nút tắt.
+
+### 4. Trạng thái Báo lỗi & Khôi phục (Error Recovery State)
+- **Quy chuẩn**: Banner cảnh báo màu đỏ (`var(--color-danger)`), giải thích nguyên nhân bằng ngôn ngữ người dùng dễ hiểu (tránh in mã lỗi kỹ thuật phức tạp).
+- **Yêu cầu bắt buộc**: Phải có nút **"Thử lại" (Retry)** và **bảo toàn 100% dữ liệu đã nhập** trong các ô input để người dùng không phải gõ lại từ đầu.

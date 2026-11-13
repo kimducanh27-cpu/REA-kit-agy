@@ -48,6 +48,7 @@ Tạo đầy đủ các thư mục sau:
 5. Tạo `CLAUDE.md`: Chứa dòng `@AGENTS.md`.
 6. Tạo `HUONG_DAN_SU_DUNG.md`: Hướng dẫn 1 trang kèm sơ đồ Mermaid luồng thư mục và 5 mẫu câu lệnh tự dán.
 7. Tạo `02_YEU_CAU_CUA_TOI/ho-so-va-muc-tieu.md`: Mẫu form điền khuyết mục tiêu kiểm tra ứng dụng.
+8. Tạo `02_YEU_CAU_CUA_TOI/design.md`: Hợp đồng thiết kế giao diện 3 tầng (Tokens, Components, 4 trạng thái UI).
 
 ---
 
@@ -56,16 +57,16 @@ Tạo đầy đủ các thư mục sau:
    - Kiểm kê nhiều file (Multi-file inventory) nếu có >1 file.
    - Tự động sao lưu sang `04_`.
    - Định tuyến REA (APK, ASAR, JS, Web, Binary, Source).
-   - Che mờ API keys `[REDACTED]` và xuất báo cáo vào `03_`.
+   - Che mờ API keys `[REDACTED]`, trích xuất **Screen Inventory & State Matrix**, xuất báo cáo vào `03_`.
    - Cập nhật `active_case.json` sang `SCAN_COMPLETED`.
 2. `.agents/skills/rea-interview/SKILL.md`:
-   - Phỏng vấn 4 câu hỏi: thiếu gì, nâng gì, bảo mật, chọn hướng đi.
+   - Phỏng vấn 4 câu hỏi: thiếu gì, nâng gì, bảo mật, chọn hướng đi & chốt Design System 3 tầng (`design.md`).
    - Xuất file đặc tả yêu cầu đóng băng (Frozen Spec) vào `03_`.
    - Cập nhật `active_case.json` sang `SPEC_APPROVED`.
 3. `.agents/skills/rea-build/SKILL.md`:
-   - Đọc đặc tả chốt.
+   - Đọc đặc tả chốt và tuân thủ `design.md` 3 tầng (Tokens, Components, 4 trạng thái UI).
    - Viết code vào `05_` (ưu tiên Web HTML/CSS/JS chạy trực tiếp).
-   - Chạy syntax check và xuất `05_MA_NGUON_PHAT_TRIEN/KET_QUA_KIEM_THU.md`.
+   - Chạy script kiểm chứng xác định `verify_code.ps1` và xuất `05_MA_NGUON_PHAT_TRIEN/KET_QUA_KIEM_THU.md`.
    - Xuất file `05_MA_NGUON_PHAT_TRIEN/HUONG_DAN_CHAY_APP.md` đúng 1 trang.
    - Cập nhật `active_case.json` sang `BUILD_COMPLETED`.
 
@@ -73,7 +74,7 @@ Tạo đầy đủ các thư mục sau:
 
 ### BƯỚC 4: TẠO BỘ CÂU LỆNH PROMPTS/ VÀ KHUNG MẪU TEMPLATES/
 1. Trong `prompts/`: Tạo đủ `00-SESSION-CONTINUITY.md`, `01-TAB-SCAN.md`, `02-TAB-SECURITY-REVIEW.md`, `03-TAB-INTERVIEW.md`, `04-TAB-BUILD.md`.
-2. Trong `templates/`: Tạo đủ `01-REPORT-TEMPLATE.md`, `02-SPEC-TEMPLATE.md`, `03-RUN-GUIDE-TEMPLATE.md`, `04-TEST-RESULT-TEMPLATE.md`.
+2. Trong `templates/`: Tạo đủ `01-REPORT-TEMPLATE.md` (kèm Screen Inventory & State Matrix), `02-SPEC-TEMPLATE.md`, `03-RUN-GUIDE-TEMPLATE.md`, `04-TEST-RESULT-TEMPLATE.md`, `05-DESIGN-TOKEN-TEMPLATE.md`.
 3. Trong `docs/`: Tạo các file context cốt lõi `PRD.md`, `ARCHITECTURE.md`, `PROGRESS.md`, `HANDOFF.md`, `PLAN.md`, `RULES.md`, `PROMPTS.md`.
 
 ---

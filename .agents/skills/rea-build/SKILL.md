@@ -11,9 +11,12 @@ Kỹ năng chuyên biệt cho giai đoạn sinh mã nguồn và kiểm thử, đ
 
 ## 1. QUY TRÌNH TRIỂN KHAI
 
-1. **Kiểm tra điều kiện tiên quyết & Hợp đồng giao diện (Preflight & Design Tokens)**:
+1. **Kiểm tra điều kiện tiên quyết & Hợp đồng giao diện (Preflight & Design System 3 Tầng)**:
    - Đọc file đặc tả yêu cầu đã chốt trong `03_KET_QUA_KIEM_TRA/`. (Nếu chưa có đặc tả: Nhắc nhở người dùng chạy `rea-interview` trước).
-   - **Bắt buộc đọc `02_YEU_CAU_CUA_TOI/design.md`**: Ánh xạ toàn bộ Design Tokens (bảng màu, font chữ, bo góc) vào biến `:root` của CSS và Tailwind utility classes. Cấm hardcode mã màu lung tung trong mã nguồn.
+   - **Bắt buộc đọc và áp dụng `02_YEU_CAU_CUA_TOI/design.md` đủ 3 tầng**:
+     * *Tầng 1 (Tokens)*: Ánh xạ bảng màu, font chữ, bo góc vào biến `:root` của CSS và Tailwind utility classes. Cấm hardcode mã màu lung tung.
+     * *Tầng 2 (Components)*: Tuân thủ quy chuẩn style cho các nút bấm, thẻ card, input, dialog, header.
+     * *Tầng 3 (UI States)*: Triển khai bắt buộc 4 trạng thái giao diện: Loading (skeleton/spinner), Empty (biểu tượng + CTA tạo mới), Success (toast thông báo), Error (thông báo lỗi + nút Thử lại). Không để màn hình trắng hoặc đơ trong bất kỳ hoàn cảnh nào.
 
 2. **Triển khai mã nguồn tại `05_MA_NGUON_PHAT_TRIEN/` (Lean Build & Surgical Patch)**:
    - **Khi Viết mới / Nâng cấp (Build App — Lean Build)**: Chỉ triển khai đúng các tính năng đã chốt trong đặc tả, tuyệt đối không over-engineering. Ưu tiên công nghệ Web độc lập (HTML5 + Tailwind CDN + Alpine/Vanilla JS + Lucide Icons) để người non-tech nhấp đúp chuột mở chạy ngay trên trình duyệt.
