@@ -22,9 +22,11 @@ Kỹ năng chuyên biệt cho giai đoạn đối thoại yêu cầu, đối chi
    - Đối chiếu tính năng hiện có trong báo cáo với mong muốn của người dùng.
    - Hỏi cụ thể: *"App hiện có [Tính năng A, B]. Bạn muốn bổ sung tính năng nào cụ thể tiếp theo?"*
 
-2. **Bước 2: Nhu cầu nâng cấp công nghệ & giao diện (Upgrade Needs)**:
-   - Đánh giá xem công nghệ cũ có cần hiện đại hóa không (ví dụ chuyển từ giao diện cũ sang Web/React/Flutter).
-   - Hỏi: *"Giao diện hiện tại có cần làm mới hay giữ nguyên phong cách cũ?"*
+2. **Bước 2: Nhu cầu nâng cấp công nghệ & giao diện (UI Design Tokens & design.md)**:
+   - Đánh giá xem công nghệ cũ có cần hiện đại hóa không (chuyển sang Web/HTML5).
+   - **Hỏi rõ về Giao diện (UI)**:
+     > *"Về giao diện, bạn muốn: (A) Tái sử dụng bảng màu & phong cách Design Tokens từ app cũ, hay (B) Tạo file `02_YEU_CAU_CUA_TOI/design.md` mới hoàn toàn (phong cách Hiện đại tối giản, Dark Mode, Dashboard)?"*
+   - Sau khi người dùng chọn, AI lưu hoặc cập nhật file `02_YEU_CAU_CUA_TOI/design.md` làm hợp đồng thiết kế.
 
 3. **Bước 3: Rà soát bảo mật & Ranh giới dữ liệu (Security Scope)**:
    - Hỏi về quyền riêng tư dữ liệu, phân quyền tài khoản (admin/user), và những gì app KHÔNG được phép làm.

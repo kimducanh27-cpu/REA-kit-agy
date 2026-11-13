@@ -11,13 +11,13 @@ Kỹ năng chuyên biệt cho giai đoạn sinh mã nguồn và kiểm thử, đ
 
 ## 1. QUY TRÌNH TRIỂN KHAI
 
-1. **Kiểm tra điều kiện tiên quyết (Preflight Check)**:
-   - Đọc file đặc tả yêu cầu đã chốt trong `03_KET_QUA_KIEM_TRA/`.
-   - Nếu chưa có đặc tả: Nhắc nhở người dùng chạy bước phỏng vấn (`rea-interview`) trước khi viết code.
+1. **Kiểm tra điều kiện tiên quyết & Hợp đồng giao diện (Preflight & Design Tokens)**:
+   - Đọc file đặc tả yêu cầu đã chốt trong `03_KET_QUA_KIEM_TRA/`. (Nếu chưa có đặc tả: Nhắc nhở người dùng chạy `rea-interview` trước).
+   - **Bắt buộc đọc `02_YEU_CAU_CUA_TOI/design.md`**: Ánh xạ toàn bộ Design Tokens (bảng màu, font chữ, bo góc) vào biến `:root` của CSS và Tailwind utility classes. Cấm hardcode mã màu lung tung trong mã nguồn.
 
-2. **Khởi tạo không gian mã nguồn tại `05_MA_NGUON_PHAT_TRIEN/`**:
-   - Nếu là **Hướng A (Nâng cấp tiếp)**: Sao chép mã nguồn gốc từ `04_SAO_LUU_AN_TOAN/` sang `05_MA_NGUON_PHAT_TRIEN/` và tạo nhánh/thư mục làm việc an toàn.
-   - Nếu là **Hướng B (Viết lại hoàn toàn)**: Khởi tạo khung dự án mới tinh. **Bắt buộc ưu tiên công nghệ Web độc lập (Single-file HTML/CSS/JavaScript)** để người dùng non-tech có thể mở chạy ngay bằng trình duyệt (Chrome/Edge) mà không cần cài đặt Node.js hay Python.
+2. **Triển khai mã nguồn tại `05_MA_NGUON_PHAT_TRIEN/` (Lean Build & Surgical Patch)**:
+   - **Khi Viết mới / Nâng cấp (Build App — Lean Build)**: Chỉ triển khai đúng các tính năng đã chốt trong đặc tả, tuyệt đối không over-engineering. Ưu tiên công nghệ Web độc lập (HTML5 + Tailwind CDN + Alpine/Vanilla JS + Lucide Icons) để người non-tech nhấp đúp chuột mở chạy ngay trên trình duyệt.
+   - **Khi Sửa lỗi (Fix App — Surgical Patch)**: Chỉ chỉnh sửa ở phạm vi hẹp nhất có trách nhiệm gây ra lỗi, không xóa ghi đè lan man các hàm đang hoạt động tốt. Bắt buộc chạy lại bước 3 để chứng minh lỗi đã hết.
 
 3. **Cổng kiểm chứng 4 tầng bắt buộc (4-Tier Verification Gate)**:
    - *Triết lý: Dùng công cụ xác định cho lỗi xác định; chỉ dùng AI ở phần cần suy luận.*

@@ -4,6 +4,20 @@
 - Overall: P01 IN PROGRESS (Non-tech Workspace Scaffold & REA Inspector Skill)
 - Product direction: REA-powered App Investigation & Development Kit
 
+## 2026-11-13 — Tích Hợp UI Design Tokens, Hợp Đồng design.md & Chuẩn Surgical Patch / Lean Build
+
+### Completed
+- Hoàn thành phiên Grilling về công nghệ, kỹ năng và quy chuẩn xây dựng/sửa lỗi app:
+  1. **Quy chuẩn Sửa Lỗi (Fix App)**: Tham chiếu `caveman/surgical-patch` — sửa lỗi tại phạm vi hẹp nhất, bảo toàn 100% code cũ, chạy lại `verify_code.ps1` chứng minh hết lỗi.
+  2. **Quy chuẩn Xây Dựng (Build App)**: Tham chiếu `caveman/lean-build` — bám sát đặc tả đóng băng, chống over-engineering.
+  3. **Khung công nghệ đầu ra**: Chuẩn hóa Single-file Web App (HTML5 + Tailwind CSS CDN + Alpine/Vanilla JS + Lucide Icons) chạy trực tiếp trên trình duyệt máy khách (Zero-Install).
+  4. **Hệ thống UI Design Tokens & `design.md`**:
+     - Tạo file mẫu `templates/05-DESIGN-TOKEN-TEMPLATE.md` và file người dùng `02_YEU_CAU_CUA_TOI/design.md`.
+     - `rea-scan`: Tự động trích xuất màu sắc/assets từ app cũ sang `03_.../design-system-cu.md`.
+     - `rea-interview`: Phỏng vấn người dùng lựa chọn: giữ design cũ hay tạo `design.md` mới.
+     - `rea-build`: Bắt buộc đọc `design.md`, ánh xạ tokens vào `:root` CSS variables và Tailwind, cấm hardcode mã màu tùy tiện.
+- Cập nhật tài liệu đăng ký nguồn `UPSTREAMS.md`, luật `AGENTS.md`, các kỹ năng và câu lệnh prompts.
+
 ## 2026-11-13 — Tích Hợp Tháp 4 Tầng Kiểm Soát Chất Lượng & Công Cụ Xác Định (verify_code.ps1)
 
 ### Completed

@@ -55,3 +55,8 @@ Hệ thống vận hành thông qua 3 kỹ năng chuyên biệt trong `.agents/s
    - **Tầng 2 (Công cụ xác định)**: Bắt buộc chạy script `.agents/scripts/verify_code.ps1` để kiểm tra cú pháp thẻ HTML, cú pháp JavaScript và quét rò rỉ secret. Phải đạt `Exit Code: 0` mới được đi tiếp.
    - **Tầng 3 (AI đánh giá ngữ cảnh)**: AI đối chiếu mã nguồn thực tế với bản đặc tả yêu cầu đã chốt trong `03_`.
    - **Tầng 4 (Nghiệm thu người dùng)**: Xuất file `05_MA_NGUON_PHAT_TRIEN/KET_QUA_KIEM_THU.md` theo mẫu `templates/04-TEST-RESULT-TEMPLATE.md` để người dùng nghiệm thu thực tế.
+5. **Hợp đồng giao diện & Quản trị Design Tokens (`design.md`)**:
+   Khi xây dựng giao diện, Agent bắt buộc đọc file `02_YEU_CAU_CUA_TOI/design.md`. Mọi màu sắc, phông chữ, bo góc phải được ánh xạ qua các biến CSS Variables (`:root`) và Tailwind CSS. Tuyệt đối cấm hardcode mã màu tự do trong HTML/JS để người dùng non-tech có thể dễ dàng đổi theme toàn trang chỉ bằng cách sửa `design.md`.
+6. **Chuẩn Sửa Lỗi (Surgical Patch) & Phát Triển (Lean Build)**:
+   - **Khi Sửa lỗi (Fix App)**: Áp dụng chuẩn *Surgical Patch* (từ `caveman/surgical-patch`) — chỉ sửa đúng phạm vi hẹp nhất gây ra lỗi, bảo toàn 100% các đoạn code đang hoạt động bình thường, và chạy lại `verify_code.ps1` chứng minh lỗi đã khắc phục xong.
+   - **Khi Phát triển (Build App)**: Áp dụng chuẩn *Lean Build* (từ `caveman/lean-build`) — chỉ triển khai đúng các tính năng đã chốt trong file đặc tả, có điều kiện dừng rõ ràng, cấm tự ý phình tính năng hoặc over-engineering.
