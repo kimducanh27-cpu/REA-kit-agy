@@ -30,7 +30,7 @@ The kit must reduce the need for the user to understand prompts, terminal comman
 5. A backup folder for source files and recovery copies.
 6. A hidden or visually de-emphasized technical area for agent rules, skills, scripts, and templates.
 7. Vietnamese, non-technical communication by default.
-8. Initial office-document workflows to research and validate: summarize documents, process spreadsheets, organize files, draft from samples, and verify outputs.
+8. File-based agent workflows (summarizing and organizing user-provided material, spreadsheet work, drafting from samples, and checking outputs) are capability goals to validate after the bootstrap core. Individual parsers and OCR engines are optional extensions, not the product foundation.
 9. Antigravity-first integration with adapters for other agents.
 10. A continuously maintained project context system in this repository's docs folder.
 
@@ -43,6 +43,7 @@ The kit must reduce the need for the user to understand prompts, terminal comman
 - Silent bulk changes to user files.
 - Claiming support for an agent or file format before a real integration test.
 - Importing an entire upstream project merely because it is available.
+- Making OCR, PDF conversion, or specialist document-processing engines mandatory parts of the bootstrap kit.
 
 ## 4. Intended user experience
 
@@ -81,8 +82,8 @@ This is the intended flow, not yet a verified implementation.
 
 - Exact supported operating systems and minimum versions: UNKNOWN.
 - Whether the kit is distributed as a ZIP, installer, repository template, or setup command: UNKNOWN.
-- Whether Python/Node helpers are necessary for initial document workflows: UNKNOWN.
-- Exact library choices for PDF, DOCX, XLSX, and image extraction: UNKNOWN; must be researched and tested.
+- Whether the core bootstrap kit needs any Python/Node helper: UNKNOWN; prefer no extra runtime unless a verified core function requires one.
+- Which optional document-processing extensions are useful later: UNKNOWN; evaluate only after the workspace/bootstrap experience works.
 - Exact backup retention and naming policy: UNKNOWN.
 - Whether an optional global Antigravity setup is needed in addition to workspace-local configuration: UNKNOWN.
 - Exact support matrix and parity levels for non-primary agents: NOT YET VERIFIED.

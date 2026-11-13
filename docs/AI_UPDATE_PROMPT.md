@@ -97,3 +97,14 @@ Update documents when the underlying facts change, not merely at the end of a ph
 - Exact next action.
 
 Never claim a test, backup, commit, push, or integration succeeded unless the tool or command result confirms it.
+
+
+## Product-focus guardrail — bootstrap first
+
+The core product is a Non-Tech Workspace Bootstrap Kit, not an OCR/document-conversion suite.
+
+Prioritize workspace folder generation, Antigravity-first workspace-local rules and Skills, understandable Vietnamese onboarding, per-agent adapters, safe setup preview/approval/configuration backup/diagnostics/recovery, and clear boundaries between user-visible folders and technical files.
+
+Do not promote OCR, document parsers, spreadsheet engines, or other specialized office-processing packages into core dependencies merely because optional research exists. OCR is only relevant to scanned/image-only pages; ordinary text PDFs do not inherently require OCR. Treat docs/FILE_WORKFLOWS_RESEARCH.md and docs/OCR_RESEARCH.md as optional future research. These topics must not block or dominate bootstrap-core work unless the owner explicitly changes scope.
+
+Before beginning a new research branch, explain which approved core product requirement it serves and identify the actual upstream repository/source supporting it. Do not invent additional requirements.

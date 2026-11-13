@@ -78,3 +78,13 @@
 2. Compare RapidOCR PP-OCRv6 and Tesseract vie first; include Docling as a document-level pipeline comparison.
 3. Measure CER/WER, reading order/table fidelity, CPU/memory, offline repeatability, and Windows packaging effort.
 4. Complete P00 recommendations and obtain owner approval before P01 implementation.
+
+
+## 2026-11-13 — Product-focus correction: OCR is optional, not core
+
+The owner asked why OCR had become the next focus. Clarification:
+- OCR is only needed when extracting text from image-only/scanned PDFs or images; ordinary text PDFs do not normally require OCR.
+- The project is a Non-Tech Workspace Bootstrap Kit, not an OCR/document-conversion product.
+- OCR and file-processing research from earlier sessions is retained as optional future reference, but it must not drive the core plan or block workspace bootstrap.
+- P00 is refocused on REA-derived bootstrap/install mechanisms, Antigravity-first workspace setup, other-agent adapters, safety/approval/backup/health checks, and defining the minimum useful v1.
+- No OCR engine or document-processing dependency has been selected or installed.

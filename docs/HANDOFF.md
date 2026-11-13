@@ -5,91 +5,74 @@
 - Branch: main
 - Current phase: P00 — Research & Source Audit
 - Current status: IN_PROGRESS
+- Current focus: BOOTSTRAP CORE, NOT OCR
 
 ## 1. Project in one paragraph
 
-This repository develops a personal-first Non-Tech Workspace Bootstrap Kit. It creates a clear folder-based workspace for a non-technical user to provide files, supply personal context, request work in plain Vietnamese, and receive verified deliverables in a predictable output folder. Antigravity is the primary agent; Claude Code, Cursor, OpenCode, and others remain compatibility targets after verification.
+Build a personal-first Non-Tech Workspace Bootstrap Kit for a non-technical user. It creates a clear folder-based workspace, supplies the correct instructions/Skills for the chosen AI agent, makes first use understandable in Vietnamese, and keeps setup and file operations safe. Antigravity is the primary target; Claude Code, Cursor, OpenCode, and other agents remain compatibility targets through verified adapters.
 
 ## 2. User-approved decisions
 
-- Destination repository is kimducanh27-cpu/REA-kit-agy.
-- The initial user-visible workspace should use numbered Vietnamese folder names without diacritics.
-- Main visible folders: 01_THA_FILE_VAO_DAY, 02_THONG_TIN_CUA_TOI, 03_KET_QUA_XUAT_RA, 04_SAO_LUU_AN_TOAN.
-- Keep technical agent materials in an organized technical area; use .agents for new Antigravity workspace customizations.
+- Destination repository: kimducanh27-cpu/REA-kit-agy.
+- Main user-facing folders: 01_THA_FILE_VAO_DAY, 02_THONG_TIN_CUA_TOI, 03_KET_QUA_XUAT_RA, 04_SAO_LUU_AN_TOAN.
 - Antigravity is the main agent, but do not abandon other-agent compatibility.
-- Research and reuse existing repositories before writing new components.
-- Priority upstream repositories: https://github.com/morluto/rea and https://github.com/storytold/craft-anything.
-- Six mandatory context files live in this repository's docs folder: PRD.md, ARCHITECTURE.md, DESIGN.md, RULES.md, TASKS.md, PROGRESS.md.
+- Priority references: https://github.com/morluto/rea and https://github.com/storytold/craft-anything.
+- Research existing repositories before designing/implementing; do not invent systems or present unverified claims as facts.
+- Six mandatory context files live in docs: PRD.md, ARCHITECTURE.md, DESIGN.md, RULES.md, TASKS.md, PROGRESS.md.
 - Maintain PLAN.md, HANDOFF.md, AI_UPDATE_PROMPT.md, and SOURCE_AUDIT.md.
-- docs contains context, decisions, plans, status, and research only; no product source or user deliverables.
+- docs/ contains project context, decisions, plans, research, and progress only. No product code or user deliverables.
 
-## 3. Current verified findings
+## 3. Scope clarification — important
+
+OCR is not a core requirement. It is only relevant if a later optional Skill needs to read scanned/image-only PDFs or pictures. Ordinary text-based PDFs do not inherently require OCR.
+
+The earlier OCR_RESEARCH.md and FILE_WORKFLOWS_RESEARCH.md are retained as optional future references. They do not authorize installing OCR engines, selecting document libraries, or making document conversion a central product feature. Do not let this research block or dominate the bootstrap kit.
+
+Core v1 focus:
+1. Generate the four visible user folders and technical agent configuration.
+2. Provide the simplest reliable Antigravity workspace-local setup.
+3. Provide clear user instructions and a fill-in personal profile.
+4. Distribute Skills at correct locations for each supported Agent.
+5. Protect configuration and user files using source-backed setup preview, approval, backups, diagnostics, and recovery.
+6. Add verified adapters for other Agents without claiming feature parity.
+
+## 4. Current verified findings
 
 ### REA
-- License MIT; inspected main commit 54906fdb1fc735b507961b2954f6968775cae4f6.
-- Setup/SetupPlan build actions before applying them, support dry-run, show a plan, and ask approval.
-- SetupRecoveryBackup uses exclusive copy behavior and verifies backup bytes.
-- ClientConfigurationTransaction serializes configuration writes for a resolved path.
-- SetupSkill checks skill directories and path conditions.
-- Doctor is a read-only structured readiness workflow.
-- Exact files and reuse boundaries are recorded in SOURCE_AUDIT.md.
-
-### Agent compatibility
-- Antigravity, Cursor, and OpenCode document .agents/skills discovery.
-- Claude Code project skills use .claude/skills. Its AGENTS.md behavior is conditional; a CLAUDE.md @AGENTS.md import is documented.
-- Root AGENTS.md plus agent-specific adapters is the current proposed pattern, not runtime tested.
-- Detailed paths, scan behavior, and sources are in AGENT_COMPATIBILITY.md.
-
-### Office-file candidate research
-- MarkItDown: broad document-to-Markdown extraction candidate; not a high-fidelity output conversion tool.
-- pypdf: PDF extraction/structure candidate; scanned PDFs need OCR separately.
-- python-docx: DOCX creation and controlled-edit candidate; does not target legacy DOC.
-- pandas: tabular analysis candidate.
-- openpyxl: XLSX/XLSM candidate with XML security considerations and maintenance freshness concerns.
-- No dependency has been approved or installed.
-- Detailed limits and sources are in FILE_WORKFLOWS_RESEARCH.md.
+- MIT; inspected commit 54906fdb1fc735b507961b2954f6968775cae4f6.
+- Setup and SetupPlan build planned actions, support dry-run, and ask for approval before applying changes.
+- SetupRecoveryBackup uses exclusive copy and verifies backup bytes.
+- ClientConfigurationTransaction serializes changes per configuration path.
+- SetupSkill validates skill roots and path safety.
+- Doctor is a read-only structured health-check workflow.
+- Exact source mapping and license boundaries are in SOURCE_AUDIT.md.
 
 ### Craft Anything
-- Its AGENTS.md explicitly says original work only and forbids copying code, scripts, schemas, names, assets, or wording.
-- Use high-level UX observations only.
-- Its Antigravity grants row currently reports no tool server and no approval integration.
+- Use only high-level UX observations.
+- Its AGENTS.md prohibits copying code, scripts, schemas, names, assets, or wording.
+- Do not use its current Antigravity adapter as a safe integration template.
 
-## 4. What has NOT been done
+### Agent compatibility
+- Antigravity is primary.
+- Official docs describe .agents/skills for Antigravity, Cursor, and OpenCode.
+- Claude Code project Skills use .claude/skills; a CLAUDE.md import adapter is a documented way to import @AGENTS.md.
+- These are documentation findings, not runtime tests. See AGENT_COMPATIBILITY.md.
 
-- No product code or workspace generator has been written.
-- No OCR engine has been selected.
-- No live agent integration has been tested.
-- No office-document benchmark has been run.
-- No final architecture or dependency stack has been approved.
+## 5. Repository status
 
-## 5. Exact next actions
+- No product source code or executable kit functionality has been created.
+- No dependencies or OCR engine have been installed or selected.
+- No live Antigravity/Claude Code/Cursor/OpenCode tests have been performed.
+- The root currently contains README.md and docs/ only.
 
-1. Research OCR candidates, including Vietnamese support, offline capability, license, packaging, and maintenance.
-2. Create representative public/synthetic fixtures for searchable PDF, scanned PDF, DOCX, XLSX with formulas/macros/formatting, CSV, and mixed folders.
-3. Define comparison criteria and inspect candidate behavior without using private user documents.
-4. Complete P00 recommendations and obtain owner approval for implementation boundaries.
-5. Do not start P01 code until P00 decisions are accepted.
+## 6. Exact next actions
 
-## 6. Instructions to the next AI
+1. Continue P00 by researching existing workspace bootstrap/install repositories and official Antigravity setup patterns.
+2. Inspect whether REA's setup/client/backup/doctor mechanisms can be reused independently; document exact file and license provenance.
+3. Define minimal v1 bootstrap behavior, installation scope, and explicit non-goals.
+4. Present the bootstrap-core source map and implementation boundary for owner approval.
+5. Do not benchmark or install OCR/document-processing packages unless the owner explicitly brings that capability into scope.
 
-Read AI_UPDATE_PROMPT.md first, then this HANDOFF.md and all six context files. Verify the current repository branch and Git status before changes. Do not assume prior chat history is available. Continue at P00-06 and P00-08; do not jump to implementation.
+## 7. Instructions to next AI
 
-
-## 7. Latest OCR research and exact continuation point
-
-Read [OCR_RESEARCH.md](OCR_RESEARCH.md) before continuing.
-
-No OCR engine is selected. Current test order:
-- RapidOCR 3.10.0 with PP-OCRv6 multilingual vi route and ONNX Runtime.
-- Tesseract 5.5.4 with vie.traineddata as baseline.
-- Docling 2.150.0 as document-level parsing comparison, using RapidOCR and Tesseract configurations.
-- PaddleOCR 3.7.0 as direct framework alternative.
-- EasyOCR 1.7.2 as lower-priority alternative.
-
-Next exact actions:
-1. Prepare public/synthetic Vietnamese scan fixtures with ground-truth text; do not use private user documents.
-2. Pin exact engine/package versions, model routes, model files, and hashes.
-3. Compare CER/WER, table reading order, rotated/skewed/faint scans, throughput, memory, offline repeatability, and Windows installation.
-4. Record reproducible results and decide whether one engine is sufficient or a baseline/fallback is needed.
-5. Present P00 implementation boundaries and dependency recommendations for owner approval.
-6. Do not implement the workspace generator or install dependencies before approval.
+Read AI_UPDATE_PROMPT.md first, then this HANDOFF.md and all six context files. Verify repository branch, current commit, and Git status. Continue with bootstrap-core P00 tasks, not OCR. Keep docs synchronized and follow RESEARCH → VERIFY → REUSE → INTEGRATE → TEST.
