@@ -9,13 +9,13 @@
 | ID | Task | Status | Exit condition |
 |---|---|---|---|
 | P00-01 | Audit current REA release, README, Skill, MCP/CLI contracts and target support | IN PROGRESS | Version-pinned capability map |
-| P00-02 | Review REA security policy, disclaimer, tool effects and provider boundaries | IN PROGRESS | Threat model and approval matrix |
-| P00-03 | Define Vietnamese intake and adaptive question logic | TODO | Questions are evidence-driven and decision-critical |
-| P00-04 | Define investigation report and Evidence status contract | TODO | Report preserves Evidence, coverage and unknowns |
-| P00-05 | Define source-repo review versus packaged-app reverse-engineering routes | TODO | Correct routing and fallback |
+| P00-02 | Review REA security policy, disclaimer, tool effects and provider boundaries | IN PROGRESS | Threat model and approval matrix reviewed against actual tool effects |
+| P00-03 | Define Vietnamese intake and adaptive question logic | DRAFTED — OWNER REVIEW | Questions are evidence-driven and decision-critical |
+| P00-04 | Define investigation report and Evidence status contract | DRAFTED — OWNER REVIEW | Report preserves Evidence, coverage and unknowns |
+| P00-05 | Define source-repo review versus packaged-app reverse-engineering routes | DRAFTED — NEEDS TARGET MATRIX | Correct routing and fallback per supported target |
 | P00-06 | Select first end-to-end target class | BLOCKED — OWNER DECISION | Owner selects target |
 | P00-07 | Decide Skill-only, CLI wrapper or both | TODO | Evidence-backed architecture decision |
-| P00-08 | Define extend/new/rewrite decision and build safety | TODO | Acceptance and rollback rules |
+| P00-08 | Define extend/new/rewrite decision and build safety | DRAFTED — OWNER REVIEW | Acceptance and rollback rules approved |
 | P00-09 | Research supplementary SAST/dependency tools if a gap remains | DEFERRED | Only after a documented gap |
 
 ## P01 — REA integration
