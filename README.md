@@ -87,6 +87,13 @@ REA-kit-agy/
 
 ---
 
+## 6. Khởi tạo bộ kit vào thư mục mới (Meta-Bootstrap)
+
+Muốn nhân bản toàn bộ bộ kit này sang một thư mục rỗng bất kỳ chỉ bằng 1 câu lệnh cho AI:
+👉 Mở file **[prompts/BOOTSTRAP_KIT.md](prompts/BOOTSTRAP_KIT.md)**, copy khối siêu lệnh và dán vào Agent trong thư mục mới. Agent sẽ tự động tạo đủ cấu trúc, kiểm tra sức khỏe và báo kết quả `5/5 PASSED`.
+
+---
+
 ## Nguồn gốc & Giấy phép
 * **Upstream Engine**: [morluto/rea](https://github.com/morluto/rea) (Commit `5cddc69c51a0fb18d021417199046314581ba9c2`, MIT). Chi tiết xem tại [UPSTREAMS.md](UPSTREAMS.md).
 * **Quy tắc phát triển**: *"Upstream-first, orchestration-second"*, tham khảo cấu trúc chuẩn từ [kimducanh27-cpu/app-adr-ui](https://github.com/kimducanh27-cpu/app-adr-ui).

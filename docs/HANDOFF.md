@@ -23,7 +23,7 @@ A Vietnamese-first kit using upstream REA (https://github.com/morluto/rea) and G
   - `HUONG_DAN_SU_DUNG.md` (1-page quick start cheat sheet)
   - `KIEM_TRA.bat` (1-click health check launcher for Windows)
 - Process Playbook & Templates (app-adr-ui alignment):
-  - `prompts/`: 00-SESSION-CONTINUITY, 01-TAB-SCAN, 02-TAB-SECURITY-REVIEW, 03-TAB-INTERVIEW, 04-TAB-BUILD
+  - `prompts/`: 00-SESSION-CONTINUITY, 01-TAB-SCAN, 02-TAB-SECURITY-REVIEW, 03-TAB-INTERVIEW, 04-TAB-BUILD, BOOTSTRAP_KIT
   - `templates/`: 01-REPORT-TEMPLATE, 02-SPEC-TEMPLATE, 03-RUN-GUIDE-TEMPLATE, 04-TEST-RESULT-TEMPLATE
 - Antigravity integration:
   - 3 modular skills: `.agents/skills/rea-scan/`, `.agents/skills/rea-interview/`, `.agents/skills/rea-build/`

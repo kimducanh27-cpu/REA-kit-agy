@@ -4,6 +4,16 @@
 - Overall: P01 IN PROGRESS (Non-tech Workspace Scaffold & REA Inspector Skill)
 - Product direction: REA-powered App Investigation & Development Kit
 
+## 2026-11-13 — Xây Dựng Siêu Lệnh Khởi Tạo Bộ Kit (Meta-Bootstrap Prompt)
+
+### Completed
+- Hoàn thành phiên Grilling thống nhất phạm vi Meta-Bootstrap Prompt.
+- Soạn thảo siêu lệnh độc lập tại `prompts/BOOTSTRAP_KIT.md`:
+  - Cho phép dán vào bất kỳ AI Agent nào (Antigravity, Claude Code, Cursor, OpenCode) tại một thư mục rỗng bất kỳ.
+  - Tự động sinh trọn gói toàn bộ 5 thư mục số (`01_` đến `05_`), luật `AGENTS.md`, `CLAUDE.md`, `UPSTREAMS.md`, bộ 3 skills, `prompts/`, `templates/`, `docs/`, và script `KIEM_TRA.bat`.
+  - Tích hợp cổng tự kiểm chứng (Self-Verification Gate): Bắt buộc AI tự động chạy `health_check.ps1` và xác nhận đạt `5/5 PASSED` trước khi hoàn tất.
+- Cập nhật liên kết hướng dẫn sử dụng Meta-Bootstrap vào `README.md`.
+
 ## 2026-11-13 — Đồng Bộ Chuẩn Kiến Trúc với app-adr-ui (Upstream Register, Prompts & Templates)
 
 ### Completed
