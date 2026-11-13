@@ -4,7 +4,7 @@
 - Repository: https://github.com/kimducanh27-cpu/REA-kit-agy
 - Branch: main
 - Phase: P01 — Non-tech Workspace Scaffolding & REA Skill Integration
-- Status: IN PROGRESS (Health Check 5/5 PASSED)
+- Status: IN PROGRESS (Health Check 6/6 PASSED, REA Doctor Aligned)
 
 ## 1. Product in one paragraph
 A Vietnamese-first kit using upstream REA (https://github.com/morluto/rea) and Google Antigravity (with Claude Code, Cursor, OpenCode compatibility) to inspect an authorized app, preserve evidence, summarize features/structure/risks, interview the user on missing requirements, then extend or rewrite the app with tests and independent review.
@@ -26,9 +26,9 @@ A Vietnamese-first kit using upstream REA (https://github.com/morluto/rea) and G
   - `prompts/`: 00-SESSION-CONTINUITY, 01-TAB-SCAN, 02-TAB-SECURITY-REVIEW, 03-TAB-INTERVIEW, 04-TAB-BUILD, BOOTSTRAP_KIT
   - `templates/`: 01-REPORT-TEMPLATE, 02-SPEC-TEMPLATE, 03-RUN-GUIDE-TEMPLATE, 04-TEST-RESULT-TEMPLATE, 05-DESIGN-TOKEN-TEMPLATE
 - Antigravity integration:
-  - 3 modular skills: `.agents/skills/rea-scan/`, `.agents/skills/rea-interview/`, `.agents/skills/rea-build/`
+  - 4 skills: 1 upstream engine skill (`.agents/skills/reverse-engineer-anything/`) + 3 orchestration skills (`rea-scan`, `rea-interview`, `rea-build`)
   - `.agents/rules/rea-workflow.md` (Antigravity YAML rule for security and data integrity)
-  - `.agents/scripts/health_check.ps1` (Tested: 5/5 components verified ready)
+  - `.agents/scripts/health_check.ps1` (Tested: 6/6 components verified ready, including runtime REA doctor)
   - `.agents/scripts/verify_code.ps1` (Deterministic syntax, tag & secret checker, exit code 0/1)
   - `.agents/state/active_case.json` (State machine tracking live cases across chat sessions)
   - Windows hidden attribute applied to `.agents/` (`attrib +h`)

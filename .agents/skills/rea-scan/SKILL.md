@@ -5,7 +5,8 @@ description: Quét và phân tích ứng dụng trong thư mục 01_THA_APP_VAO_
 
 # KỸ NĂNG: QUÉT & PHÂN TÍCH ỨNG DỤNG (REA-SCAN)
 
-Kỹ năng chuyên biệt cho giai đoạn tiếp nhận và phân tích tĩnh ứng dụng, đối chiếu chuẩn công cụ từ **REA (morluto/rea)**.
+Kỹ năng chuyên biệt cho giai đoạn tiếp nhận và phân tích tĩnh ứng dụng.
+Kỹ năng này đóng vai trò Lớp Điều Phối (Orchestration Layer), kế thừa và tham chiếu trực tiếp kỹ năng nền tảng gốc từ upstream: `.agents/skills/reverse-engineer-anything/SKILL.md` cùng 7 tài liệu kỹ thuật trong thư mục `references/`.
 
 ---
 

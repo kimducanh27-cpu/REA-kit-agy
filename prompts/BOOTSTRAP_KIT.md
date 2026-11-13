@@ -20,11 +20,12 @@ Tạo đầy đủ các thư mục sau:
 7. `templates` (Khung mẫu tài liệu hợp đồng chuẩn)
 8. `docs` (Bộ tài liệu quản trị ngữ cảnh đa phiên)
 9. `.agents/rules` (Luật an toàn cho Agent)
-10. `.agents/skills/rea-scan` (Kỹ năng quét)
-11. `.agents/skills/rea-interview` (Kỹ năng phỏng vấn)
-12. `.agents/skills/rea-build` (Kỹ năng phát triển)
-13. `.agents/scripts` (Script kiểm tra sức khỏe)
-14. `.agents/state` (Bộ nhớ trạng thái phiên)
+10. `.agents/skills/reverse-engineer-anything` (Kỹ năng lõi gốc upstream REA)
+11. `.agents/skills/rea-scan` (Kỹ năng điều phối quét)
+12. `.agents/skills/rea-interview` (Kỹ năng phỏng vấn)
+13. `.agents/skills/rea-build` (Kỹ năng phát triển)
+14. `.agents/scripts` (Script kiểm tra sức khỏe)
+15. `.agents/state` (Bộ nhớ trạng thái phiên)
 
 ---
 
@@ -52,18 +53,17 @@ Tạo đầy đủ các thư mục sau:
 
 ---
 
-### BƯỚC 3: TẠO BỘ 3 KỸ NĂNG ĐỘC LẬP TRONG .agents/skills/
-1. `.agents/skills/rea-scan/SKILL.md`:
-   - Kiểm kê nhiều file (Multi-file inventory) nếu có >1 file.
-   - Tự động sao lưu sang `04_`.
-   - Định tuyến REA (APK, ASAR, JS, Web, Binary, Source).
-   - Che mờ API keys `[REDACTED]`, trích xuất **Screen Inventory & State Matrix**, xuất báo cáo vào `03_`.
+### BƯỚC 3: TẠO BỘ KỸ NĂNG TRONG .agents/skills/
+1. `.agents/skills/reverse-engineer-anything/`:
+   - Kỹ năng lõi gốc sao chép nguyên văn từ upstream `morluto/rea` (file `SKILL.md` và thư mục `references/`).
+2. `.agents/skills/rea-scan/SKILL.md`:
+   - Lớp điều phối tiếp nhận và quét: kiểm kê nhiều file, sao lưu sang `04_`, định tuyến REA, che mờ API keys `[REDACTED]`, trích xuất **Screen Inventory & State Matrix**, xuất báo cáo vào `03_`.
    - Cập nhật `active_case.json` sang `SCAN_COMPLETED`.
-2. `.agents/skills/rea-interview/SKILL.md`:
+3. `.agents/skills/rea-interview/SKILL.md`:
    - Phỏng vấn 4 câu hỏi: thiếu gì, nâng gì, bảo mật, chọn hướng đi & chốt Design System 3 tầng (`design.md`).
    - Xuất file đặc tả yêu cầu đóng băng (Frozen Spec) vào `03_`.
    - Cập nhật `active_case.json` sang `SPEC_APPROVED`.
-3. `.agents/skills/rea-build/SKILL.md`:
+4. `.agents/skills/rea-build/SKILL.md`:
    - Đọc đặc tả chốt và tuân thủ `design.md` 3 tầng (Tokens, Components, 4 trạng thái UI).
    - Viết code vào `05_` (ưu tiên Web HTML/CSS/JS chạy trực tiếp).
    - Chạy script kiểm chứng xác định `verify_code.ps1` và xuất `05_MA_NGUON_PHAT_TRIEN/KET_QUA_KIEM_THU.md`.
@@ -73,24 +73,25 @@ Tạo đầy đủ các thư mục sau:
 ---
 
 ### BƯỚC 4: TẠO BỘ CÂU LỆNH PROMPTS/ VÀ KHUNG MẪU TEMPLATES/
-1. Trong `prompts/`: Tạo đủ `00-SESSION-CONTINUITY.md`, `01-TAB-SCAN.md`, `02-TAB-SECURITY-REVIEW.md`, `03-TAB-INTERVIEW.md`, `04-TAB-BUILD.md`.
+1. Trong `prompts/`: Tạo đủ `00-SESSION-CONTINUITY.md`, `01-TAB-SCAN.md`, `02-TAB-SECURITY-REVIEW.md`, `03-TAB-INTERVIEW.md`, `04-TAB-BUILD.md` (tuân thủ nghiêm ngặt chuẩn Active Skill hợp đồng của `app-adr-ui`).
 2. Trong `templates/`: Tạo đủ `01-REPORT-TEMPLATE.md` (kèm Screen Inventory & State Matrix), `02-SPEC-TEMPLATE.md`, `03-RUN-GUIDE-TEMPLATE.md`, `04-TEST-RESULT-TEMPLATE.md`, `05-DESIGN-TOKEN-TEMPLATE.md`.
 3. Trong `docs/`: Tạo các file context cốt lõi `PRD.md`, `ARCHITECTURE.md`, `PROGRESS.md`, `HANDOFF.md`, `PLAN.md`, `RULES.md`, `PROMPTS.md`.
 
 ---
 
 ### BƯỚC 5: CỔNG TỰ KIỂM CHỨNG BẮT BUỘC (SELF-VERIFICATION GATE)
-1. Tạo script `.agents/scripts/health_check.ps1` kiểm tra đủ 5 tiêu chí:
-   - (1/5) Cấu trúc 5 thư mục giao diện người dùng.
-   - (2/5) File luật AGENTS.md và Hướng dẫn sử dụng.
-   - (3/5) Bộ 3 skills (rea-scan, rea-interview, rea-build).
-   - (4/5) Luật an toàn trong .agents/rules.
-   - (5/5) Bộ hồ sơ ngữ cảnh docs/ và active_case.json.
+1. Tạo script `.agents/scripts/health_check.ps1` kiểm tra đủ 6 tiêu chí:
+   - (1/6) Cấu trúc 5 thư mục giao diện người dùng.
+   - (2/6) File luật AGENTS.md và Hướng dẫn sử dụng.
+   - (3/6) Bộ kỹ năng đầy đủ (3 skills điều phối + 1 skill lõi REA gốc).
+   - (4/6) Luật an toàn trong .agents/rules.
+   - (5/6) Bộ hồ sơ ngữ cảnh docs/ và active_case.json.
+   - (6/6) REA Engine & MCP Server runtime trên máy (npx rea-agents doctor).
 2. Tạo file `KIEM_TRA.bat` để kích hoạt script trên 1-click.
 3. Chạy lệnh ẩn thư mục kỹ thuật: `attrib +h .agents`.
 4. **BẮT BUỘC**: Tự động chạy lệnh kiểm tra `health_check.ps1` ngay trong terminal.
-5. Chỉ khi kết quả trả về `5/5 PASSED`, hãy in thông báo:
+5. Chỉ khi kết quả trả về `6/6 PASSED`, hãy in thông báo:
    "==========================================================
-    BOOTSTRAP THÀNH CÔNG: WORKSPACE SẴN SÀNG (5/5)!
+    BOOTSTRAP THÀNH CÔNG: WORKSPACE & RUNTIME SẴN SÀNG (6/6)!
     =========================================================="
 ```

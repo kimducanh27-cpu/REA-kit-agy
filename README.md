@@ -49,25 +49,28 @@ REA-kit-agy/
 ├── CLAUDE.md                      # Tương thích Claude Code (@AGENTS.md)
 ├── UPSTREAMS.md                   # Đăng ký chuẩn nguồn gốc morluto/rea
 ├── HUONG_DAN_SU_DUNG.md           # Hướng dẫn sử dụng 1 trang kèm câu lệnh copy-paste
-├── KIEM_TRA.bat                   # 1-click kiểm tra sức khỏe workspace (5/5)
+├── KIEM_TRA.bat                   # 1-click kiểm tra sức khỏe workspace & runtime (6/6)
 ├── .gitignore                     # Bảo vệ bản quyền và chống rò rỉ dữ liệu cá nhân
 ├── prompts/                       # Bộ câu lệnh dán theo từng tab/giai đoạn (00 đến 04)
-├── templates/                     # Khung mẫu tài liệu hợp đồng chuẩn (01 đến 04)
+├── templates/                     # Khung mẫu tài liệu hợp đồng chuẩn (01 đến 05)
 ├── docs/                          # Hệ thống quản lý ngữ cảnh đa phiên (Context Docs)
 └── .agents/                       # Khu vực kỹ thuật (ẩn trên Windows)
     ├── rules/rea-workflow.md      # Luật an toàn REA
-    ├── skills/                    # Bộ 3 skills độc lập: rea-scan, rea-interview, rea-build
+    ├── skills/                    # Kỹ năng lõi REA gốc + Bộ 3 skills điều phối tiếng Việt
     ├── state/active_case.json     # Bộ nhớ trạng thái tự động nối lại phiên làm việc
-    └── scripts/health_check.ps1   # Script kiểm tra môi trường
+    └── scripts/health_check.ps1   # Script kiểm tra môi trường và runtime (6/6)
 ```
 
 ---
 
-## 3. Bộ 3 Kỹ năng độc lập (Modular Skills)
+## 3. Kiến trúc 2 tầng Kỹ năng (Engine & Orchestration Skills)
 
-1. **`rea-scan`**: Nhận diện file đầu vào, sao lưu sang `04_`, gọi công cụ REA/mã nguồn phù hợp, tự động che mờ API keys thành `[REDACTED]`, trích xuất **Screen Inventory & State Matrix** (theo chuẩn app-adr-ui), và xuất báo cáo hiện trạng vào `03_`.
-2. **`rea-interview`**: Đọc báo cáo và `02/ho-so-va-muc-tieu.md`, phỏng vấn người dùng (thiếu gì, cần nâng gì, bảo mật ra sao), chốt hợp đồng thiết kế **Design System 3 tầng (`design.md`)**, và xuất file đặc tả yêu cầu đã chốt.
-3. **`rea-build`**: Triển khai mã nguồn vào `05_` tuân thủ nghiêm ngặt **Design System 3 tầng & 4 trạng thái UI (Loading, Empty, Success, Error)**, chạy kiểm chứng 4 tầng (`verify_code.ps1`), và xuất hướng dẫn chạy app 1 trang.
+* **Tầng 1 — Kỹ năng lõi Upstream (`reverse-engineer-anything`)**:
+  - Sao chép nguyên văn từ `morluto/rea` (SHA `5cddc69c51a0fb18d021417199046314581ba9c2`), gồm 229 MCP tools, hướng dẫn định tuyến dịch ngược APK, Electron ASAR, Native binaries và 7 tài liệu kỹ thuật trong `references/`.
+* **Tầng 2 — Bộ 3 Kỹ năng điều phối tiếng Việt (Orchestration Skills)**:
+  1. **`rea-scan`**: Nhận diện file đầu vào, sao lưu sang `04_`, gọi công cụ REA/mã nguồn phù hợp, tự động che mờ API keys thành `[REDACTED]`, trích xuất **Screen Inventory & State Matrix** (theo chuẩn app-adr-ui), và xuất báo cáo hiện trạng vào `03_`.
+  2. **`rea-interview`**: Đọc báo cáo và `02/ho-so-va-muc-tieu.md`, phỏng vấn người dùng (thiếu gì, cần nâng gì, bảo mật ra sao), chốt hợp đồng thiết kế **Design System 3 tầng (`design.md`)**, và xuất file đặc tả yêu cầu đã chốt.
+  3. **`rea-build`**: Triển khai mã nguồn vào `05_` tuân thủ nghiêm ngặt **Design System 3 tầng & 4 trạng thái UI (Loading, Empty, Success, Error)**, chạy kiểm chứng 4 tầng (`verify_code.ps1`), và xuất hướng dẫn chạy app 1 trang.
 
 ---
 
@@ -91,7 +94,7 @@ REA-kit-agy/
 ## 6. Khởi tạo bộ kit vào thư mục mới (Meta-Bootstrap)
 
 Muốn nhân bản toàn bộ bộ kit này sang một thư mục rỗng bất kỳ chỉ bằng 1 câu lệnh cho AI:
-👉 Mở file **[prompts/BOOTSTRAP_KIT.md](prompts/BOOTSTRAP_KIT.md)**, copy khối siêu lệnh và dán vào Agent trong thư mục mới. Agent sẽ tự động tạo đủ cấu trúc, kiểm tra sức khỏe và báo kết quả `5/5 PASSED`.
+👉 Mở file **[prompts/BOOTSTRAP_KIT.md](prompts/BOOTSTRAP_KIT.md)**, copy khối siêu lệnh và dán vào Agent trong thư mục mới. Agent sẽ tự động tạo đủ cấu trúc, kiểm tra sức khỏe và báo kết quả `6/6 PASSED`.
 
 ---
 

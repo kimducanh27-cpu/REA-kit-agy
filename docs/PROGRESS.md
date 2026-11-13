@@ -4,6 +4,25 @@
 - Overall: P01 IN PROGRESS (Non-tech Workspace Scaffold & REA Inspector Skill)
 - Product direction: REA-powered App Investigation & Development Kit
 
+## 2026-11-13 — Tích Hợp Skill Lõi Upstream REA, Kiểm Tra Runtime Doctor & Chuẩn Hóa Tab Prompts
+
+### Completed
+- Hoàn thành phiên Grilling về tính xác thực của Skill, kiểm tra runtime môi trường máy tính và hợp đồng Prompts:
+  1. **Đưa nguyên văn Kỹ năng Lõi Upstream (`reverse-engineer-anything`)**:
+     - Sao chép nguyên văn 100% `SKILL.md` (35KB, 229 tools) và 7 file hướng dẫn `references/` từ `morluto/rea` vào `.agents/skills/reverse-engineer-anything/`.
+     - Phân định rõ 2 tầng: Kỹ năng lõi gốc (Engine) và Bộ 3 kỹ năng tiếng Việt điều phối (Orchestration).
+  2. **Tự động kiểm tra REA Engine & MCP Runtime trên máy (`health_check.ps1`)**:
+     - Tích hợp lệnh `npx -y rea-agents doctor --client antigravity --json`.
+     - Tự động phát hiện trạng thái kết nối MCP của Antigravity (`aligned` / `healthy`).
+     - Hướng dẫn lệnh cài đặt tự động `npx -y rea-agents setup --client antigravity --yes` nếu phát hiện thiếu.
+     - Nâng cấp thang điểm kiểm tra sức khỏe thành 6/6 tiêu chuẩn (Đã test đạt 6/6 PASSED).
+  3. **Chuẩn hóa toàn bộ `prompts/` theo chuẩn Active Skill của `app-adr-ui`**:
+     - Cấu trúc lại toàn bộ `00-SESSION-CONTINUITY.md`, `01-TAB-SCAN.md`, `02-TAB-SECURITY-REVIEW.md`, `03-TAB-INTERVIEW.md`, `04-TAB-BUILD.md`.
+     - Dòng đầu tiên bắt buộc: `Read the active Skill at ... in full. The Skill is the governing process contract.`.
+     - Quy định rõ ràng: Role, Preconditions, Task execution, và Output paths.
+  4. **Đồng bộ hóa hệ sinh thái**:
+     - Cập nhật `UPSTREAMS.md`, `README.md`, `prompts/BOOTSTRAP_KIT.md`, và `docs/HANDOFF.md`.
+
 ## 2026-11-13 — Chuẩn Hóa Design System 3 Tầng & Tích Hợp Screen Inventory (Tham Chiếu app-adr-ui)
 
 ### Completed
