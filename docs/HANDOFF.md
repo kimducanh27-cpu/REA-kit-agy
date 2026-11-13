@@ -19,8 +19,12 @@ A Vietnamese-first kit using upstream REA (https://github.com/morluto/rea) and G
 - Root rule and guides:
   - `AGENTS.md` (Vietnamese non-tech communication, REA routing, untrusted data rules)
   - `CLAUDE.md` (Using verified `@AGENTS.md` import pattern)
+  - `UPSTREAMS.md` (Upstream register pinned to morluto/rea SHA 5cddc69c51a0fb18d021417199046314581ba9c2)
   - `HUONG_DAN_SU_DUNG.md` (1-page quick start cheat sheet)
   - `KIEM_TRA.bat` (1-click health check launcher for Windows)
+- Process Playbook & Templates (app-adr-ui alignment):
+  - `prompts/`: 00-SESSION-CONTINUITY, 01-TAB-SCAN, 02-TAB-SECURITY-REVIEW, 03-TAB-INTERVIEW, 04-TAB-BUILD
+  - `templates/`: 01-REPORT-TEMPLATE, 02-SPEC-TEMPLATE, 03-RUN-GUIDE-TEMPLATE, 04-TEST-RESULT-TEMPLATE
 - Antigravity integration:
   - 3 modular skills: `.agents/skills/rea-scan/`, `.agents/skills/rea-interview/`, `.agents/skills/rea-build/`
   - `.agents/rules/rea-workflow.md` (Antigravity YAML rule for security and data integrity)

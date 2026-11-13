@@ -4,6 +4,23 @@
 - Overall: P01 IN PROGRESS (Non-tech Workspace Scaffold & REA Inspector Skill)
 - Product direction: REA-powered App Investigation & Development Kit
 
+## 2026-11-13 — Đồng Bộ Chuẩn Kiến Trúc với app-adr-ui (Upstream Register, Prompts & Templates)
+
+### Completed
+- Đối chiếu và đồng bộ triết lý thiết kế từ repository `kimducanh27-cpu/app-adr-ui`:
+  1. **Đăng ký Upstream chuẩn (`UPSTREAMS.md`)**: Ghi nhận chính thức nguồn `morluto/rea`, commit SHA `5cddc69c51a0fb18d021417199046314581ba9c2`, package `rea-agents@6.9.0`, giấy phép MIT và chính sách "Upstream-first, orchestration-second".
+  2. **Tách biệt thư mục `prompts/` (Tab-based Prompts)**:
+     - `00-SESSION-CONTINUITY.md`: Lệnh tiếp quản phiên cho Antigravity.
+     - `01-TAB-SCAN.md`: Lệnh quét và sao lưu app.
+     - `02-TAB-SECURITY-REVIEW.md`: Lệnh rà soát bảo mật có phạm vi.
+     - `03-TAB-INTERVIEW.md`: Lệnh phỏng vấn và chốt đặc tả.
+     - `04-TAB-BUILD.md`: Lệnh triển khai mã nguồn và kiểm chứng.
+  3. **Chuẩn hóa thư mục `templates/` (Contract-driven Artifacts)**:
+     - `01-REPORT-TEMPLATE.md`: Khung mẫu báo cáo hiện trạng và bảo mật.
+     - `02-SPEC-TEMPLATE.md`: Khung mẫu đặc tả yêu cầu đóng băng (Frozen Spec).
+     - `03-RUN-GUIDE-TEMPLATE.md`: Khung mẫu hướng dẫn chạy 1 trang cho non-tech.
+     - `04-TEST-RESULT-TEMPLATE.md`: Khung mẫu chứng chỉ kiểm chứng cú pháp và build.
+
 ## 2026-11-13 — Audit Quy Trình với 5 Repo Chuẩn GitHub & Hoàn Thiện Bộ Kit
 
 ### Completed
