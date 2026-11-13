@@ -87,7 +87,7 @@ Tạo đầy đủ các thư mục sau:
    - (4/6) Luật an toàn trong .agents/rules.
    - (5/6) Bộ hồ sơ ngữ cảnh docs/ và active_case.json.
    - (6/6) REA Engine & MCP Server runtime trên máy (npx rea-agents doctor).
-2. Tạo file `KIEM_TRA.bat` để kích hoạt script trên 1-click.
+2. Tạo file `KIEM_TRA.bat` (kích hoạt kiểm tra sức khỏe) và `HOAN_TAC.bat` (gọi `.agents/scripts/rollback.ps1` để hoàn tác 1-click).
 3. Chạy lệnh ẩn thư mục kỹ thuật: `attrib +h .agents`.
 4. **BẮT BUỘC**: Tự động chạy lệnh kiểm tra `health_check.ps1` ngay trong terminal.
 5. Chỉ khi kết quả trả về `6/6 PASSED`, hãy in thông báo:

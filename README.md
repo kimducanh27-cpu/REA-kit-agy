@@ -50,6 +50,7 @@ REA-kit-agy/
 ├── UPSTREAMS.md                   # Đăng ký chuẩn nguồn gốc morluto/rea
 ├── HUONG_DAN_SU_DUNG.md           # Hướng dẫn sử dụng 1 trang kèm câu lệnh copy-paste
 ├── KIEM_TRA.bat                   # 1-click kiểm tra sức khỏe workspace & runtime (6/6)
+├── HOAN_TAC.bat                   # 1-click hoàn tác về bản chạy tốt gần nhất (Rollback)
 ├── .gitignore                     # Bảo vệ bản quyền và chống rò rỉ dữ liệu cá nhân
 ├── prompts/                       # Bộ câu lệnh dán theo từng tab/giai đoạn (00 đến 04)
 ├── templates/                     # Khung mẫu tài liệu hợp đồng chuẩn (01 đến 05)
@@ -74,12 +75,13 @@ REA-kit-agy/
 
 ---
 
-## 4. Bốn chốt chặn bảo vệ chất lượng & người dùng non-tech
+## 4. Năm chốt chặn bảo vệ chất lượng theo chuẩn Anthropic
 
 * **Zero-Install Runtime**: Khi viết lại app mới (Rewrite), Agent ưu tiên xuất ra **Web App độc lập (HTML/CSS/JS)** để người dùng chỉ cần nhấp đúp chuột là mở chạy ngay trên trình duyệt mà không cần cài Node.js hay Python.
 * **Provider Fallback Gate**: Nếu máy người dùng thiếu Java/JADX hoặc Ghidra, Agent tự động chuyển sang đọc tài nguyên tĩnh nhẹ nhàng, không quăng lỗi crash terminal.
 * **Design System 3 Tầng**: Mọi giao diện đều được quản lý bằng `design.md` (Tokens ➔ Components ➔ 4 Trạng thái UI), đảm bảo app không bao giờ bị đơ hoặc trắng trang.
-* **Cổng kiểm chứng 4 tầng**: Dùng công cụ xác định cho lỗi xác định (`verify_code.ps1`), bắt buộc đạt Exit Code 0 và xuất file `05_MA_NGUON_PHAT_TRIEN/KET_QUA_KIEM_THU.md` trước khi báo hoàn thành.
+* **Cổng thẩm định độc lập & Giới hạn hội tụ (Anthropic Model)**: Dùng công cụ xác định (`verify_code.ps1`) bắt lỗi cú pháp, kết hợp AI Reviewer độc lập thẩm định 2 trục (Standards & Spec). Khống chế tối đa 2 vòng tự sửa để chống lặp vô tận đốt token.
+* **Lá chắn hoàn tác 1-Click (`HOAN_TAC.bat`)**: Tự động lưu snapshot phiên bản ổn định vào `05_MA_NGUON_PHAT_TRIEN/.backup/`. Nếu bản mới lỗi, người dùng chỉ cần nhấp đúp `HOAN_TAC.bat` để khôi phục tức thì.
 
 ---
 

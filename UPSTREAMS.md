@@ -56,3 +56,10 @@ Checked: **2026-11-13**. Primary upstream source is pinned to the exact commit S
 
 4. **Chuẩn Kiến Trúc Màn Hình & Trạng Thái UI**: `kimducanh27-cpu/app-adr-ui` (`templates/04-APP-FLOW/04-SCREEN-INVENTORY.md` & `06-STATE-AND-EXCEPTION-MATRIX.md`)
    * Nguyên tắc: Tách bạch rõ ranh giới các bước: Không vẽ UI khi chưa có `Screen Inventory` và `State Matrix`. Giao diện phải định nghĩa trước 4 trạng thái (`Loading`, `Empty`, `Success`, `Error Recovery`) để không bao giờ bị đơ hoặc trắng trang.
+
+5. **Chuẩn Thẩm Định Mã Nguồn AI (Anthropic Code Review Pipeline)**: `Anthropic Claude Code Team` (*"How the Claude Code team does code review"*)
+   * Nguyên tắc:
+     - Tách biệt vai trò Builder và Independent Reviewer để tránh thiên kiến xác nhận của AI.
+     - Giới hạn cứng vòng lặp tự sửa (Review Convergence: tối đa 2 vòng) chống lặp vô tận đốt token.
+     - Phân tầng rủi ro (Risk-Tiering: Low / Medium / High) cho người non-tech nghiệm thu đúng trọng tâm.
+     - Chốt chặn an toàn tối hậu bằng cơ chế Rollback tự động (`HOAN_TAC.bat` và thư mục `.backup/`).

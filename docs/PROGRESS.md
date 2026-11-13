@@ -4,6 +4,22 @@
 - Overall: P01 IN PROGRESS (Non-tech Workspace Scaffold & REA Inspector Skill)
 - Product direction: REA-powered App Investigation & Development Kit
 
+## 2026-11-13 — Tích Hợp Mô Hình Anthropic Code Review (Independent Reviewer, Convergence & 1-Click Rollback)
+
+### Completed
+- Nghiên cứu và tích hợp trọn bộ 4 bài học cốt lõi từ bài viết *"How the Claude Code team does code review"* của Anthropic vào `REA-kit-agy`:
+  1. **Tách biệt vai trò Builder & Independent Reviewer**:
+     - Trong `rea-build` và `templates/04-TEST-RESULT-TEMPLATE.md`, AI thẩm định độc lập theo 2 trục tách biệt: Trục Tiêu chuẩn Giao diện (Standards Review đối chiếu `design.md`) và Trục Đặc tả Chức năng (Spec Review đối chiếu `dac-ta-yeu-cau-da-chot.md`), xóa bỏ thiên kiến xác nhận của AI.
+  2. **Khống chế vòng lặp tự sửa (Review Convergence Cap)**:
+     - Giới hạn tối đa 2 vòng lặp tự động sửa lỗi cú pháp/logic. Sau 2 vòng nếu không vượt qua `verify_code.ps1` thì dừng lại báo cáo trực diện người dùng, ngăn ngừa lặp vô tận đốt token.
+  3. **Phân tầng rủi ro nghiệm thu (Risk-Tiered Sign-off)**:
+     - Phân loại 3 cấp độ: Thấp (UI/text -> Auto-approve sau syntax test), Vừa (Form/local logic -> Checklist tính năng), Cao (API ngoài/secret -> Cảnh báo đỏ [HIGH RISK] bắt buộc con người xác nhận).
+  4. **Lá chắn hoàn tác 1-Click (`HOAN_TAC.bat` & `rollback.ps1`)**:
+     - Tự động lưu snapshot mã nguồn vào `05_MA_NGUON_PHAT_TRIEN/.backup/` trước mỗi đợt sinh code mới.
+     - Tạo script `HOAN_TAC.bat` và `.agents/scripts/rollback.ps1` giúp người non-tech hoàn tác 100% về phiên bản chạy tốt gần nhất chỉ bằng 1 cú nhấp đúp chuột.
+  5. **Đồng bộ hóa hệ sinh thái**:
+     - Cập nhật `templates/04-TEST-RESULT-TEMPLATE.md`, `.agents/skills/rea-build/SKILL.md`, `prompts/04-TAB-BUILD.md`, `UPSTREAMS.md`, `README.md`, `prompts/BOOTSTRAP_KIT.md`, và `docs/HANDOFF.md`.
+
 ## 2026-11-13 — Tích Hợp Skill Lõi Upstream REA, Kiểm Tra Runtime Doctor & Chuẩn Hóa Tab Prompts
 
 ### Completed

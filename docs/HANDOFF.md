@@ -22,6 +22,7 @@ A Vietnamese-first kit using upstream REA (https://github.com/morluto/rea) and G
   - `UPSTREAMS.md` (Upstream register pinned to morluto/rea SHA 5cddc69c51a0fb18d021417199046314581ba9c2)
   - `HUONG_DAN_SU_DUNG.md` (1-page quick start cheat sheet)
   - `KIEM_TRA.bat` (1-click health check launcher for Windows)
+  - `HOAN_TAC.bat` (1-click rollback launcher to restore latest working snapshot)
 - Process Playbook & Templates (app-adr-ui alignment):
   - `prompts/`: 00-SESSION-CONTINUITY, 01-TAB-SCAN, 02-TAB-SECURITY-REVIEW, 03-TAB-INTERVIEW, 04-TAB-BUILD, BOOTSTRAP_KIT
   - `templates/`: 01-REPORT-TEMPLATE, 02-SPEC-TEMPLATE, 03-RUN-GUIDE-TEMPLATE, 04-TEST-RESULT-TEMPLATE, 05-DESIGN-TOKEN-TEMPLATE
@@ -40,6 +41,7 @@ A Vietnamese-first kit using upstream REA (https://github.com/morluto/rea) and G
   - Multi-file inventory check before scan (ChatDev)
   - Screen Inventory & State Matrix (app-adr-ui)
   - Design System 3-tier contract & 4 UI states (Tokens, Components, Loading/Empty/Success/Error)
+  - Anthropic Code Review Pipeline: Independent AI Reviewer, Review Convergence (max 2 rounds), Risk-Tiered sign-off, and 1-click rollback
   - Zero-install runtime & mandatory verification gate (verify-and-stop)
 - Privacy and git tracking:
   - `.gitignore` configured to prevent user apps, private code, and reports from leaking to git.
