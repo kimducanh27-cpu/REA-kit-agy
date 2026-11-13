@@ -1,79 +1,41 @@
 # PLAN — REA-kit-agy
 
-- Plan version: 0.2
-- Status: PROPOSED IMPLEMENTATION SEQUENCE
+- Version: 0.2
 - Last updated: 2026-11-13
 
-## Goal
+## Objective
+Use REA plus a coding agent to inspect an authorized application, report verified behavior and scoped risks, ask the owner for missing requirements, then extend or rebuild the app with tests.
 
-Build a personal-first Non-Tech Workspace Bootstrap Kit that makes it easy for a non-technical user to start and use an AI workspace. Antigravity is the primary target; Claude Code, Cursor, OpenCode, and other agents remain compatibility targets through verified adapters.
+## Phases
 
-## Product-focus clarification
+### P00 — Understand REA and define the product boundary
+Audit current release, Skill, MCP/CLI contracts, target guides, security policy and disclaimer. Define target routing, operation approval, Evidence preservation, report, interview and minimum v1. No implementation before the owner approves the boundary.
 
-The core product is the workspace bootstrap and agent-setup experience:
-- Create a clear user-facing folder structure.
-- Install or generate the correct rules and Skills for the selected agent.
-- Explain how the user starts working in plain Vietnamese.
-- Protect files and configuration during setup.
-- Check whether the workspace and agent configuration are ready.
+### P01 — Integrate REA with the first agent
+Create original Vietnamese kit instructions/Skills using the upstream REA Skill and actual connected tools. Verify setup/update, version awareness and approval. Antigravity is the first candidate, not an assumed success.
 
-OCR, document-conversion engines, PDF parsing libraries, spreadsheet engines, and other task-specific utilities are optional future extensions. They must not block or dominate the core bootstrap project unless the owner explicitly changes scope.
+### P02 — Investigate and assess an app
+Implement intake, preflight, target classification, REA/source analysis and Evidence-backed report. Include coverage, unknowns and bounded security review.
 
-## P00 — Research & Source Audit
+### P03 — Clarify requirements
+Ask targeted follow-ups grounded in unresolved product decisions. Capture answers, assumptions, non-goals and owner approval.
 
-Goal: determine what existing projects and official agent mechanisms can be reused before designing the bootstrap implementation.
+### P04 — Select and plan development
+Compare extending, adding a feature, creating a compatible implementation or rewriting. Produce approved architecture, UX, task plan and acceptance criteria.
 
-1. Complete the file-level source map for REA setup flow, client registry, Skills distribution, configuration transactions, backup/recovery, doctor, and tests.
-2. Record precise reuse boundaries and license notices for each reusable REA component.
-3. Use Craft Anything only for high-level independent UX observations; obey its original-work-only restrictions.
-4. Verify current Antigravity workspace-local rules, Skills, MCP, and plugin discovery.
-5. Verify Claude Code, Cursor, and OpenCode instruction/Skill discovery and identify minimum adapters.
-6. Research existing workspace bootstrap/install projects and compare setup flows, per-agent configuration, dry-run, approval, health checks, and uninstall/rollback.
-7. Define the smallest useful v1 bootstrap scope and explicit non-goals.
-8. Produce the source-to-feature map, unresolved questions, and implementation boundary for owner review.
+### P05 — Build, test and hand off
+Implement in an isolated branch/copy, run tests, independent hard review and scoped security reassessment. Provide rollback and residual risks.
 
-OCR/document-processing research already performed is retained as optional future reference. It is not a P00 exit criterion.
+## Release gates
+- P00: source map, threat model, v1 target and owner-approved boundary.
+- P01: clean-environment REA integration verified with one agent.
+- P02: evidence-preserving report; no blanket security verdict.
+- P03: question loop resolves material requirements without overwhelming the user.
+- P04: owner-approved route and acceptance criteria.
+- P05: tests/review complete or remaining failures and unknowns explicitly accepted.
 
-Exit criteria:
-- Every proposed reusable core component has a source, exact file/location, revision, license, and integration rationale.
-- Craft Anything is limited to high-level observations unless its restrictions are separately resolved.
-- Agent support statements are evidence-backed and scoped.
-- Core scope excludes optional document-engine complexity unless separately approved.
-- Owner approves the P01 implementation boundary.
+## Non-goals
+No OCR engine, office converter, generic workspace bootstrap suite, custom REA engine, cloud upload service, public HTTP MCP or universal security scanner in v1.
 
-## P01 — Workspace Foundation
-
-Goal: create the user-facing workspace structure and starter instructions after P00 approval.
-
-Expected outcomes:
-- Agreed visible folder structure.
-- User-editable profile and optional sample templates.
-- Clear Vietnamese quick-start guide.
-- Root/shared instructions and technical folder layout.
-- No unnecessary runtime or package dependencies.
-
-Exact packaging and implementation remain subject to source audit and owner approval.
-
-## P02 — Antigravity-first integration
-
-Goal: make the generated workspace work well in Antigravity using documented workspace-local configuration. Investigate MCP/plugins only where needed. Avoid global configuration changes by default.
-
-## P03 — Other-agent adapters
-
-Goal: add Claude Code, Cursor, and OpenCode compatibility through separate verified adapters. Maintain a capability matrix; do not claim parity without runtime tests.
-
-## P04 — Safety, setup, backup, health check, and recovery
-
-Goal: adapt and test relevant REA installation patterns for setup preview, user approval, configuration preservation, backup verification, diagnostics, and safe rollback.
-
-## P05 — Optional task Skills
-
-Goal: add practical task Skills only after the bootstrap foundation works. Each Skill must have a verified source or an explicit ORIGINAL justification. Document-processing/OCR helpers are optional and require separate approval.
-
-## P06 — Independent Hard Review and release
-
-Review source attribution, licensing, setup safety, usability for non-technical users, Antigravity runtime behavior, other-agent compatibility, tests, documentation, and packaging.
-
-## Approval boundary
-
-This plan records the current product focus and phase order. Specific dependencies, implementation architecture, scripts, global agent settings, and high-impact file operations require evidence and the relevant approval.
+## Open owner decisions
+First target class and delivery model remain undecided. Do not silently choose Android, web, Electron or another platform as the sole v1 target.
