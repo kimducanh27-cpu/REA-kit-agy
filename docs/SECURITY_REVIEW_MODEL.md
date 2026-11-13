@@ -13,13 +13,25 @@ Record authorizing party, target identity/environment, allowed assets/accounts/d
 
 | Class | Examples | Default |
 |---|---|---|
-| A — Static data inspection | Read source/artifact structure | Allowed after target authorization and preflight |
-| B — External analysis engine | Run selected decompiler/provider | Explain provider/host risk; explicit approval where it executes external tooling or changes state |
-| C — Runtime observation | Launch/attach/debug/instrument app | Explicit operation-specific approval |
-| D — Browser/device/network | CDP, ADB interaction/transfer, traffic capture, remote endpoint test | Explicit target/account/device/network scope and approval |
-| E — Mutation/deployment | Change files, install packages, migrate data, publish/deploy | Explicit action scope, backup and rollback approval |
+| A — Static target inspection | Read source/artifact structure, parse metadata, inspect saved captures | Allowed after target authorization and preflight; disclose prerequisites and host effects |
+| B — Analysis worker/provider | Launch an REA-owned worker or external decompiler/provider; create temporary analysis files | Identify executable/provider, version, input and output paths. Obtain approval before installing an external engine, using an untrusted executable, or writing persistent outputs outside the agreed workspace |
+| C — Runtime observation | Launch/attach/debug/instrument the app or process | Explicit operation-specific approval |
+| D — Browser/device/network | CDP attachment, declared browser actions, ADB/device interaction, traffic capture, remote endpoint test | Explicit target/account/device/domain/network scope and approval; distinguish passive attachment from active actions |
+| E — Mutation/deployment | Change project files, install packages, migrate data, publish/deploy | Explicit action scope, backup and rollback approval |
 
-Exact classification follows connected REA tool effects and version-specific docs, not tool names alone.
+Exact classification follows the active tool's actual effect contract and version-matched docs, not its name or a generic static/runtime label.
+
+### Upstream REA effect-contract findings
+
+- Upstream MCP does not implement owner authorization through per-call permission grants. MCP clients control their own confirmation UI. Tool annotations/effect fields are hints, not authorization controls; the kit must enforce its own consent and scope policy.
+- `readOnlyHint` can be false because a call records additive Evidence even when it leaves the target unchanged. `destructiveHint` can cover data loss, execution/driving of code REA does not own, or Android device mutations. Do not reduce the decision to one boolean.
+- `analyze_javascript_application` launches an REA-owned worker and writes private temporary source files; upstream states that this analysis does not execute the supplied application code.
+- `analyze_web_bundle` similarly launches an owned worker and writes private temporary source files; it parses captured scripts rather than executing captured app code.
+- Static Android APK analysis invokes the selected JADX bridge/engine. Parsing an APK is not permission to install or run it; ADB and Frida/device routes need separate approval.
+- Passive website observation attaches to an already-running Chrome-family browser through loopback CDP; it does not navigate or drive actions by default. `capture_browser_scenario` is a separate action-driving workflow.
+- Artifact extraction may write to a fresh output directory; approve its path and preserve the original. DMG inventory may launch `hdiutil` and create a temporary mount directory.
+
+Use `tools/list` for canonical schemas and `binary_session.tool_availability` for current availability. Request `detail: "complete"` for effect/annotation fields; use `discover_tools` for cold tools. These metadata inform approval but never replace it.
 
 ## 4. Threats and controls
 

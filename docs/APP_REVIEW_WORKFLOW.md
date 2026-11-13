@@ -8,16 +8,16 @@ Collect only what is needed to route the work: app name and goal; target type/lo
 
 ## 2. Preflight
 1. Identify input type without executing it.
-2. Confirm installed REA version and discover actual MCP tools.
-3. Read current upstream Skill route and target-specific guide.
-4. Check readiness only for the selected provider/operation.
-5. Explain static versus runtime effects and request additional approval if needed.
+2. Confirm installed REA version. Read active `tools/list` for canonical schemas and call `binary_session` to inspect `result.tool_availability` for the current host, target, provider and client. Request `detail: "complete"` when effect/annotation or provider-remediation fields are needed. If hot/cold catalog mode is enabled, load exact required tools with `discover_tools`; respect configured tool-family exclusions.
+3. Read the current upstream Skill route and version-matched target guide.
+4. Check readiness only for the selected provider/operation; a broad `rea doctor` result is not proof every operation is ready or unavailable.
+5. Explain target effects and host effects. Tool annotations are hints, not authorization controls. Distinguish an REA-owned worker from execution of the target app. Request separate approval for runtime, browser actions, device, network, external-service or mutation operations.
 6. If unsupported, explain the missing prerequisite and offer source/manual review.
 
 When source code is supplied, inspect source directly; do not force REA into ordinary source-repository architecture analysis.
 
 ## 3. Investigation
-Collect relevant artifact identity, version and provenance; modules/resources/platform boundaries; routes/APIs/IPC/methods/permissions/components where supported; the selected feature flow; runtime observations only when authorized; security-relevant declarations; and version/capture comparisons when supported. Do not launch or interact with an app just because static inspection was requested.
+Collect relevant artifact identity, version and provenance; modules/resources/platform boundaries; routes/APIs/IPC/methods/permissions/components where supported; the selected feature flow; runtime observations only when authorized; security-relevant declarations; and version/capture comparisons when supported. Do not launch or interact with an app just because static inspection was requested. Static JavaScript analysis may use an owned worker and private temporary files without executing the supplied app. Passive CDP page inspection attaches to an already-running browser and is not general browser automation; `capture_browser_scenario` performs declared actions and needs a separate approval scope.
 
 ## 4. Assessment report
 Include:

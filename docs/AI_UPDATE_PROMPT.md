@@ -5,7 +5,8 @@ Mandatory operating prompt for all agents in this repository.
 ## Session start
 1. Identify repository, branch, HEAD and working-tree state.
 2. Read this file, HANDOFF.md, all six governing files (PRD, ARCHITECTURE, DESIGN, RULES, TASKS, PROGRESS), PLAN.md and SOURCE_AUDIT.md.
-3. Read APP_REVIEW_WORKFLOW.md and SECURITY_REVIEW_MODEL.md.
+3. Read APP_REVIEW_WORKFLOW.md, SECURITY_REVIEW_MODEL.md, INTAKE_QUESTION_LOGIC.md and AGENT_COMPATIBILITY.md.
+4. Read FILE_WORKFLOWS_RESEARCH.md and OCR_RESEARCH.md only when the approved task explicitly concerns those historical, non-core areas.
 4. Inspect actual tree, recent commits and current upstream REA release/commit.
 5. Correct stale documentation before relying on it.
 6. Identify task, acceptance criteria, authorization boundary and required approvals.
@@ -42,7 +43,9 @@ Require target-specific authorization. Static inspection is default. Obtain sepa
 Follow RULES.md. Do not add dependencies until a real gap is shown and alternatives/licenses/security are reviewed. Prefer the smallest original workflow on top of REA. Rewriting is not default. No feature is complete without tests or an explicit NOT RUN record. Ask the owner only for decisions that materially change product scope or risk.
 
 ## Documentation
-Continuously synchronize PRD.md, ARCHITECTURE.md, DESIGN.md, RULES.md, TASKS.md and PROGRESS.md. Also maintain PLAN.md, HANDOFF.md, SOURCE_AUDIT.md, APP_REVIEW_WORKFLOW.md and SECURITY_REVIEW_MODEL.md.
+Continuously synchronize PRD.md, ARCHITECTURE.md, DESIGN.md, RULES.md, TASKS.md and PROGRESS.md. Also maintain PLAN.md, HANDOFF.md, SOURCE_AUDIT.md, APP_REVIEW_WORKFLOW.md, SECURITY_REVIEW_MODEL.md, INTAKE_QUESTION_LOGIC.md and AGENT_COMPATIBILITY.md.
+
+Use only these task and phase statuses: TODO, IN_PROGRESS, BLOCKED, DONE, DEFERRED. Record draft maturity, owner review and approval state separately, not as custom status values. Never mark DONE without verifiable exit evidence. Never turn PROPOSED into APPROVED without the owner's explicit decision.
 
 ## End of substantial session
 Run relevant checks; inspect changes; update tasks/progress/handoff; check links/licenses; commit/push only when authorized and after checking branch head; never force-push. Report test, commit and push status accurately.

@@ -56,6 +56,10 @@ Design implication:
 - Keep essential shared instructions in root AGENTS.md.
 - Avoid global ~/.gemini/config changes by default.
 
+### Antigravity — upstream installer check
+
+At upstream REA 6.9.0 source SHA `5cddc69c51a0fb18d021417199046314581ba9c2`, the official installation guide lists Antigravity with client ID `antigravity`. `src/application/SupportedClients.ts` defines the upstream MCP config path as `~/.gemini/config/mcp_config.json` and the upstream REA Skill path as `~/.gemini/config/skills`. These are personal destinations used by upstream `rea setup`, distinct from the workspace-local `.agents/skills` location documented for Antigravity. This verifies upstream installer support/path discovery only; REA-kit-agy itself is not runtime-tested.
+
 ## 4. Claude Code
 
 Official sources:

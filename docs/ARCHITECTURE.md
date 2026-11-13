@@ -52,6 +52,12 @@ No later phase silently expands permissions. A new runtime, device, account, net
 - Keep upstream REA Skill upstream-owned; install through its supported distribution path. Kit-specific Vietnamese workflows are original content.
 - Unsupported target/provider means explain the blocker or fallback; never fabricate results.
 
+### MCP discovery and effects
+
+- `tools/list` is canonical for complete tool definitions and schemas. `binary_session` and `result.tool_availability` describe current host/provider/target/client availability; request `detail: "complete"` when effect/annotation fields or provider remediation are needed.
+- If hot/cold discovery is enabled, load exact tools through `discover_tools`. Respect configured `REA_MCP_TOOL_FAMILIES`; excluded tools are not callable merely because they exist upstream.
+- Effect annotations are descriptive hints, not authorization controls. Static target analysis can launch an REA-owned worker or write temporary files without executing supplied app code.
+- Preserve Evidence identity, authority, provenance, coverage, limitations and unknowns through every projection/page.
 ## 5. Target routing examples
 
 Exact routes depend on the installed REA version and its Skill:
@@ -78,4 +84,10 @@ See SECURITY_REVIEW_MODEL.md and upstream SECURITY.md / DISCLAIMER.md.
 
 ## 8. Deferred choices
 
-Skill-only versus CLI wrapper; case schema; Evidence persistence; supplementary source/dependency/UI security tools; GUI; multi-agent orchestration. Add no framework, server, database or dependency without a demonstrated need and source-backed comparison.
+### Delivery-model comparison — PROPOSED, not approved
+
+- **Skill-first over upstream REA MCP:** smallest initial integration surface. The kit contributes Vietnamese intake, decision-critical questions, report structure, authorization gates and handoff while REA retains its target tools and schemas. This is a preferred prototype candidate only.
+- **Thin CLI wrapper:** consider only if a verified gap requires deterministic case persistence, schema validation, repeatable reports, cross-agent setup or automation that a Skill plus existing REA CLI/MCP cannot provide. A wrapper adds packaging, runtime, filesystem, update and test obligations.
+- **Status:** PROPOSED. Neither delivery model is approved. Do not create a wrapper, package, server or dependency until the owner approves the v1 boundary and a demonstrated gap justifies it.
+
+Other deferred choices: case schema; Evidence persistence; supplementary source/dependency/UI security tools; GUI; multi-agent orchestration. Add no framework, server, database or dependency without a demonstrated need and source-backed comparison.
