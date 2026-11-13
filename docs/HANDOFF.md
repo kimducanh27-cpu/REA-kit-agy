@@ -57,7 +57,7 @@ Only inspect authorized targets. Static analysis by default. Runtime, debugger, 
 - tools/list is canonical for schemas; binary_session/tool_availability reports live availability; detail=complete exposes effect data; discover_tools loads cold tools. Effect annotations are hints, not authorization.
 - Static JavaScript analysis can launch an REA worker and write temporary files without executing target code. Keep host effects distinct from target execution and interaction.
 - P00 remains IN_PROGRESS. P00-01, P00-02, P00-03, P00-04, P00-05 and P00-08 are IN_PROGRESS; P00-06 is BLOCKED on the owner target decision; P00-07 is TODO pending delivery choice; P00-09 is DEFERRED pending a documented gap. P01–P05 are TODO. First target class and v1 boundary remain owner decisions. Skill-first delivery remains PROPOSED only.
-- Documentation commits pushed to `main`: `1f0011f055c17b79c2401ebaa1e385f3031e6a11` and `94630735be0c2af93e8eda4ac8efd7a4708cce87`.
+- Documentation commits pushed to `main` in this session: `1f0011f055c17b79c2401ebaa1e385f3031e6a11`, `94630735be0c2af93e8eda4ac8efd7a4708cce87` and `e193b308a18df3f24f9d90cf428bf56525ea5d27`.
 
 ## 9. Verification and limits
 - Source/document review was read-only; no REA runtime, provider, Android toolchain or agent integration test ran.

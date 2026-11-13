@@ -58,7 +58,7 @@
 - P00 remains IN_PROGRESS. First target class and v1 boundary remain owner decisions; draft intake/report/security/delivery decisions are not approved.
 
 ### Documentation synchronization
-The affected architecture, rules, workflow, security, compatibility, source audit, task, plan, progress and handoff docs were committed to main in `1f0011f055c17b79c2401ebaa1e385f3031e6a11` and `94630735be0c2af93e8eda4ac8efd7a4708cce87`. PRD.md and DESIGN.md were checked and left unchanged because no approved product requirement or UX decision changed. Historical OCR/file-workflow research remains out of scope.
+The affected architecture, rules, workflow, security, compatibility, source audit, task, plan, progress and handoff docs were synchronized to main in fast-forward commits `1f0011f055c17b79c2401ebaa1e385f3031e6a11`, `94630735be0c2af93e8eda4ac8efd7a4708cce87` and `e193b308a18df3f24f9d90cf428bf56525ea5d27`. PRD.md and DESIGN.md were checked and left unchanged because no approved product requirement or UX decision changed. Historical OCR/file-workflow research remains out of scope.
 
 
 ## Historical notes
