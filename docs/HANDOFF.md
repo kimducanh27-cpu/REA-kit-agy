@@ -25,11 +25,15 @@ A Vietnamese-first kit using upstream REA (https://github.com/morluto/rea) and G
   - 3 modular skills: `.agents/skills/rea-scan/`, `.agents/skills/rea-interview/`, `.agents/skills/rea-build/`
   - `.agents/rules/rea-workflow.md` (Antigravity YAML rule for security and data integrity)
   - `.agents/scripts/health_check.ps1` (Tested: 5/5 components verified ready)
-  - `.agents/state/` (Tracking internal app processing status)
+  - `.agents/state/active_case.json` (State machine tracking live cases across chat sessions)
   - Windows hidden attribute applied to `.agents/` (`attrib +h`)
 - Diagram and Prompt Playbook:
   - 4 Mermaid diagrams integrated in `HUONG_DAN_SU_DUNG.md` and `docs/ARCHITECTURE.md`
   - 5 Ready-to-paste prompts in `HUONG_DAN_SU_DUNG.md` and `docs/PROMPTS.md`
+- Audited GitHub Standards:
+  - Secret redaction (`[REDACTED]`) filter in reports (morluto/rea)
+  - Multi-file inventory check before scan (ChatDev)
+  - Zero-install runtime & mandatory verification gate (verify-and-stop)
 - Privacy and git tracking:
   - `.gitignore` configured to prevent user apps, private code, and reports from leaking to git.
 

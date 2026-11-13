@@ -1,0 +1,12 @@
+{
+  "case_id": null,
+  "target_name": null,
+  "target_type": null,
+  "current_phase": "IDLE",
+  "backup_verified": false,
+  "report_path": null,
+  "spec_approved": false,
+  "build_status": null,
+  "last_updated": "2026-11-13T16:12:00+07:00",
+  "notes": "Hệ thống trạng thái tự động ghi nhớ tiến độ theo chuẩn AutoGPT/MetaGPT"
+}

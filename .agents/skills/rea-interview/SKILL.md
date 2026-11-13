@@ -37,6 +37,10 @@ Kỹ năng chuyên biệt cho giai đoạn đối thoại yêu cầu, đối chi
 ---
 
 ## 3. KẾT QUẢ ĐẦU RA
-Ghi nhận toàn bộ quyết định của người dùng vào file:
-`03_KET_QUA_KIEM_TRA/YYYY-MM-DD_HHmm_dac-ta-yeu-cau-da-chot.md`
-để làm căn cứ triển khai cho kỹ năng `rea-build`.
+1. Ghi nhận toàn bộ quyết định của người dùng vào file:
+   `03_KET_QUA_KIEM_TRA/YYYY-MM-DD_HHmm_dac-ta-yeu-cau-da-chot.md`
+   để làm căn cứ triển khai cho kỹ năng `rea-build`.
+2. Cập nhật file `.agents/state/active_case.json`:
+   - `spec_approved`: `true`
+   - `current_phase`: `"SPEC_APPROVED"`
+   - `last_updated`: Thời gian hiện tại.

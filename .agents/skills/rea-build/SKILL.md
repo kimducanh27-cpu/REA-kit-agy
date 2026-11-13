@@ -33,5 +33,9 @@ Kỹ năng chuyên biệt cho giai đoạn sinh mã nguồn và kiểm thử, đ
      2. Cách thử nghiệm các tính năng mới vừa được thêm.
      3. Hướng dẫn sao lưu hoặc hoàn tác nếu cần.
 
-5. **Đồng bộ tiến độ**:
+5. **Đồng bộ tiến độ & Trạng thái**:
    - Cập nhật kết quả hoàn thành vào `docs/PROGRESS.md` và `docs/HANDOFF.md`.
+   - Cập nhật file `.agents/state/active_case.json`:
+     * `build_status`: `"SUCCESS"`
+     * `current_phase`: `"BUILD_COMPLETED"`
+     * `last_updated`: Thời gian hiện tại.

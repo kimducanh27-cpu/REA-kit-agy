@@ -4,6 +4,17 @@
 - Overall: P01 IN PROGRESS (Non-tech Workspace Scaffold & REA Inspector Skill)
 - Product direction: REA-powered App Investigation & Development Kit
 
+## 2026-11-13 — Audit Quy Trình với 5 Repo Chuẩn GitHub & Hoàn Thiện Bộ Kit
+
+### Completed
+- Thực hiện phiên Grilling chuyên sâu đối chiếu quy trình với 5 repository GitHub tiêu biểu:
+  1. **`morluto/rea`**: Tích hợp quy tắc khử trùng dữ liệu nhạy cảm (Secret Redaction Filter) — tự động che mờ API keys, token, mật khẩu thành `[REDACTED]` trong báo cáo `03_`.
+  2. **`Significant-Gravitas/AutoGPT` & `geekan/MetaGPT`**: Bổ sung cơ chế lưu trữ và phục hồi trạng thái tự động qua file `.agents/state/active_case.json`, giúp AI tự động nối lại đúng bước làm dở khi người dùng đổi cửa sổ chat.
+  3. **`OpenBMB/ChatDev`**: Bổ sung cơ chế kiểm kê đầu vào khi có nhiều file (Multi-file Inventory) — in bảng danh sách và hỏi người dùng thứ tự ưu tiên trước khi quét.
+  4. **`Aider-AI/aider`**: Thống nhất giữ ranh giới hoàn tác qua thư mục `04_SAO_LUU_AN_TOAN/`, giữ gốc workspace gọn gàng.
+  5. **`anthropics/skills`**: Chuẩn hóa toàn diện 3 Skills độc lập (`rea-scan`, `rea-interview`, `rea-build`) đồng bộ trạng thái với `active_case.json`.
+- Cập nhật quy tắc vào `AGENTS.md`, các file `SKILL.md`, và `.gitignore`.
+
 ## 2026-11-13 — Stress-test Quy trình với Chuẩn GitHub & Thêm 3 Cổng An Toàn
 
 ### Completed
