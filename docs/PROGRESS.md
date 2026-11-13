@@ -4,6 +4,22 @@
 - Overall: P01 IN PROGRESS (Non-tech Workspace Scaffold & REA Inspector Skill)
 - Product direction: REA-powered App Investigation & Development Kit
 
+## 2026-11-13 — Tích Hợp Tháp 4 Tầng Kiểm Soát Chất Lượng & Công Cụ Xác Định (verify_code.ps1)
+
+### Completed
+- Hoàn thành phiên Grilling theo triết lý: *"Dùng công cụ xác định cho lỗi xác định; chỉ dùng AI ở phần cần suy luận."*
+- Xây dựng công cụ kiểm tra xác định độc lập `.agents/scripts/verify_code.ps1`:
+  - Tự động phân tích cú pháp HTML/XML, kiểm tra thẻ đóng/mở.
+  - Kiểm tra cú pháp JavaScript (dùng `node --check` hoặc token counter).
+  - Quét phát hiện rò rỉ secret/API key bằng biểu thức chính quy (Regex).
+  - Trả về mã lỗi xác định (`Exit Code: 0` = PASS, `Exit Code: 1` = FAIL).
+- Chuẩn hóa mẫu báo cáo `templates/04-TEST-RESULT-TEMPLATE.md` chia rõ 4 tầng:
+  * Tầng 1: Kiến trúc & Cấu trúc code (Zero-Install Web, ranh giới an toàn).
+  * Tầng 2: Công cụ xác định (Deterministic Static Analysis).
+  * Tầng 3: AI Rules & Đánh giá ngữ cảnh (Semantic / Intent validation).
+  * Tầng 4: Nghiệm thu người dùng thực tế (Human Acceptance).
+- Đồng bộ quy tắc vào `AGENTS.md` và kỹ năng `.agents/skills/rea-build/SKILL.md`.
+
 ## 2026-11-13 — Xây Dựng Siêu Lệnh Khởi Tạo Bộ Kit (Meta-Bootstrap Prompt)
 
 ### Completed

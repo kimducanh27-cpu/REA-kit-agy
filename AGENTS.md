@@ -49,5 +49,9 @@ Hệ thống vận hành thông qua 3 kỹ năng chuyên biệt trong `.agents/s
    Nếu máy người dùng thiếu Java/JADX (khi phân tích APK) hoặc Ghidra (khi phân tích EXE), tuyệt đối KHÔNG in mã lỗi crash. Tự động chuyển sang phân tích tĩnh nhẹ (đọc file nén, manifest, asset, chuỗi text) và giải thích ngắn gọn bằng tiếng Việt.
 3. **Ưu tiên Zero-Install Runtime (Chạy không cần cài đặt)**:
    Khi người dùng chọn phương án *Viết lại hoàn toàn (Rewrite)*, Agent ưu tiên xuất ra công nghệ **Web độc lập (HTML/CSS/JS chạy trực tiếp trên trình duyệt)**. Người non-tech chỉ cần nhấp đúp chuột để mở app mà không phải cài Node.js hay Python.
-4. **Cổng kiểm chứng bắt buộc (Verification Gate)**:
-   Trước khi tuyên bố hoàn thành, kỹ năng `rea-build` bắt buộc phải tự chạy lệnh kiểm tra cú pháp (Syntax/Build Check) và xuất file `05_MA_NGUON_PHAT_TRIEN/KET_QUA_KIEM_THU.md` chứng minh app không có lỗi cú pháp.
+4. **Cổng kiểm chứng 4 tầng bắt buộc (4-Tier Quality Control Gate)**:
+   *Triết lý cốt lõi: "Dùng công cụ xác định cho lỗi xác định; chỉ dùng AI ở phần cần suy luận."*
+   - **Tầng 1 (Kiến trúc & Ranh giới)**: Thiết kế ngăn ngừa lỗi ngay từ đầu, ưu tiên Web độc lập (Zero-Install), dữ liệu lưu trữ cục bộ.
+   - **Tầng 2 (Công cụ xác định)**: Bắt buộc chạy script `.agents/scripts/verify_code.ps1` để kiểm tra cú pháp thẻ HTML, cú pháp JavaScript và quét rò rỉ secret. Phải đạt `Exit Code: 0` mới được đi tiếp.
+   - **Tầng 3 (AI đánh giá ngữ cảnh)**: AI đối chiếu mã nguồn thực tế với bản đặc tả yêu cầu đã chốt trong `03_`.
+   - **Tầng 4 (Nghiệm thu người dùng)**: Xuất file `05_MA_NGUON_PHAT_TRIEN/KET_QUA_KIEM_THU.md` theo mẫu `templates/04-TEST-RESULT-TEMPLATE.md` để người dùng nghiệm thu thực tế.

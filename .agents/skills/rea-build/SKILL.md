@@ -19,13 +19,12 @@ Kỹ năng chuyên biệt cho giai đoạn sinh mã nguồn và kiểm thử, đ
    - Nếu là **Hướng A (Nâng cấp tiếp)**: Sao chép mã nguồn gốc từ `04_SAO_LUU_AN_TOAN/` sang `05_MA_NGUON_PHAT_TRIEN/` và tạo nhánh/thư mục làm việc an toàn.
    - Nếu là **Hướng B (Viết lại hoàn toàn)**: Khởi tạo khung dự án mới tinh. **Bắt buộc ưu tiên công nghệ Web độc lập (Single-file HTML/CSS/JavaScript)** để người dùng non-tech có thể mở chạy ngay bằng trình duyệt (Chrome/Edge) mà không cần cài đặt Node.js hay Python.
 
-3. **Cổng kiểm chứng bắt buộc (Verification Gate)**:
-   - Viết mã nguồn sạch, có chú thích tiếng Việt.
-   - Bắt buộc tự chạy lệnh kiểm tra cú pháp hoặc build thử nghiệm trước khi báo hoàn thành.
-   - Xuất file **`05_MA_NGUON_PHAT_TRIEN/KET_QUA_KIEM_THU.md`** gồm:
-     * Lệnh kiểm tra đã chạy (Syntax check / Build / Test).
-     * Kết quả thực tế (Thành công / Cảnh báo).
-     * Bằng chứng chức năng hoạt động bình thường, không có lỗi cú pháp.
+3. **Cổng kiểm chứng 4 tầng bắt buộc (4-Tier Verification Gate)**:
+   - *Triết lý: Dùng công cụ xác định cho lỗi xác định; chỉ dùng AI ở phần cần suy luận.*
+   - **Tầng 1 (Kiến trúc)**: Kiểm tra cấu trúc ranh giới Web độc lập, không phụ thuộc môi trường ngoài.
+   - **Tầng 2 (Công cụ xác định)**: Chạy script `powershell -ExecutionPolicy Bypass -File .agents/scripts/verify_code.ps1`. Script này kiểm tra cú pháp HTML/JS và quét leak secret. Bắt buộc phải đạt Exit Code 0.
+   - **Tầng 3 (AI đánh giá ngữ cảnh)**: AI đối chiếu xem các tính năng mới có đúng với đặc tả yêu cầu đã chốt không.
+   - **Tầng 4 (Nghiệm thu)**: Xuất file **`05_MA_NGUON_PHAT_TRIEN/KET_QUA_KIEM_THU.md`** theo mẫu `templates/04-TEST-RESULT-TEMPLATE.md`.
 
 4. **Tạo tài liệu hướng dẫn chạy 1 trang (Run Guide)**:
    - Tạo file `05_MA_NGUON_PHAT_TRIEN/HUONG_DAN_CHAY_APP.md` đúng 1 trang:

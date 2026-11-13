@@ -29,6 +29,7 @@ A Vietnamese-first kit using upstream REA (https://github.com/morluto/rea) and G
   - 3 modular skills: `.agents/skills/rea-scan/`, `.agents/skills/rea-interview/`, `.agents/skills/rea-build/`
   - `.agents/rules/rea-workflow.md` (Antigravity YAML rule for security and data integrity)
   - `.agents/scripts/health_check.ps1` (Tested: 5/5 components verified ready)
+  - `.agents/scripts/verify_code.ps1` (Deterministic syntax, tag & secret checker, exit code 0/1)
   - `.agents/state/active_case.json` (State machine tracking live cases across chat sessions)
   - Windows hidden attribute applied to `.agents/` (`attrib +h`)
 - Diagram and Prompt Playbook:
