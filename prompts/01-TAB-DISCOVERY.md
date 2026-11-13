@@ -5,28 +5,29 @@
 ---
 
 ```markdown
-# Tab 01 — Phase 01: Discovery (Bước 01: App Intake & Bước 02: Reference Baseline)
+# Tab 01 — Stage 01: Discovery (Bước 01: App Intake & Bước 02: Reference Baseline)
 
 Read and follow `AGENTS.md` and `docs/WORKFLOW_LIFECYCLE.md`.
 Activate Skill `rea-scan` and `reverse-engineer-anything`.
+Tận dụng plugin `Android CLI` của Google Antigravity và công cụ REA ADB.
 
-You are executing **PHASE 01 · DISCOVERY**:
+You are executing **STAGE_01 · DISCOVERY**:
 
 ### BƯỚC 01: APP INTAKE / PREFLIGHT (Tiếp nhận & Kiểm tra)
-1. Kiểm tra thư mục `01_THA_APP_VAO_DAY/`. Xác định file đầu vào (APK, Electron ASAR, ZIP, Web URL, v.v.).
+1. Kiểm tra thư mục `01_THA_APP_VAO_DAY/`. Xác định file đầu vào (Android APK, Electron ASAR, ZIP, Web URL, v.v.).
 2. **SAO LƯU AN TOÀN**: Tự động sao chép nguyên vẹn file gốc sang thư mục `04_SAO_LUU_AN_TOAN/` (đặt cờ Read-Only).
 3. Đọc `UPSTREAMS.md` để đảm bảo REA engine đã sẵn sàng.
-4. Cập nhật `active_case.json`: `target_name`, `target_type`, `current_phase = "PHASE_01_DISCOVERY"`, `current_step = "01_APP_INTAKE"`.
+4. Cập nhật `active_case.json`: `target_name`, `target_type`, `current_phase = "STAGE_01_DISCOVERY"`, `current_step = "01_APP_INTAKE"`.
 
 ### BƯỚC 02: REFERENCE BASELINE (Đo kiểm Ứng dụng Gốc)
-1. Nếu môi trường hỗ trợ (có máy ảo, trình duyệt hoặc runtime):
-   - Chạy thử ứng dụng gốc.
-   - Chụp ảnh màn hình giao diện (Screenshots), ghi nhận danh mục màn hình (Screen Inventory) và luồng thao tác người dùng.
-   - Lưu ảnh chụp/ghi chép vào `01_THA_APP_VAO_DAY/baseline/`.
-2. **Cơ chế Fallback (Nếu không có máy ảo / không thể chạy runtime)**:
-   - Tự động chuyển sang bóc tách tài nguyên tĩnh (hình ảnh, icon, layout file, string resources).
-   - Đánh dấu trạng thái runtime là `SKIPPED (Tĩnh)`.
-   - Tuyệt đối không dừng lại hay báo lỗi crash terminal.
+1. **Nếu mục tiêu là Android APK (`.apk`)**:
+   - Kiểm tra Antigravity Device Hub và máy ảo AVD:
+     * Nếu có máy ảo AVD hoặc thiết bị thật kết nối: Khởi chạy app với `start_adb_app` hoặc lệnh Android CLI.
+     * Chụp ảnh màn hình giao diện baseline sống bằng lệnh `android screen` hoặc `capture_adb_screen` và lưu vào `01_THA_APP_VAO_DAY/baseline/`.
+     * Bóc tách phân cấp giao diện (UI Component Hierarchy) bằng lệnh `android layout` để lập danh mục màn hình gốc.
+   - **Cơ chế Fallback tĩnh**: Nếu máy người dùng chưa có AVD / Device Hub / thiết bị thật kết nối, tự động chuyển sang bóc tách tài nguyên tĩnh với `inspect_android_package` (layout XML, strings.xml, icons, drawable, AndroidManifest.xml) và đánh dấu trạng thái runtime là `SKIPPED (Tĩnh)`. Tuyệt đối không dừng lại hay báo lỗi crash terminal.
+2. **Nếu là các định dạng khác (Web, Electron ASAR, Desktop)**:
+   - Chạy thử app trong trình duyệt hoặc runtime cục bộ, chụp ảnh baseline và ghi nhận luồng thao tác.
 3. **CỔNG 01 (Quality Gate 01: `gate_01_baseline_verified`)**:
    - Khi có đủ ảnh chụp baseline HOẶC đã bóc tách tài nguyên tĩnh dự phòng:
    - Cập nhật `active_case.json`: `gates.gate_01_baseline_verified = true`, `current_step = "02_REFERENCE_BASELINE"`.
@@ -34,7 +35,7 @@ You are executing **PHASE 01 · DISCOVERY**:
 
 ### BÁO CÁO CHO NGƯỜI DÙNG:
 Báo cáo ngắn gọn bằng tiếng Việt đời thường:
-- Loại file đã nhận & xác nhận đã sao lưu vào `04_SAO_LUU_AN_TOAN/`.
-- Trạng thái Baseline (Đã chạy thử thành công / hay Bóc tách tài nguyên tĩnh dự phòng).
+- Loại file đã nhận & xác nhận đã sao lưu an toàn vào `04_SAO_LUU_AN_TOAN/`.
+- Trạng thái Baseline (Chạy thử qua AVD/Device Hub với `android layout`/`android screen`, hoặc Bóc tách tài nguyên tĩnh dự phòng).
 - Thông báo CỔNG 01 ĐÃ MỞ. Hướng dẫn người dùng mở `prompts/02-TAB-REVERSE-ENGINEERING.md` để dán tiếp.
 ```

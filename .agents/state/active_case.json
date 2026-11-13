@@ -1,8 +1,9 @@
 {
   "case_id": null,
   "target_name": null,
-  "target_type": null,
-  "current_phase": "PHASE_00_FOUNDATION",
+  "target_class": "ANDROID_APK",
+  "target_type": "ANDROID_APK",
+  "current_phase": "STAGE_00_BOOTSTRAP",
   "current_step": "00_PROJECT_BOOTSTRAP",
   "current_gate_status": "GATE_00_READY",
   "next_prompt_guide": "Dán 'prompts/01-TAB-DISCOVERY.md' để bắt đầu tiếp nhận app và đo kiểm baseline.",
@@ -31,6 +32,6 @@
     "risk_level": "LOW",
     "review_convergence_rounds": 0
   },
-  "last_updated": "2026-11-13T17:35:00+07:00",
-  "notes": "Hệ thống máy trạng thái 6 Phase · 14 Bước theo chuẩn Anthropic & EGM"
+  "last_updated": "2026-11-13T18:30:00+07:00",
+  "notes": "Hệ thống máy trạng thái 6 Giai đoạn STAGE_00_BOOTSTRAP .. STAGE_05_VALIDATION · 14 Bước (V1 Target: ANDROID_APK)"
 }

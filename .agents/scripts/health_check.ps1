@@ -93,6 +93,15 @@ if ($mcpOk) {
     Write-Host "        npx -y rea-agents setup --client antigravity --yes" -ForegroundColor Cyan
 }
 
+# 7. Kiểm tra Android CLI Tooling & Device Hub Readiness (V1 Target Class: Android APK)
+$androidCmd = Get-Command android -ErrorAction SilentlyContinue
+$adbCmd = Get-Command adb -ErrorAction SilentlyContinue
+if ($androidCmd) {
+    Write-Host "[OK] Android CLI khả dụng: Hỗ trợ AVD, Device Hub, android layout, android screen." -ForegroundColor Green
+} else {
+    Write-Host "[i] Android CLI: Chưa phát hiện trong PATH (REA-kit-agy tự động kích hoạt Static Fallback XML/Assets)." -ForegroundColor Yellow
+}
+
 Write-Host "==========================================================" -ForegroundColor Cyan
 if ($score -eq $total) {
     Write-Host " KẾT QUẢ: WORKSPACE & RUNTIME SẴN SÀNG ($score/$total) - BẠN CÓ THỂ BẮT ĐẦU!" -ForegroundColor Green
@@ -108,9 +117,12 @@ if (Test-Path ".agents\state\active_case.json") {
         if ($case) {
             Write-Host ""
             Write-Host "--- TIẾN ĐỘ DỰ ÁN (LIFECYCLE STATUS) ---" -ForegroundColor Yellow
-            Write-Host " Phase hiện tại : $($case.current_phase)" -ForegroundColor White
+            Write-Host " Stage hiện tại : $($case.current_phase)" -ForegroundColor White
+            Write-Host " Target Class   : $($case.target_class)" -ForegroundColor White
             Write-Host " Bước hiện tại  : $($case.current_step)" -ForegroundColor White
             Write-Host " Trạng thái Gate: $($case.current_gate_status)" -ForegroundColor White
+            Write-Host " Android CLI    : $(if ($androidCmd) { 'SẴN SÀNG (AVD / Device Hub / layout / screen)' } else { 'STATIC FALLBACK (Bóc tách tài nguyên tĩnh XML/Smali)' })" -ForegroundColor $(if ($androidCmd) { 'Green' } else { 'Yellow' })
+            Write-Host " ADB Tool       : $(if ($adbCmd) { 'KHẢ DỤNG' } else { 'Chưa cấu hình trong PATH' })" -ForegroundColor $(if ($adbCmd) { 'Green' } else { 'Gray' })
             Write-Host " Hướng dẫn tiếp : $($case.next_prompt_guide)" -ForegroundColor Cyan
             Write-Host "----------------------------------------" -ForegroundColor Yellow
         }

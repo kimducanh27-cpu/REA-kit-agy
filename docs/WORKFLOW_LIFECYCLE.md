@@ -1,7 +1,12 @@
 # QUY TRÌNH VÒNG ĐỜI DỰ ÁN (WORKFLOW LIFECYCLE) — REA-KIT-AGY
-## Khung Chuẩn 6 Phase · 14 Bước & 6 Cổng Kiểm Soát Chất Lượng (Quality Gates)
+## Khung Chuẩn 6 Stage · 14 Bước & 6 Cổng Kiểm Soát Chất Lượng (Quality Gates)
 
-Tài liệu này là đặc tả chuẩn hóa kiến trúc điều phối của **REA-kit-agy**. Mọi AI Agent (Antigravity, Claude Code, Cursor) và con người tham gia dự án đều phải tuân thủ nghiêm ngặt từng bước và các cổng kiểm soát (Gates) dưới đây.
+> [!IMPORTANT]
+> **Tách Bạch Hệ Thống Phân Loại (Taxonomy Decoupling)**:
+> - **Lộ trình Phát triển Kho (Repo Development Roadmap — P00 đến P05)**: Theo dõi tiến độ xây dựng công cụ, kiến trúc và kỹ năng của bản thân kho REA-kit-agy (P00 đã hoàn tất, P01 đang thực hiện).
+> - **Quy trình Điều phối Ca Phân tích (End-User Case Workflow — STAGE_00 đến STAGE_05)**: 6 giai đoạn chuẩn hóa (`STAGE_00_BOOTSTRAP` đến `STAGE_05_VALIDATION`), 14 bước nguyên tử và 6 cổng kiểm soát chất lượng dưới đây, do AI Agent thực hiện trên từng ứng dụng mục tiêu (`active_case.json`).
+
+Tài liệu này là đặc tả chuẩn hóa kiến trúc điều phối ca phân tích của **REA-kit-agy**. Mọi AI Agent (Antigravity, Claude Code, Cursor) và con người tham gia dự án đều phải tuân thủ nghiêm ngặt từng bước và các cổng kiểm soát (Gates) dưới đây.
 
 ---
 
@@ -9,39 +14,39 @@ Tài liệu này là đặc tả chuẩn hóa kiến trúc điều phối của 
 
 ```mermaid
 flowchart TD
-    subgraph P0["PHASE 00 · FOUNDATION"]
+    subgraph S0["STAGE 00 · FOUNDATION / BOOTSTRAP"]
         S00["00. PROJECT BOOTSTRAP<br/>(Khởi tạo Git, Workspace, Cấu hình Agent, Context Docs)"]
     end
 
-    subgraph P1["PHASE 01 · DISCOVERY (Tab 01)"]
+    subgraph S1["STAGE 01 · DISCOVERY (Tab 01)"]
         S01["01. APP INTAKE / PREFLIGHT<br/>(Nhận app, kiểm tra file, phân loại định dạng)"]
-        S02["02. REFERENCE BASELINE<br/>(Chạy thử app gốc, chụp màn hình UI, luồng thao tác)"]
+        S02["02. REFERENCE BASELINE<br/>(Android CLI / AVD / Device Hub / REA ADB hoặc Fallback tĩnh)"]
         G1{"CỔNG 01: Baseline Verified?<br/>(Có ảnh giao diện hoặc Fallback tĩnh)"}
     end
 
-    subgraph P2["PHASE 02 · REVERSE ENGINEERING (Tab 02)"]
+    subgraph S2["STAGE 02 · REVERSE ENGINEERING (Tab 02)"]
         S03["03. REA SCAN<br/>(Phân tích cấu trúc, mã nguồn, tài nguyên, Evidence)"]
         S04["04. REA INVESTIGATE<br/>(Truy vết hàm, khảo sát runtime & hành vi)"]
-        S05["05. REA AUDIT<br/>(Kiểm tra Evidence, Coverage, xuất Sổ Unknowns)"]
-        G2{"CỔNG 02: Audit Passed?<br/>(Không còn lỗ hổng che giấu, Unknowns rõ ràng)"}
+        S05["05. REA AUDIT<br/>(Kiểm toán Scoped Static Audit, Coverage, Sổ Unknowns)"]
+        G2{"CỔNG 02: Scoped Audit Passed?<br/>(Scoped Static Audit đạt, che mờ secrets, Unknowns rõ ràng)"}
     end
 
-    subgraph P3["PHASE 03 · PRODUCT DEFINITION (Tab 03)"]
+    subgraph S3["STAGE 03 · PRODUCT DEFINITION (Tab 03)"]
         S06["06. REA INTERVIEW<br/>(Phỏng vấn người dùng: mục tiêu, tính năng, cải tiến)"]
         S07["07. SPEC & DESIGN GATE<br/>(Đặc tả sản phẩm, Design Tokens 3 tầng, 4 UI States)"]
         S08["08. IMPLEMENTATION PLAN<br/>(Chia task nguyên tử, xác định phụ thuộc & thứ tự)"]
         G3{"CỔNG 03: Spec Frozen?<br/>(Người dùng duyệt đặc tả & kế hoạch chia task)"}
     end
 
-    subgraph P4["PHASE 04 · IMPLEMENTATION (Tab 04)"]
-        S09["09. REA BUILD<br/>(Viết code theo từng task, Zero-Install Web App)"]
+    subgraph S4["STAGE 04 · IMPLEMENTATION (Tab 04)"]
+        S09["09. REA BUILD<br/>(Build Routes: Web Zero-Install / Android Native `android create` / Patch APK)"]
         S10["10. BUILD QA / CODE REVIEW<br/>(Independent Reviewer: Standards vs Spec, Syntax, Risk Classifier)"]
         G4{"CỔNG 04: Build QA Passed?<br/>(Syntax 100% OK, không lỗi, Risk được kiểm soát)"}
     end
 
-    subgraph P5["PHASE 05 · VALIDATION (Tab 05)"]
-        S11["11. RUN APP / SMOKE TEST<br/>(Khởi chạy app mới, kiểm tra chức năng cốt lõi)"]
-        S12["12. HARD VERIFY<br/>(Đối chiếu 1-1 với app gốc: Khớp 100% / Khác biệt / Nâng cấp)"]
+    subgraph S5["STAGE 05 · VALIDATION (Tab 05)"]
+        S11["11. RUN APP / SMOKE TEST<br/>(Khởi chạy Web hoặc AVD/Device Hub qua Android CLI / start_adb_app)"]
+        S12["12. HARD VERIFY<br/>(Đối chiếu 1-1: android layout, android screen, Khớp 100% / Khác biệt / Nâng cấp)"]
         G5{"CỔNG 05: Hard Verify Passed?<br/>(Người dùng xác nhận app mới đạt yêu cầu)"}
         S13["13. RELEASE & HANDOFF<br/>(Đóng gói, Explainer đời thường, Hướng dẫn HOAN_TAC.bat)"]
         G6{"CỔNG 06: Handoff Signed?<br/>(Ký nhận trách nhiệm, bàn giao mã nguồn hoàn tất)"}
@@ -62,16 +67,16 @@ flowchart TD
 
 ---
 
-## 2. Chi Tiết Từng Phase & 14 Bước Thực Hiện
+## 2. Chi Tiết Từng Stage & 14 Bước Thực Hiện
 
-### PHASE 00 · FOUNDATION — Khởi Tạo Nền Móng
+### STAGE 00 · FOUNDATION / BOOTSTRAP — Khởi Tạo Nền Móng
 - **Thời điểm thực hiện**: Duy nhất một lần khi bắt đầu dự án.
 - **Nhiệm vụ**: Khởi tạo cấu trúc thư mục chuẩn, Git, cấu hình Agent (`AGENTS.md`, `REVIEW.md`), bộ nhớ trạng thái (`active_case.json`), bộ nhớ học sự cố (`learned_rules.json`) và tài liệu ngữ cảnh (`docs/`).
 - **Lệnh thực hiện**: Chạy siêu lệnh tại `prompts/BOOTSTRAP_KIT.md` hoặc kiểm tra bằng `KIEM_TRA.bat`.
 
 ---
 
-### PHASE 01 · DISCOVERY — Khám Phá & Thiết Lập Chuẩn Đối Chiếu
+### STAGE 01 · DISCOVERY — Khám Phá & Thiết Lập Chuẩn Đối Chiếu
 *Tương ứng Tab Prompt: `prompts/01-TAB-DISCOVERY.md`*
 
 #### Bước 01: App Intake / Preflight (Tiếp nhận & Kiểm tra)
@@ -79,30 +84,37 @@ flowchart TD
 - **Hành động Agent**:
   1. Tự động sao lưu nguyên vẹn tệp gốc vào `04_SAO_LUU_AN_TOAN/` (Bất khả xâm phạm).
   2. Xác định định dạng tệp, cấu trúc bao gói, tính toàn vẹn (checksum).
-  3. Kiểm tra quyền truy cập, các biến môi trường và công cụ dịch ngược sẵn có trên máy.
+  3. Kiểm tra quyền truy cập, các biến môi trường và công cụ dịch ngược sẵn có trên máy (Android CLI, REA MCP, ADB, JADX).
 - **Đầu ra**: Ghi nhận thông tin tệp vào `.agents/state/active_case.json`.
 
 #### Bước 02: Reference Baseline (Đo kiểm Ứng dụng Gốc)
 - **Hành động Agent**:
-  1. Chạy thử ứng dụng gốc (nếu có môi trường/máy ảo/trình duyệt).
-  2. Chụp ảnh màn hình giao diện thực tế, ghi nhận danh mục màn hình (Screen Inventory) và luồng thao tác mẫu.
-  3. **Cơ chế Fallback (Nếu không có máy ảo/thiết bị thật)**: Tự động chuyển sang bóc tách tài nguyên tĩnh (hình ảnh, icon, layout, chuỗi ký tự) và đánh dấu `SKIPPED (Tĩnh)`. Tuyệt đối không dừng lại hay báo lỗi crash terminal.
+  1. **Quy trình với Android APK (Mục tiêu cốt lõi V1)**:
+     - Tận dụng plugin **Android CLI** của Antigravity kết hợp cùng công cụ **REA ADB**:
+       * Khởi chạy ứng dụng trên máy ảo AVD hoặc thiết bị thật qua Antigravity Device Hub bằng `start_adb_app` hoặc lệnh `android`.
+       * Chụp ảnh màn hình giao diện thực tế bằng `android screen` hoặc `capture_adb_screen` và lưu vào `01_THA_APP_VAO_DAY/baseline/`.
+       * Trích xuất phân cấp giao diện (UI Hierarchy) trực tiếp bằng `android layout` để lập danh mục màn hình sống (Live Screen Inventory).
+  2. **Quy trình với ứng dụng khác (Web, Electron ASAR, Desktop)**:
+     - Chạy thử app gốc trên trình duyệt hoặc runtime cục bộ, chụp ảnh giao diện và ghi nhận luồng thao tác mẫu.
+  3. **Cơ chế Fallback (Nếu không có máy ảo/thiết bị thật/không chạy được runtime)**:
+     - Tự động chuyển sang bóc tách tài nguyên tĩnh với `inspect_android_package` (layout XML, drawables, strings, AndroidManifest.xml đối với APK) hoặc bóc tách assets/HTML tĩnh.
+     - Đánh dấu runtime là `SKIPPED (Tĩnh)`. Tuyệt đối không dừng lại hay báo lỗi crash terminal.
 - **CỔNG 01 (`gate_01_baseline_verified`)**: Đã có đủ ảnh giao diện hoặc đã trích xuất toàn bộ tài nguyên tĩnh dự phòng.
 
 ---
 
-### PHASE 02 · REVERSE ENGINEERING — Bóc Tách & Dịch Ngược Chuyên Sâu
+### STAGE 02 · REVERSE ENGINEERING — Bóc Tách & Dịch Ngược Chuyên Sâu
 *Tương ứng Tab Prompt: `prompts/02-TAB-REVERSE-ENGINEERING.md`*
 
 #### Bước 03: REA Scan (Quét Cấu Trúc & Tài Nguyên)
 - **Hành động Agent**:
-  1. Sử dụng công cụ MCP từ `reverse-engineer-anything` để giải mã cấu trúc gói (AndroidManifest, package.json, binaries).
+  1. Sử dụng công cụ MCP từ `reverse-engineer-anything` để giải mã cấu trúc gói (đối với APK: `inspect_android_package`, AndroidManifest.xml, permissions, activities, services; đối với ASAR: `analyze_javascript_application`).
   2. Tự động che mờ toàn bộ API Keys, Secret Tokens thành `[REDACTED]` để chống rò rỉ dữ liệu.
   3. Lập danh mục màn hình và bảng trạng thái giao diện (Screen Inventory & State Matrix).
 
 #### Bước 04: REA Investigate (Điều Tra Hành Vi & Logic Nghiệp Vụ)
 - **Hành động Agent**:
-  1. Phân tích luồng dữ liệu (Data flow), các API endpoint, cách lưu trữ dữ liệu (SQLite, LocalStorage, Preferences).
+  1. Phân tích luồng dữ liệu (Data flow), các API endpoint, cách lưu trữ dữ liệu (SQLite, SharedPreferences, LocalStorage).
   2. Truy vết các hàm nghiệp vụ trọng yếu (Xác thực, tính toán, giỏ hàng, mã hóa).
   3. Đánh dấu các khối code obfuscated hoặc native libraries chưa rõ bản chất.
 
@@ -110,13 +122,15 @@ flowchart TD
 - **Hành động Agent**:
   1. Đối chiếu bằng chứng tĩnh với bằng chứng động (Static vs Dynamic Evidence).
   2. Đo lường tỷ lệ bao phủ bằng chứng (Coverage Score: ví dụ 85% chức năng đã được giải mã rõ ràng).
-  3. **Xuất Sổ Theo Dõi Unknowns**: Ghi toàn bộ các điểm chưa giải mã được, các rủi ro bảo mật vào file:
+  3. **Kiểm toán tĩnh có giới hạn phạm vi (Scoped Static Audit)**:
+     - Nhận diện các pattern bất thường, quyền hạn nhạy cảm, network endpoints gọi ra ngoài, không đưa ra tuyên bố tuyệt đối về "quét sạch 100% mã độc" (tránh ngộ nhận an ninh).
+  4. **Xuất Sổ Theo Dõi Unknowns**: Ghi toàn bộ các điểm chưa giải mã được, các vùng code chưa xác thực vào file:
      `03_KET_QUA_KIEM_TRA/UNKNOWNS_AND_COVERAGE.md`.
-- **CỔNG 02 (`gate_02_audit_passed`)**: Đã quét sạch mã độc, che mờ secrets, và mọi điểm mù đều được đưa vào sổ Unknowns.
+- **CỔNG 02 (`gate_02_audit_passed`)**: Đạt kiểm toán tĩnh Scoped Static Audit, che mờ 100% secrets `[REDACTED]`, và mọi điểm mù đều được đưa vào sổ Unknowns.
 
 ---
 
-### PHASE 03 · PRODUCT DEFINITION — Định Hình Sản Phẩm & Kế Hoạch
+### STAGE 03 · PRODUCT DEFINITION — Định Hình Sản Phẩm & Kế Hoạch
 *Tương ứng Tab Prompt: `prompts/03-TAB-PRODUCT-DEFINITION.md`*
 
 #### Bước 06: REA Interview (Phỏng Vấn Người Dùng Thân Thiện)
@@ -126,6 +140,7 @@ flowchart TD
      - Giữ lại chức năng nào của app gốc?
      - Bỏ qua hoặc sửa đổi chức năng nào?
      - Cần bổ sung tính năng mới hoặc đổi giao diện ra sao?
+     - Chọn hướng tái tạo mã nguồn (Web Zero-Install, Android Native hay Patch APK)?
      - Xử lý các điểm mù (Unknowns) bằng phương án nào?
 
 #### Bước 07: Spec & Design Gate (Đóng Băng Đặc Tả & Thiết Kế)
@@ -144,15 +159,18 @@ flowchart TD
 
 ---
 
-### PHASE 04 · IMPLEMENTATION — Triển Khai & Kiểm Toán Mã Nguồn
+### STAGE 04 · IMPLEMENTATION — Triển Khai & Kiểm Toán Mã Nguồn
 *Tương ứng Tab Prompt: `prompts/04-TAB-IMPLEMENTATION.md`*
 
-#### Bước 09: REA Build (Viết Mã Nguồn Theo Chuẩn Zero-Install)
+#### Bước 09: REA Build (Viết Mã Nguồn Theo Các Build Routes Linh Hoạt)
 - **Hành động Agent**:
   1. Tự động lưu snapshot vào `05_MA_NGUON_PHAT_TRIEN/.backup/` trước khi viết code.
-  2. Ưu tiên xuất **Web App độc lập (HTML/CSS/JS thuần)** chạy trực tiếp trên trình duyệt, không bắt người dùng cài môi trường.
+  2. **Lựa chọn Build Route theo đặc tả đã chốt**:
+     - **Route A (Mặc định — Zero-Install Web App)**: Triển khai Web App độc lập (`index.html`, `styles.css`, `app.js`) chạy trực tiếp trên trình duyệt, không bắt người dùng cài môi trường.
+     - **Route B (Android Native Project)**: Sử dụng plugin **Android CLI** của Antigravity (`android create` hoặc template Android Gradle với Kotlin/Java) để tạo project Android chuẩn, tái tạo UI bằng Jetpack Compose / XML Layouts và logic nghiệp vụ. Hỗ trợ biên dịch và chạy trực tiếp trên AVD/thiết bị qua Android SDK.
+     - **Route C (Patch APK / Resources hoặc Web/Hybrid)**: Thực hiện vá tài nguyên/smali trực tiếp trên gói APK gốc, hoặc đóng gói ứng dụng Hybrid (Capacitor/PWA) nếu người dùng yêu cầu môi trường lai.
   3. Tuân thủ 100% token màu sắc, typography và 4 trạng thái UI từ `design.md`.
-  4. Nếu là bản sửa đổi/nâng cấp: Xuất file xem trước `preview.html` trước khi ghi đè `index.html`.
+  4. Nếu là bản sửa đổi/nâng cấp: Xuất file xem trước (`preview.html` hoặc build preview APK) trước khi hoàn thiện bản chính thức.
 
 #### Bước 10: Build QA / Code Review (Thẩm Định Độc Lập & Phân Tầng Rủi Ro)
 - **Hành động Agent**:
@@ -164,23 +182,26 @@ flowchart TD
   4. **Chốt chặn phân tầng rủi ro**:
      - `LOW RISK`: UI/Text tĩnh ➔ Tự động thông qua sau kiểm tra cú pháp.
      - `MEDIUM RISK`: Logic form, dữ liệu local ➔ Kiểm tra theo checklist.
-     - `HIGH RISK` / `SYNTAX ERROR`: Lỗi cú pháp hoặc gọi mạng ngoài không báo trước ➔ **CHẶN ĐỨNG**. Không cho phép chuyển sang Phase 05.
+     - `HIGH RISK` / `SYNTAX ERROR`: Lỗi cú pháp hoặc gọi mạng ngoài không báo trước ➔ **CHẶN ĐỨNG**. Không cho phép chuyển sang Stage 05.
   5. Xuất báo cáo kiểm thử vào `03_KET_QUA_KIEM_TRA/KET_QUA_KIEM_THU.md`.
 - **CỔNG 04 (`gate_04_build_qa_passed`)**: Mã nguồn vượt qua kiểm tra cú pháp, không có cờ HIGH RISK chưa giải trình.
 
 ---
 
-### PHASE 05 · VALIDATION — Nghiệm Thu Đối Chiếu & Bàn Giao
+### STAGE 05 · VALIDATION — Nghiệm Thu Đối Chiếu & Bàn Giao
 *Tương ứng Tab Prompt: `prompts/05-TAB-VALIDATION.md`*
 
 #### Bước 11: Run App / Smoke Test (Khởi Chạy & Kiểm Tra Nhanh)
 - **Hành động Agent**:
-  1. Hướng dẫn người dùng nhấp đúp mở app trên trình duyệt hoặc chạy runtime cục bộ.
-  2. Kiểm tra các luồng đi cơ bản (Happy path): tải trang, hiển thị dữ liệu mẫu, điều hướng các màn hình.
+  1. **Với Web App**: Hướng dẫn người dùng nhấp đúp mở `05_MA_NGUON_PHAT_TRIEN/index.html` trên trình duyệt.
+  2. **Với Android Native / APK**: Cài đặt và khởi chạy app mới trên máy ảo AVD hoặc thiết bị thật kết nối qua Device Hub bằng lệnh `start_adb_app` hoặc Android CLI.
+  3. Kiểm tra các luồng đi cơ bản (Happy path): tải trang/màn hình chính, hiển thị dữ liệu mẫu, điều hướng các màn hình.
 
 #### Bước 12: Hard Verify (Đối Chiếu 1-1 Với App Gốc)
 - **Hành động Agent**:
-  1. Đặt app mới cạnh app gốc để đối chiếu từng tính năng và giao diện.
+  1. Đặt app mới cạnh app gốc để đối chiếu từng tính năng và giao diện:
+     - **Với Android**: Sử dụng `android screen` hoặc `capture_adb_screen` để ghi lại hình ảnh app mới; chạy `android layout` để trích xuất cây cấu trúc component và so sánh 1-1 với layout baseline thu được tại Bước 02.
+     - **Với Web**: So sánh trực tiếp trên trình duyệt hoặc đối chiếu với ảnh chụp màn hình trong `01_THA_APP_VAO_DAY/baseline/`.
   2. Lập bảng đối chiếu trực quan 3 cột:
      - **Cột 1: Khớp 100%**: Các chức năng và UI chuẩn xác như bản gốc.
      - **Cột 2: Khác biệt có chủ đích**: Các điểm thay đổi đã được thống nhất tại Bước 06.
@@ -204,11 +225,11 @@ flowchart TD
 
 | Cổng Kiểm Soát | Vị Trí Vòng Đời | Điều Kiện Vượt Qua (Passing Criteria) | Hành Động Khi Bị Từ Chối (Reject Loop) |
 | :--- | :--- | :--- | :--- |
-| **GATE 01** (`gate_01_baseline_verified`) | Sau Bước 02 | Có ảnh chụp app gốc hoặc đã bóc tách tài nguyên tĩnh dự phòng. | Bổ sung file vào `01_` hoặc chạy lại chế độ Static Fallback. |
-| **GATE 02** (`gate_02_audit_passed`) | Sau Bước 05 | Quét sạch mã độc, che mờ API Keys, xuất đủ `UNKNOWNS_AND_COVERAGE.md`. | Điều tra bổ sung các file nghi vấn tại Bước 04. |
-| **GATE 03** (`gate_03_spec_frozen`) | Sau Bước 08 | Người dùng duyệt `dac-ta-yeu-cau-da-chot.md` và `KE_HOACH_TRIEN_KHAI.md`. | Tạo bản `SPEC_v2.md`, lùi về Bước 06 để phỏng vấn lại. Không xóa bản cũ. |
+| **GATE 01** (`gate_01_baseline_verified`) | Sau Bước 02 | Có ảnh chụp app gốc (từ AVD/Device Hub qua `android screen`/`capture_adb_screen` hoặc browser) hoặc đã bóc tách tài nguyên tĩnh dự phòng (`inspect_android_package`). | Bổ sung file vào `01_` hoặc chạy lại chế độ Static Fallback. |
+| **GATE 02** (`gate_02_audit_passed`) | Sau Bước 05 | Đạt Scoped Static Audit (kiểm toán tĩnh có giới hạn phạm vi, phát hiện patterns nghi vấn, che mờ API Keys `[REDACTED]`, không over-claim quét sạch mã độc, xuất đủ `UNKNOWNS_AND_COVERAGE.md`). | Điều tra bổ sung các file nghi vấn tại Bước 04. |
+| **GATE 03** (`gate_03_spec_frozen`) | Sau Bước 08 | Người dùng duyệt `dac-ta-yeu-cau-da-chot.md` (bao gồm lựa chọn Build Route) và `KE_HOACH_TRIEN_KHAI.md`. | Tạo bản `SPEC_v2.md`, lùi về Bước 06 để phỏng vấn lại. Không xóa bản cũ. |
 | **GATE 04** (`gate_04_build_qa_passed`) | Sau Bước 10 | Syntax check 100% OK, không có HIGH RISK chưa duyệt, Independent Reviewer PASS. | Lùi về Bước 09 tối đa 2 lần. Nếu vẫn lỗi, dừng lại báo cáo người dùng. |
-| **GATE 05** (`gate_05_hard_verify_passed`) | Sau Bước 12 | Người dùng xác nhận bảng đối chiếu Hard Verify đạt yêu cầu. | Tạo `FIX_PLAN_v2.md`, lùi về Bước 09 để sửa code cục bộ. |
+| **GATE 05** (`gate_05_hard_verify_passed`) | Sau Bước 12 | Người dùng xác nhận bảng đối chiếu Hard Verify đạt yêu cầu (so sánh UI/layout qua `android layout` hoặc đối chiếu visual). | Tạo `FIX_PLAN_v2.md`, lùi về Bước 09 để sửa code cục bộ. |
 | **GATE 06** (`gate_06_handoff_signed`) | Sau Bước 13 | Người dùng ký nhận bàn giao, đã kiểm tra `HOAN_TAC.bat` sẵn sàng. | Hoàn tất dự án, lưu trạng thái hoàn thành vào `active_case.json`. |
 
 ---
@@ -219,20 +240,21 @@ flowchart TD
 
 ```text
 REA-kit-agy/
-├── 01_THA_APP_VAO_DAY/             # [Phase 01]: File ứng dụng gốc cần phân tích
-├── 02_YEU_CAU_CUA_TOI/            # [Phase 03]: ho-so-va-muc-tieu.md, design.md (Tokens 3 tầng)
-├── 03_KET_QUA_KIEM_TRA/           # [Phase 02, 03, 04, 05]:
-│   ├── UNKNOWNS_AND_COVERAGE.md   # Sản phẩm Bước 05 (Sổ theo dõi điểm mù & độ phủ)
-│   ├── dac-ta-yeu-cau-da-chot.md   # Sản phẩm Bước 07 (Đặc tả đóng băng)
+├── 01_THA_APP_VAO_DAY/             # [Stage 01]: File ứng dụng gốc cần phân tích & baseline/ (ảnh màn hình, layout dump)
+├── 02_YEU_CAU_CUA_TOI/            # [Stage 03]: ho-so-va-muc-tieu.md, design.md (Tokens 3 tầng)
+├── 03_KET_QUA_KIEM_TRA/           # [Stage 02, 03, 04, 05]:
+│   ├── UNKNOWNS_AND_COVERAGE.md   # Sản phẩm Bước 05 (Sổ theo dõi điểm mù & độ phủ Scoped Audit)
+│   ├── dac-ta-yeu-cau-da-chot.md   # Sản phẩm Bước 07 (Đặc tả đóng băng & Build Route)
 │   ├── KE_HOACH_TRIEN_KHAI.md     # Sản phẩm Bước 08 (Kế hoạch chia task nguyên tử)
 │   ├── KET_QUA_KIEM_THU.md        # Sản phẩm Bước 10 (Chứng chỉ QA & Review độc lập)
-│   └── BAO_CAO_NGHIEM_THU_HARD_VERIFY.md # Sản phẩm Bước 12 (Bảng đối chiếu 1-1)
+│   └── BAO_CAO_NGHIEM_THU_HARD_VERIFY.md # Sản phẩm Bước 12 (Bảng đối chiếu 1-1 qua android layout / visual)
 ├── 04_SAO_LUU_AN_TOAN/            # [Bảo vệ]: Bản sao lưu nguyên vẹn gốc (Chỉ đọc, bất khả xâm phạm)
-└── 05_MA_NGUON_PHAT_TRIEN/        # [Phase 04 & 05]:
-    ├── index.html, styles.css, app.js # Mã nguồn sản phẩm mới (Zero-Install Web App)
-    ├── preview.html               # Bản xem trước theo giai đoạn trước khi ghi đè
-    ├── BAN_GIAO_SAN_PHAM.md       # Sản phẩm Bước 13 (Gói bàn giao & Explainer đời thường)
-    └── .backup/                   # Snapshot tự động phục vụ HOAN_TAC.bat
+└── 05_MA_NGUON_PHAT_TRIEN/        # [Stage 04 & 05]:
+    ├── index.html, styles.css, app.js # Mã nguồn Route A (Zero-Install Web App)
+    ├── android/                       # Mã nguồn Route B (Android Native Project tạo qua `android create`)
+    ├── preview.html                   # Bản xem trước theo giai đoạn trước khi ghi đè
+    ├── BAN_GIAO_SAN_PHAM.md           # Sản phẩm Bước 13 (Gói bàn giao & Explainer đời thường)
+    └── .backup/                       # Snapshot tự động phục vụ HOAN_TAC.bat
 ```
 
 ---
@@ -241,8 +263,10 @@ REA-kit-agy/
 
 1. **Sau mỗi cổng Gate thành công**:
    - Agent bắt buộc cập nhật bảng checklist trong `docs/PROGRESS.md`.
-   - Cập nhật trường `current_phase`, `current_step`, `current_gate_status` trong `.agents/state/active_case.json`.
+   - Cập nhật trường `current_phase` (theo Stage taxonomy: `STAGE_00_BOOTSTRAP` .. `STAGE_05_VALIDATION`), `current_step`, `current_gate_status` trong `.agents/state/active_case.json`.
 2. **Khi phát sinh sự cố hoặc hoàn tác**:
    - Agent tự động nạp nguyên nhân vào `.agents/state/learned_rules.json` để không lặp lại sai lầm trong các lượt build tiếp theo.
 3. **Khi kết thúc dự án (Gate 06)**:
    - Toàn bộ thông tin phiên bản, known issues và hướng dẫn chạy được đồng bộ trọn vẹn vào `docs/HANDOFF.md`.
+
+

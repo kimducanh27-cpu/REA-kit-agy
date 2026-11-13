@@ -1,27 +1,29 @@
 ---
 name: rea-build
-description: Triển khai mã nguồn Web App Zero-Install vào thư mục 05_MA_NGUON_PHAT_TRIEN, thẩm định chất lượng độc lập theo chuẩn Anthropic (REVIEW.md), thực hiện smoke test, hard verify đối chiếu 1-1 và đóng gói bàn giao sản phẩm hoàn thiện. Phụ trách Phase 04 (Implementation) và Phase 05 (Validation) theo docs/WORKFLOW_LIFECYCLE.md.
+description: Triển khai mã nguồn đa lộ trình (Web Zero-Install, Android Native qua Antigravity Android CLI 'android create', hoặc Patch APK/Hybrid) vào thư mục 05_MA_NGUON_PHAT_TRIEN, thẩm định chất lượng độc lập theo chuẩn Anthropic (REVIEW.md), thực hiện smoke test trên browser hoặc AVD/Device Hub, hard verify đối chiếu 1-1 qua 'android layout' / 'android screen' và đóng gói bàn giao sản phẩm hoàn thiện. Phụ trách STAGE_04 (Implementation) và STAGE_05 (Validation) theo docs/WORKFLOW_LIFECYCLE.md.
 ---
 
 # KỸ NĂNG: PHÁT TRIỂN, KIỂM ĐỊNH & BÀN GIAO SẢN PHẨM (REA-BUILD)
 
-Kỹ năng chuyên biệt cho **Phase 04 (Implementation)** và **Phase 05 (Validation)** theo khung chuẩn 6 Phase · 14 Bước tại `docs/WORKFLOW_LIFECYCLE.md`.
-Tuân thủ nghiêm ngặt hợp đồng thẩm định tại `REVIEW.md` và mô hình **Anthropic Code Review Pipeline** (*"How the Claude Code team does code review"*).
+Kỹ năng chuyên biệt cho **STAGE_04 (Implementation)** và **STAGE_05 (Validation)** theo khung chuẩn 6 Stage · 14 Bước tại `docs/WORKFLOW_LIFECYCLE.md`.
+Tuân thủ nghiêm ngặt hợp đồng thẩm định tại `REVIEW.md` và mô hình **Anthropic Code Review Pipeline** (*"How the Claude Code team does code review"*), kết hợp công cụ phát triển **Android CLI** của Google Antigravity.
 
 ---
 
 ## 1. PHÂN CÔNG THEO 2 GIAI ĐOẠN
 
-### GIAI ĐOẠN 1: PHASE 04 · IMPLEMENTATION (Bước 09 & 10)
+### GIAI ĐOẠN 1: STAGE_04 · IMPLEMENTATION (Bước 09 & 10)
 
-#### Bước 09: REA Build (Phát Triển Mã Nguồn Chuẩn Zero-Install)
-1. **Kiểm tra điều kiện tiên quyết**: Đọc `03_KET_QUA_KIEM_TRA/KE_HOACH_TRIEN_KHAI.md` và `02_YEU_CAU_CUA_TOI/design.md`. (Bắt buộc Cổng 03 đã mở).
+#### Bước 09: REA Build (Phát Triển Mã Nguồn Đa Lộ Trình)
+1. **Kiểm tra điều kiện tiên quyết**: Đọc `03_KET_QUA_KIEM_TRA/KE_HOACH_TRIEN_KHAI.md`, `03_KET_QUA_KIEM_TRA/dac-ta-yeu-cau-da-chot.md` và `02_YEU_CAU_CUA_TOI/design.md`. (Bắt buộc Cổng 03 đã mở).
 2. **Lá chắn hoàn tác tự động**: Tự động lưu snapshot mã nguồn cũ vào `05_MA_NGUON_PHAT_TRIEN/.backup/YYYYMMDD_HHmmss/` trước khi sửa code. Đảm bảo nút **`HOAN_TAC.bat`** luôn sẵn sàng.
 3. **Nạp bài học quá khứ (Incidents to Evals)**: Đọc `.agents/state/learned_rules.json` để không tái phạm lỗi cũ.
-4. **Triển khai mã nguồn**:
-   - Ưu tiên Web App độc lập (`index.html`, `styles.css`, `app.js`) chạy trực tiếp trên trình duyệt, zero-install.
-   - Bắt buộc tuân thủ Design Tokens từ `design.md` và đủ 4 trạng thái UI: `Loading`, `Empty`, `Success`, `Error`.
-   - **Bản xem trước Staged Preview**: Khi sửa đổi/nâng cấp, xuất ra `05_MA_NGUON_PHAT_TRIEN/preview.html` trước khi ghi đè `index.html`.
+4. **Triển khai theo Build Route đã duyệt**:
+   - **Route A (Mặc định — Zero-Install Web App)**: Web App độc lập (`index.html`, `styles.css`, `app.js`) chạy trực tiếp trên trình duyệt, không bắt người dùng cài môi trường.
+   - **Route B (Android Native Project)**: Sử dụng plugin **Android CLI** của Antigravity (`android create` hoặc template Android Gradle với Kotlin/Java) khởi tạo dự án Android chuẩn trong `05_MA_NGUON_PHAT_TRIEN/android/`, dựng UI bằng Jetpack Compose hoặc XML layouts bóc tách từ REA.
+   - **Route C (Patch APK / Resources hoặc Web/Hybrid)**: Thực hiện vá tài nguyên/smali trực tiếp trên gói APK gốc hoặc đóng gói môi trường Hybrid (Capacitor/PWA).
+5. Bắt buộc tuân thủ Design Tokens từ `design.md` và đủ 4 trạng thái UI: `Loading`, `Empty`, `Success`, `Error`.
+6. **Bản xem trước Staged Preview**: Khi sửa đổi/nâng cấp, xuất ra `05_MA_NGUON_PHAT_TRIEN/preview.html` (hoặc bản build preview APK) trước khi thay thế bản chính.
 
 #### Bước 10: Build QA / Code Review (Thẩm Định Độc Lập & Kiểm Soát Rủi Ro)
 1. **Thẩm định 2 trục độc lập** theo `REVIEW.md`:
@@ -33,20 +35,23 @@ Tuân thủ nghiêm ngặt hợp đồng thẩm định tại `REVIEW.md` và m�
 5. **Chốt chặn phân tầng rủi ro**:
    - `LOW RISK`: UI/Text tĩnh ➔ Tự động duyệt sau khi syntax test OK.
    - `MEDIUM RISK`: Logic form, dữ liệu local ➔ Báo cáo checklist tính năng.
-   - `HIGH RISK` / `SYNTAX ERROR`: Lỗi cú pháp hoặc gọi mạng ngoài không báo trước ➔ **CHẶN ĐỨNG**. Tuyệt đối không cho sang Phase 05.
+   - `HIGH RISK` / `SYNTAX ERROR`: Lỗi cú pháp hoặc gọi mạng ngoài không báo trước ➔ **CHẶN ĐỨNG**. Tuyệt đối không cho sang Stage 05.
 6. Xuất báo cáo kiểm thử vào `03_KET_QUA_KIEM_TRA/KET_QUA_KIEM_THU.md` theo `templates/04-TEST-RESULT-TEMPLATE.md`.
 7. **MỞ CỔNG 04 (`gate_04_build_qa_passed = true`)**: Cập nhật `active_case.json` và `docs/PROGRESS.md`.
 
 ---
 
-### GIAI ĐOẠN 2: PHASE 05 · VALIDATION (Bước 11, 12 & 13)
+### GIAI ĐOẠN 2: STAGE_05 · VALIDATION (Bước 11, 12 & 13)
 
 #### Bước 11: Run App / Smoke Test (Khởi Chạy & Kiểm Thử Nhanh)
-1. Hướng dẫn người dùng nhấp đúp file `05_MA_NGUON_PHAT_TRIEN/index.html` để chạy app trên trình duyệt.
-2. Kiểm tra nhanh luồng chính (Happy Path) xem giao diện có mượt mà, không giật lag.
+1. **Với Web App**: Hướng dẫn người dùng nhấp đúp file `05_MA_NGUON_PHAT_TRIEN/index.html` để chạy app trên trình duyệt.
+2. **Với Android Native / APK**: Cài đặt và khởi chạy app mới trên máy ảo AVD hoặc thiết bị thật qua Antigravity Device Hub bằng lệnh `start_adb_app` hoặc Android CLI.
+3. Kiểm tra nhanh luồng chính (Happy Path) để đảm bảo giao diện hiển thị đúng, tương tác phản hồi mượt mà.
 
 #### Bước 12: Hard Verify (Đối Chiếu 1-1 Với App Gốc)
-1. Đối chiếu trực tiếp với app gốc (hoặc ảnh chụp tại `01_THA_APP_VAO_DAY/baseline/`).
+1. Đối chiếu trực tiếp với app gốc (hoặc ảnh chụp/tài nguyên tại `01_THA_APP_VAO_DAY/baseline/`):
+   - **Với Android**: Sử dụng `android screen` hoặc `capture_adb_screen` để chụp ảnh màn hình app mới; dùng `android layout` để trích xuất cấu trúc phân cấp layout cây component và đối chiếu 1-1 với layout baseline tại Stage 01.
+   - **Với Web**: Đối chiếu visual trực quan trên browser với baseline.
 2. Lập bảng đối chiếu trực quan 3 cột:
    - Cột 1: Khớp 100% (Y hệt bản gốc).
    - Cột 2: Khác biệt có chủ đích (Đã thống nhất tại Bước 06).

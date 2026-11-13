@@ -1,40 +1,78 @@
 # PROGRESS — REA-kit-agy
 
 - Last updated: 2026-11-13
-- Overall: P01 READY (Khung chuẩn 6 Phase · 14 Bước & 6 Cổng kiểm soát chất lượng)
-- Product direction: REA-powered App Investigation & Development Kit
+- Overall Project Status: **P01 IN_PROGRESS** (Repo Roadmap: P00 DONE, P01 ACTIVE)
+- Case Lifecycle State: **STAGE_00_BOOTSTRAP** completed, ready for **STAGE_01_DISCOVERY**
+- Product direction: REA-powered App Investigation & Development Kit (Target: Android APK V1, Skill-first)
 
 ---
 
-## BẢNG TIẾN ĐỘ VÒNG ĐỜI 6 PHASE · 14 BƯỚC (LIFECYCLE CHECKLIST)
+## KIẾN TRÚC PHÂN LOẠI LỘ TRÌNH (TAXONOMY DECOUPLING)
 
-| Phase | Bước | Tên Nhiệm Vụ | Đầu Ra / Artifact | Cổng Kiểm Soát (Gate) | Trạng Thái |
+Nhằm đảm bảo sự tách bạch tuyệt đối giữa việc phát triển công cụ kit và quy trình thực thi một ca phân tích ứng dụng của người dùng, dự án phân định rõ hai hệ quy chiếu:
+
+1. **Lộ trình Phát triển Repo (Repo Development Roadmap — P00 đến P05)**:
+   - **P00 (DONE)**: Nghiên cứu REA, thiết lập ranh giới sản phẩm, ban hành 6 ADRs nền tảng.
+   - **P01 (IN_PROGRESS)**: Tích hợp công cụ REA MCP và Android CLI plugin với Antigravity, hoàn thiện bộ kỹ năng điều phối.
+   - **P02 (TODO)**: Điều tra và đánh giá ứng dụng thực tế.
+   - **P03 (TODO)**: Làm rõ yêu cầu và đóng băng đặc tả.
+   - **P04 (TODO)**: Lập kế hoạch kiến trúc và thiết kế phát triển.
+   - **P05 (TODO)**: Triển khai, kiểm thử độc lập và bàn giao.
+
+2. **Quy trình Điều phối Ca Phân tích Ứng dụng (End-User Case Workflow — STAGE_00 đến STAGE_05)**:
+   - Khung điều phối 6 giai đoạn chuẩn hóa, 14 bước nguyên tử và 6 cổng kiểm soát chất lượng do AI Agent thực hiện trên ứng dụng mục tiêu (`active_case.json`).
+
+---
+
+## BẢNG TIẾN ĐỘ QUY TRÌNH CASE 6 GIAI ĐOẠN · 14 BƯỚC (CASE LIFECYCLE CHECKLIST)
+
+| Giai Đoạn (Case Stage) | Bước | Tên Nhiệm Vụ | Đầu Ra / Artifact | Cổng Kiểm Soát (Gate) | Trạng Thái |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| **P00** | 00 | Project Bootstrap | Workspace, Git, Config, State | Gate 00: Ready | `[x] ĐẠT` |
-| **P01** | 01 | App Intake / Preflight | Sao lưu sang `04_SAO_LUU_AN_TOAN/` | — | `[ ] CHỜ` |
-| **P01** | 02 | Reference Baseline | Ảnh chụp baseline / Trích xuất tĩnh | **GATE 01**: `gate_01_baseline_verified` | `[ ] CHỜ` |
-| **P02** | 03 | REA Scan | Screen Inventory, State Matrix | — | `[ ] CHỜ` |
-| **P02** | 04 | REA Investigate | Luồng nghiệp vụ, API, Data flow | — | `[ ] CHỜ` |
-| **P02** | 05 | REA Audit | `03_/UNKNOWNS_AND_COVERAGE.md` | **GATE 02**: `gate_02_audit_passed` | `[ ] CHỜ` |
-| **P03** | 06 | REA Interview | Biên bản phỏng vấn nhu cầu | — | `[ ] CHỜ` |
-| **P03** | 07 | Spec & Design Gate | `02_/design.md`, `03_/dac-ta-yeu-cau-da-chot.md` | — | `[ ] CHỜ` |
-| **P03** | 08 | Implementation Plan | `03_/KE_HOACH_TRIEN_KHAI.md` | **GATE 03**: `gate_03_spec_frozen` | `[ ] CHỜ` |
-| **P04** | 09 | REA Build | Web App Zero-Install, `preview.html` | — | `[ ] CHỜ` |
-| **P04** | 10 | Build QA / Code Review | `03_/KET_QUA_KIEM_THU.md` | **GATE 04**: `gate_04_build_qa_passed` | `[ ] CHỜ` |
-| **P05** | 11 | Run App / Smoke Test | Khởi chạy thực tế trên trình duyệt | — | `[ ] CHỜ` |
-| **P05** | 12 | Hard Verify | `03_/BAO_CAO_NGHIEM_THU_HARD_VERIFY.md` | **GATE 05**: `gate_05_hard_verify_passed` | `[ ] CHỜ` |
-| **P05** | 13 | Release & Handoff | `05_/BAN_GIAO_SAN_PHAM.md` | **GATE 06**: `gate_06_handoff_signed` | `[ ] CHỜ` |
+| **STAGE_00_BOOTSTRAP** | 00 | Project Bootstrap | Workspace, Git, Config, State | Gate 00: Ready | `[x] ĐẠT` |
+| **STAGE_01_DISCOVERY** | 01 | App Intake / Preflight | Sao lưu sang `04_SAO_LUU_AN_TOAN/` | — | `[ ] CHỜ` |
+| **STAGE_01_DISCOVERY** | 02 | Reference Baseline | Ảnh chụp baseline / Trích xuất tĩnh | **GATE 01**: `gate_01_baseline_verified` | `[ ] CHỜ` |
+| **STAGE_02_REVERSE_ENGINEERING** | 03 | REA Scan | Screen Inventory, State Matrix | — | `[ ] CHỜ` |
+| **STAGE_02_REVERSE_ENGINEERING** | 04 | REA Investigate | Luồng nghiệp vụ, API, Data flow | — | `[ ] CHỜ` |
+| **STAGE_02_REVERSE_ENGINEERING** | 05 | REA Audit | `03_/UNKNOWNS_AND_COVERAGE.md` | **GATE 02**: `gate_02_audit_passed` | `[ ] CHỜ` |
+| **STAGE_03_PRODUCT_DEFINITION** | 06 | REA Interview | Biên bản phỏng vấn nhu cầu | — | `[ ] CHỜ` |
+| **STAGE_03_PRODUCT_DEFINITION** | 07 | Spec & Design Gate | `02_/design.md`, `03_/dac-ta-yeu-cau-da-chot.md` | — | `[ ] CHỜ` |
+| **STAGE_03_PRODUCT_DEFINITION** | 08 | Implementation Plan | `03_/KE_HOACH_TRIEN_KHAI.md` | **GATE 03**: `gate_03_spec_frozen` | `[ ] CHỜ` |
+| **STAGE_04_IMPLEMENTATION** | 09 | REA Build | Web App Zero-Install, `preview.html` | — | `[ ] CHỜ` |
+| **STAGE_04_IMPLEMENTATION** | 10 | Build QA / Code Review | `03_/KET_QUA_KIEM_THU.md` | **GATE 04**: `gate_04_build_qa_passed` | `[ ] CHỜ` |
+| **STAGE_05_VALIDATION** | 11 | Run App / Smoke Test | Khởi chạy thực tế trên trình duyệt | — | `[ ] CHỜ` |
+| **STAGE_05_VALIDATION** | 12 | Hard Verify | `03_/BAO_CAO_NGHIEM_THU_HARD_VERIFY.md` | **GATE 05**: `gate_05_hard_verify_passed` | `[ ] CHỜ` |
+| **STAGE_05_VALIDATION** | 13 | Release & Handoff | `05_/BAN_GIAO_SAN_PHAM.md` | **GATE 06**: `gate_06_handoff_signed` | `[ ] CHỜ` |
 
 ---
 
-## 2026-11-13 — Chuẩn Hóa Toàn Diện Khung 6 Phase · 14 Bước & 6 Cổng Kiểm Soát Chất Lượng
+## 2026-11-13 — Phê Duyệt 6 Quyết Định Kiến Trúc (ADRs), Hoàn Tất P00, Kích Hoạt P01 & Chuẩn Hóa Phân Loại Lộ Trình
+
+### Completed
+- **Phê duyệt trọn bộ 6 Architecture Decision Records (ADRs) theo chuẩn MADR**:
+  1. `docs/adrs/0001-multi-target-architecture.md`: Phạm vi sản phẩm đa mục tiêu; lát cắt V1 xác thực chuyên sâu duy nhất `ANDROID_APK`.
+  2. `docs/adrs/0002-skill-first-delivery.md`: Sử dụng trực tiếp engine REA MCP upstream; điều phối qua Antigravity Skills tiếng Việt; không làm CLI wrapper thừa thãi.
+  3. `docs/adrs/0003-hybrid-memory-architecture.md`: Cấu trúc bộ nhớ 4 tầng (Event log, Trạng thái vận hành `active_case.json`, Tri thức bền vững `learned_rules.json` + `docs/`, Ngữ cảnh nạp tự động); cục bộ 100%, bảo mật tuyệt đối.
+  4. `docs/adrs/0004-single-coordinator-agent-model.md`: Mô hình Agent Điều Phối Đơn Lẻ (Single Coordinator) có toàn quyền; subagent chỉ dùng cho tác vụ cô lập; không ép buộc swarm trong V1.
+  5. `docs/adrs/0005-android-apk-first-target-via-android-cli.md`: Mục tiêu V1 là Android APK; tích hợp trực tiếp plugin chính thức `android-cli-plugin` của Google Antigravity (Device Hub, AVD, SDK, Layout Inspector) kết hợp REA ADB.
+  6. `docs/adrs/0006-cli-adr-management.md`: Quản lý ADR thuần file Markdown trong kho, không phụ thuộc UI web ngoài; cung cấp CLI script `.agents/scripts/adr.ps1`.
+- **Cập nhật & Đóng toàn bộ các đầu việc P00-01 đến P00-08**:
+  - P00-06 giải quyết dứt điểm qua quyết định `ANDROID_APK` và plugin Android CLI.
+  - P00-07 giải quyết dứt điểm qua quyết định Skill-first delivery.
+  - Chuyển trạng thái Lộ trình Repo: **P00 DONE**, **P01 IN_PROGRESS**.
+- **Tách bạch hoàn toàn Hệ thống Phân loại (Taxonomy Decoupling)**:
+  - Tách bạch Lộ trình Phát triển Kho (P00–P05) khỏi Quy trình Vòng đời Ca Phân tích của Người dùng (`STAGE_00_BOOTSTRAP` đến `STAGE_05_VALIDATION`).
+  - Cập nhật `.agents/state/active_case.json`: `current_phase` chuyển thành `STAGE_00_BOOTSTRAP`, bổ sung `target_class` là `ANDROID_APK`.
+
+---
+
+## 2026-11-13 — Chuẩn Hóa Toàn Diện Khung 6 Giai Đoạn · 14 Bước & 6 Cổng Kiểm Soát Chất Lượng
 
 ### Completed
 - Hoàn thành xuất sắc 3 vòng Grilling với 12 quyết định kiến trúc then chốt:
   1. **Đặc tả kiến trúc chuẩn hóa (`docs/WORKFLOW_LIFECYCLE.md`)**:
-     - Đặc tả chi tiết từng bước từ Phase 00 đến Phase 05, luồng Mermaid và tiêu chí 6 Cổng kiểm soát.
+     - Đặc tả chi tiết từng bước từ Stage 00 đến Stage 05, luồng Mermaid và tiêu chí 6 Cổng kiểm soát.
   2. **Gom Tab Prompts tối ưu hóa UX**:
-     - Khởi tạo bộ 5 Tab Prompts chuẩn (`prompts/01-TAB-DISCOVERY.md` đến `05-TAB-VALIDATION.md`) tương ứng 5 Phase thực thi, giúp người non-tech chỉ cần dán 5 lần.
+     - Khởi tạo bộ 5 Tab Prompts chuẩn (`prompts/01-TAB-DISCOVERY.md` đến `05-TAB-VALIDATION.md`) tương ứng 5 Giai đoạn thực thi, giúp người non-tech chỉ cần dán 5 lần.
   3. **Cơ chế Fallback Bước 02 (Reference Baseline)**:
      - Tự động chuyển sang trích xuất tài nguyên tĩnh và đánh dấu `SKIPPED (Tĩnh)` khi thiếu máy ảo/thiết bị thật.
   4. **Bổ sung trọn bộ 4 Templates mới**:
@@ -49,6 +87,8 @@
   7. **Đồng bộ hóa toàn bộ Skills & Rules**:
      - Cập nhật `rea-scan`, `rea-interview`, `rea-build`, `AGENTS.md`, `.agents/rules/rea-workflow.md`.
   8. **Kiểm tra sức khỏe đạt 6/6 PASSED**.
+
+---
 
 ## 2026-11-13 — Hoàn Thiện Trọn Bộ Anthropic Pipeline: Explainers Over Diffs, Tab 05 Review, Accountability & Risk Classifier
 
@@ -66,6 +106,8 @@
      - Cập nhật `UPSTREAMS.md`, `README.md`, `prompts/BOOTSTRAP_KIT.md`, và `docs/HANDOFF.md`.
      - Health check đạt 6/6 PASSED.
 
+---
+
 ## 2026-11-13 — Nâng Cấp Chuyên Sâu Anthropic Pipeline: REVIEW.md, High-Signal Filter, Incidents-to-Evals & Staged Preview
 
 ### Completed
@@ -81,6 +123,8 @@
   5. **Đồng bộ hóa hệ sinh thái**:
      - Cập nhật `.agents/skills/rea-build/SKILL.md`, `.agents/scripts/health_check.ps1`, `prompts/04-TAB-BUILD.md`, `README.md`, `prompts/BOOTSTRAP_KIT.md`, `docs/HANDOFF.md`.
      - Health check đạt 6/6 PASSED.
+
+---
 
 ## 2026-11-13 — Tích Hợp Mô Hình Anthropic Code Review (Independent Reviewer, Convergence & 1-Click Rollback)
 
