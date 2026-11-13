@@ -49,3 +49,13 @@
 - No live test has run in any target agent.
 - No PDF/DOCX/XLSX/OCR dependency is approved.
 - Do not begin P01 implementation until P00 source boundaries and unresolved decisions are reviewed.
+
+
+## P00-06 research breakdown
+
+| Subtask | Status | Evidence / exit condition |
+|---|---|---|
+| P00-06A — Survey PDF/DOCX/XLSX extractors | DONE | FILE_WORKFLOWS_RESEARCH.md |
+| P00-06B — Survey Vietnamese OCR engines, Windows support, offline models, and licenses | DONE | OCR_RESEARCH.md; exact revisions and license boundaries recorded |
+| P00-06C — Inspect packaging footprint and dependency boundaries | IN_PROGRESS | Metadata reviewed; actual Windows install footprint still needs testing |
+| P00-06D — Benchmark OCR and document parsing | TODO | CER/WER, layout/table quality, speed, memory, offline repeatability, and Windows setup measured |

@@ -73,3 +73,23 @@ This repository develops a personal-first Non-Tech Workspace Bootstrap Kit. It c
 ## 6. Instructions to the next AI
 
 Read AI_UPDATE_PROMPT.md first, then this HANDOFF.md and all six context files. Verify the current repository branch and Git status before changes. Do not assume prior chat history is available. Continue at P00-06 and P00-08; do not jump to implementation.
+
+
+## 7. Latest OCR research and exact continuation point
+
+Read [OCR_RESEARCH.md](OCR_RESEARCH.md) before continuing.
+
+No OCR engine is selected. Current test order:
+- RapidOCR 3.10.0 with PP-OCRv6 multilingual vi route and ONNX Runtime.
+- Tesseract 5.5.4 with vie.traineddata as baseline.
+- Docling 2.150.0 as document-level parsing comparison, using RapidOCR and Tesseract configurations.
+- PaddleOCR 3.7.0 as direct framework alternative.
+- EasyOCR 1.7.2 as lower-priority alternative.
+
+Next exact actions:
+1. Prepare public/synthetic Vietnamese scan fixtures with ground-truth text; do not use private user documents.
+2. Pin exact engine/package versions, model routes, model files, and hashes.
+3. Compare CER/WER, table reading order, rotated/skewed/faint scans, throughput, memory, offline repeatability, and Windows installation.
+4. Record reproducible results and decide whether one engine is sufficient or a baseline/fallback is needed.
+5. Present P00 implementation boundaries and dependency recommendations for owner approval.
+6. Do not implement the workspace generator or install dependencies before approval.

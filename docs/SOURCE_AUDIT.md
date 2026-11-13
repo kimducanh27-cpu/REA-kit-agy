@@ -149,3 +149,17 @@ Do not pin or install these dependencies based solely on this survey. Check curr
 - pypdf: https://github.com/py-pdf/pypdf/tree/77c9a418421b6a783b9e7795973e778f3a10fb9d
 - python-docx: https://github.com/python-openxml/python-docx/tree/e45454602b53e8e572b179ccf1c91093ec9f4ed7
 - openpyxl documentation: https://openpyxl.readthedocs.io/en/stable/
+
+
+## 9. OCR research — Vietnamese and Windows
+Detailed findings are in [OCR_RESEARCH.md](OCR_RESEARCH.md). Exact inspected sources:
+
+| Candidate | Inspected source | License evidence | Status |
+|---|---|---|---|
+| RapidOCR | https://github.com/RapidAI/RapidOCR/tree/ae1d898295ecec19df7f4782f52949780e56d211; python/rapidocr/default_models.yaml; python/MODEL_LICENSES.md | Apache-2.0 code; registered models Apache-2.0; dictionaries/fonts have separate terms | Priority prototype candidate; not tested |
+| Tesseract | https://github.com/tesseract-ocr/tesseract/tree/34f4e3ffc25847740a4b1d52d39d40e8013ace83; https://github.com/tesseract-ocr/tessdata_best/tree/e12c65a915945e4c28e237a9b52bc4a8f39a0cec | Apache-2.0 engine and tessdata_best; Vietnamese model file exists | Baseline comparator; not tested |
+| PaddleOCR | https://github.com/PaddlePaddle/PaddleOCR/tree/dab3fe35379033fdcb2d0e9572fac0b36c9a9ebf | Apache-2.0 repository; audit model assets separately | Alternative; not tested |
+| Docling | https://github.com/docling-project/docling/tree/b9bf356f9763095ca9d51e7452a054a7db20f237 | MIT repository; audit model/engine dependencies separately | Document-level parser candidate; not tested |
+| EasyOCR | https://github.com/JaidedAI/EasyOCR/tree/2f77e2e8125d666af859a57d49014731ecbf40c6 | Apache-2.0 source; model-weight terms not yet audited | Lower-priority alternative; not tested |
+
+No OCR code, model weights, or third-party binaries have been copied or installed.

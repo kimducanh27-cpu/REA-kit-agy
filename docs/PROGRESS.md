@@ -46,3 +46,35 @@
 - Created the six mandatory context files plus PLAN.md, HANDOFF.md, AI_UPDATE_PROMPT.md, and SOURCE_AUDIT.md.
 - Initial source inspection found REA as an implementation reference and Craft Anything as high-level UX observation only.
 - No product implementation was performed.
+
+
+## 2026-11-13 — P00 OCR research
+
+### Completed in this session
+- Verified the preceding source-audit commit remains on main and the context docs are present.
+- Researched Vietnamese OCR candidates from current upstream repositories and official documentation: RapidOCR, Tesseract/tessdata_best, PaddleOCR, Docling, and EasyOCR.
+- Inspected exact source files and licenses for RapidOCR's model registry/model-license notice, EasyOCR's language configuration, Tesseract's Vietnamese traineddata, PaddleOCR's language matrix, and Docling's package metadata.
+- Added OCR_RESEARCH.md with inspected revisions, release versions, license boundaries, Windows/offline behavior, candidate ordering, and test measures.
+- Updated FILE_WORKFLOWS_RESEARCH.md, SOURCE_AUDIT.md, TASKS.md, and HANDOFF.md.
+
+### Evidence-backed findings
+- RapidOCR v3.10.0 (2026-10-08) has a PP-OCRv6 multilingual route including vi; the official model registry lists Vietnamese. Its model-license notice says registered model artifacts are Apache-2.0, while dictionaries and fonts are outside that declaration.
+- RapidOCR supports local model paths. Its installation guide describes a roughly 27.2 MB package and says ONNX Runtime must be installed separately for the default ONNX engine from v2.0.6 onward.
+- Tesseract 5.5.4 was released 2026-10-28; the official tessdata_best repository contains vie.traineddata (12,435,550 bytes). Windows installation guidance points to UB Mannheim installers and separate language-data placement.
+- PaddleOCR v3.7.0 supports Vietnamese in PP-OCRv5 and PP-OCRv6 language tables and documents Windows/local model use.
+- Docling v2.150.0 (2026-11-10) is MIT-licensed, declares Python >=3.10 and Windows support, and documents pluggable OCR engines including RapidOCR, EasyOCR, and Tesseract.
+- EasyOCR source includes vi in its Latin language list and supports CPU-only mode, but the latest stable release inspected is v1.7.2 from 2024-09-24; Windows setup requires separate PyTorch/torchvision installation.
+- No engine has been benchmarked or selected.
+
+### Not completed
+- No OCR package has been installed.
+- No model weights or third-party binaries have been added to the repository.
+- No OCR accuracy, throughput, or memory comparison has run.
+- No Windows installation test has run.
+- No dependency set or P00 implementation boundary has been approved.
+
+### Next work
+1. Prepare public/synthetic Vietnamese scan fixtures with verified ground-truth text and representative tables.
+2. Compare RapidOCR PP-OCRv6 and Tesseract vie first; include Docling as a document-level pipeline comparison.
+3. Measure CER/WER, reading order/table fidelity, CPU/memory, offline repeatability, and Windows packaging effort.
+4. Complete P00 recommendations and obtain owner approval before P01 implementation.

@@ -145,3 +145,6 @@ Candidate role:
 ## 6. Research conclusion
 
 No dependency stack is approved. Current evidence supports a split between broad read-only extraction, specialized format editing, OCR, and independent output verification. The next step is a focused comparison and test plan, not immediate installation or code generation.
+
+
+See [OCR_RESEARCH.md](OCR_RESEARCH.md) for the separate Vietnamese OCR and Windows packaging audit.
