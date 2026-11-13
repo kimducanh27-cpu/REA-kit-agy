@@ -103,4 +103,4 @@ Muốn nhân bản toàn bộ bộ kit này sang một thư mục rỗng bất k
 
 ## Nguồn gốc & Giấy phép
 * **Upstream Engine**: [morluto/rea](https://github.com/morluto/rea) (Commit `5cddc69c51a0fb18d021417199046314581ba9c2`, MIT). Chi tiết xem tại [UPSTREAMS.md](UPSTREAMS.md).
-* **Quy tắc phát triển**: *"Upstream-first, orchestration-second"*, tham khảo cấu trúc chuẩn từ [kimducanh27-cpu/app-adr-ui](https://github.com/kimducanh27-cpu/app-adr-ui).
+* **Quy tắc phát triển**: *"Upstream-first, orchestration-second"*, tham khảo cấu trúc quy trình từ [kimducanh27-cpu/app-adr-ui](https://github.com/kimducanh27-cpu/app-adr-ui) và chuẩn kiểm toán chất lượng từ [Anthropic Code Review Pipeline](https://claude.dev/blog/solving-code-review-at-anthropic/).
