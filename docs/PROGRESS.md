@@ -1,8 +1,31 @@
 # PROGRESS — REA-kit-agy
 
 - Last updated: 2026-11-13
-- Overall: P00 IN PROGRESS
+- Overall: P01 IN PROGRESS (Non-tech Workspace Scaffold & REA Inspector Skill)
 - Product direction: REA-powered App Investigation & Development Kit
+
+## 2026-11-13 — Non-tech Workspace Scaffolding & REA Inspector Integration
+
+### Completed
+- Thiết lập toàn bộ cấu trúc thư mục giao diện người dùng trực quan cho non-tech:
+  - `01_THA_APP_VAO_DAY/` (Kèm README hướng dẫn thả file)
+  - `02_YEU_CAU_CUA_TOI/` (Kèm template `ho-so-va-muc-tieu.md` dạng điền khuyết)
+  - `03_KET_QUA_KIEM_TRA/` (Nơi xuất báo cáo hiện trạng, bảo mật và câu hỏi)
+  - `04_SAO_LUU_AN_TOAN/` (Lưu bản sao bảo toàn dữ liệu gốc)
+  - `05_MA_NGUON_PHAT_TRIEN/` (Nơi triển khai code nâng cấp hoặc viết lại app)
+- Soạn thảo `AGENTS.md` làm luật điều hành cốt lõi: 100% tiếng Việt thân thiện, không rác kỹ thuật, định tuyến thư mục và quy tắc an toàn REA.
+- Tạo `CLAUDE.md` sử dụng cú pháp import chính thức `@AGENTS.md`.
+- Tạo `HUONG_DAN_SU_DUNG.md` (Cheat sheet 1 trang) với 3 bước và 3 mẫu lệnh copy-paste.
+- Xây dựng Antigravity Skill `.agents/skills/rea-app-inspector/SKILL.md` bao trọn quy trình 4 bước: Check app -> Report -> Interview -> Build & Verify.
+- Thêm rule `.agents/rules/rea-workflow.md` với YAML frontmatter chuẩn Antigravity.
+- Viết script kiểm tra tự động `.agents/scripts/health_check.ps1` và file chạy 1-click `KIEM_TRA.bat`.
+- Chạy thử nghiệm Health Check: Đạt 5/5 kiểm tra thành công.
+- Cấu hình ẩn thư mục kỹ thuật `.agents` trên Windows (`attrib +h`).
+- Cấu hình `.gitignore` chặn rò rỉ file ứng dụng và dữ liệu cá nhân của người dùng.
+
+### In Progress
+- Tiếp nhận ứng dụng thực tế đầu tiên vào `01_THA_APP_VAO_DAY/` để kiểm thử quy trình trọn vẹn (end-to-end).
+- Tinh chỉnh các câu lệnh gọi REA MCP/CLI tương ứng theo từng định dạng file cụ thể.
 
 ## 2026-11-13 — Owner clarification and documentation direction reset
 

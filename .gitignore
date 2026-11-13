@@ -1,0 +1,25 @@
+# Dữ liệu ứng dụng và file người dùng (Bảo vệ thông tin cá nhân & bản quyền)
+01_THA_APP_VAO_DAY/*
+!01_THA_APP_VAO_DAY/README.md
+
+03_KET_QUA_KIEM_TRA/*
+!03_KET_QUA_KIEM_TRA/.gitkeep
+
+04_SAO_LUU_AN_TOAN/*
+!04_SAO_LUU_AN_TOAN/.gitkeep
+
+05_MA_NGUON_PHAT_TRIEN/*
+!05_MA_NGUON_PHAT_TRIEN/.gitkeep
+
+# Trạng thái xử lý nội bộ
+.agents/state/*
+!.agents/state/.gitkeep
+
+# File hệ thống và bộ nhớ tạm
+*.log
+*.tmp
+.DS_Store
+Thumbs.db
+node_modules/
+dist/
+build/
