@@ -37,3 +37,13 @@ Hệ thống vận hành thông qua 3 kỹ năng chuyên biệt trong `.agents/s
 - **Không bao giờ xóa hay ghi đè file gốc**: Luôn tạo bản sao sang `04_SAO_LUU_AN_TOAN/` trước khi thao tác sâu.
 - **Cổng cấp quyền người dùng**: Mọi hành động can thiệp runtime (chạy app, debug, can thiệp thiết bị qua ADB, bắt gói tin mạng) đều phải hỏi ý kiến xác nhận của người dùng trước khi thực hiện.
 - **Đồng bộ tài liệu sau phiên**: Mỗi khi hoàn thành một tác vụ lớn hoặc kết thúc phiên, Agent phải cập nhật lại `docs/PROGRESS.md` và `docs/HANDOFF.md`.
+
+---
+
+## 5. LUẬT KIỂM CHỨNG & TRẢI NGHIỆM ĐẦU RA CHO NON-TECH
+1. **Xử lý thiếu công cụ dịch ngược mượt mà (Graceful Fallback)**:
+   Nếu máy người dùng thiếu Java/JADX (khi phân tích APK) hoặc Ghidra (khi phân tích EXE), tuyệt đối KHÔNG in mã lỗi crash. Tự động chuyển sang phân tích tĩnh nhẹ (đọc file nén, manifest, asset, chuỗi text) và giải thích ngắn gọn bằng tiếng Việt.
+2. **Ưu tiên Zero-Install Runtime (Chạy không cần cài đặt)**:
+   Khi người dùng chọn phương án *Viết lại hoàn toàn (Rewrite)*, Agent ưu tiên xuất ra công nghệ **Web độc lập (HTML/CSS/JS chạy trực tiếp trên trình duyệt)**. Người non-tech chỉ cần nhấp đúp chuột để mở app mà không phải cài Node.js hay Python.
+3. **Cổng kiểm chứng bắt buộc (Verification Gate)**:
+   Trước khi tuyên bố hoàn thành, kỹ năng `rea-build` bắt buộc phải tự chạy lệnh kiểm tra cú pháp (Syntax/Build Check) và xuất file `05_MA_NGUON_PHAT_TRIEN/KET_QUA_KIEM_THU.md` chứng minh app không có lỗi cú pháp.

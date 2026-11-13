@@ -4,6 +4,16 @@
 - Overall: P01 IN PROGRESS (Non-tech Workspace Scaffold & REA Inspector Skill)
 - Product direction: REA-powered App Investigation & Development Kit
 
+## 2026-11-13 — Stress-test Quy trình với Chuẩn GitHub & Thêm 3 Cổng An Toàn
+
+### Completed
+- Đối chiếu quy trình bộ kit với repository `morluto/rea` và các chuẩn công nghiệp (`mattpocock-skills/verify-and-stop`).
+- Bổ sung 3 chốt chặn kỹ thuật quan trọng cho người dùng non-tech:
+  1. **Zero-Install Runtime Gate**: Ép `rea-build` ưu tiên xuất ra công nghệ Web tĩnh (HTML/CSS/JS chạy trực tiếp trên trình duyệt) khi viết lại app, giúp người dùng không cần cài môi trường phức tạp (Node/Python/Docker).
+  2. **Provider Prerequisite Fallback Gate**: Trong `rea-scan`, nếu máy người dùng thiếu Java/JADX hoặc Ghidra, Agent tự động chuyển sang đọc file nén và tài nguyên tĩnh, không quăng lỗi crash.
+  3. **Verification Gate**: Bắt buộc `rea-build` phải tự chạy kiểm tra cú pháp và xuất `05_MA_NGUON_PHAT_TRIEN/KET_QUA_KIEM_THU.md` trước khi bàn giao.
+- Cập nhật đồng bộ các quy tắc này vào `AGENTS.md`, `.agents/skills/rea-scan/SKILL.md`, và `.agents/skills/rea-build/SKILL.md`.
+
 ## 2026-11-13 — Tách 3 Modular Skills, Vẽ 4 Sơ đồ Mermaid & Bộ 5 Prompt Tự Dán
 
 ### Completed

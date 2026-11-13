@@ -19,10 +19,10 @@ Kỹ năng chuyên biệt cho giai đoạn tiếp nhận và phân tích tĩnh �
    - Sao chép nguyên vẹn toàn bộ file/thư mục từ `01_` sang `04_`.
    - Kiểm tra kích thước và tính toàn vẹn của bản sao trước khi thao tác tiếp.
 
-3. **Định tuyến công cụ phân tích (REA Target Routing)**:
-   * **File Android (`.apk`)**: Gọi `inspect_android_package` để đọc manifest, permissions, classes.
-   * **Gói Electron / JavaScript (`.asar` hoặc thư mục mã nguồn JS)**: Gọi `analyze_javascript_application` hoặc lệnh `npx -y rea-agents analyze-javascript-application <path> --json`.
-   * **File nén / Nhị phân (`.zip`, `.exe`, PyInstaller)**: Gọi `open_binary` và `inspect_artifact`.
+3. **Định tuyến công cụ phân tích (REA Target Routing & Fallback Gate)**:
+   * **File Android (`.apk`)**: Gọi `inspect_android_package`. Nếu máy thiếu Java/JADX, tự động chuyển sang đọc nội dung gói nén (manifest, assets, chuỗi resource thô) và giải thích nhẹ nhàng cho người dùng.
+   * **Gói Electron / JavaScript (`.asar` hoặc thư mục mã nguồn JS)**: Gọi `analyze_javascript_application` hoặc lệnh `npx -y rea-agents analyze-javascript-application <path> --json` (hoạt động độc lập, không cần công cụ ngoài).
+   * **File nén / Nhị phân (`.zip`, `.exe`, PyInstaller)**: Gọi `open_binary` và `inspect_artifact`. Nếu thiếu Ghidra/Hopper, chỉ đọc cấu trúc member và metadata.
    * **Website / Web link**: Gọi `list_browser_targets` hoặc `capture_browser_scenario` khi có sự cho phép.
    * **Mã nguồn phần mềm thông thường**: Sử dụng công cụ đọc code thông thường của Agent (tuân thủ tài liệu gốc REA: không ép REA phân tích mã nguồn thuần).
 

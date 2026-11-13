@@ -17,18 +17,21 @@ Kỹ năng chuyên biệt cho giai đoạn sinh mã nguồn và kiểm thử, đ
 
 2. **Khởi tạo không gian mã nguồn tại `05_MA_NGUON_PHAT_TRIEN/`**:
    - Nếu là **Hướng A (Nâng cấp tiếp)**: Sao chép mã nguồn gốc từ `04_SAO_LUU_AN_TOAN/` sang `05_MA_NGUON_PHAT_TRIEN/` và tạo nhánh/thư mục làm việc an toàn.
-   - Nếu là **Hướng B (Viết lại hoàn toàn)**: Khởi tạo khung dự án mới tinh (Scaffold) với công nghệ hiện đại đã thống nhất.
+   - Nếu là **Hướng B (Viết lại hoàn toàn)**: Khởi tạo khung dự án mới tinh. **Bắt buộc ưu tiên công nghệ Web độc lập (Single-file HTML/CSS/JavaScript)** để người dùng non-tech có thể mở chạy ngay bằng trình duyệt (Chrome/Edge) mà không cần cài đặt Node.js hay Python.
 
-3. **Viết mã nguồn & Kiểm thử (Build & Test)**:
-   - Viết code sạch, có chú thích tiếng Việt rõ ràng.
-   - Chạy kiểm tra cú pháp, build thử hoặc chạy unit test (nếu có).
-   - Tuyệt đối không để lại file rác hoặc các API key bí mật trong code.
+3. **Cổng kiểm chứng bắt buộc (Verification Gate)**:
+   - Viết mã nguồn sạch, có chú thích tiếng Việt.
+   - Bắt buộc tự chạy lệnh kiểm tra cú pháp hoặc build thử nghiệm trước khi báo hoàn thành.
+   - Xuất file **`05_MA_NGUON_PHAT_TRIEN/KET_QUA_KIEM_THU.md`** gồm:
+     * Lệnh kiểm tra đã chạy (Syntax check / Build / Test).
+     * Kết quả thực tế (Thành công / Cảnh báo).
+     * Bằng chứng chức năng hoạt động bình thường, không có lỗi cú pháp.
 
-4. **Tạo tài liệu hướng dẫn chạy (Run Guide)**:
-   - Tạo file `05_MA_NGUON_PHAT_TRIEN/HUONG_DAN_CHAY_APP.md` dài đúng 1 trang:
-     1. Yêu cầu cài đặt tối thiểu (ví dụ: cần cài Node.js hoặc Python).
-     2. Lệnh khởi chạy ứng dụng (ví dụ: `npm start` hoặc `python app.py`).
-     3. Cách kiểm tra các tính năng mới vừa được thêm.
+4. **Tạo tài liệu hướng dẫn chạy 1 trang (Run Guide)**:
+   - Tạo file `05_MA_NGUON_PHAT_TRIEN/HUONG_DAN_CHAY_APP.md` đúng 1 trang:
+     1. Cách mở ứng dụng (ví dụ: "Nhấp đúp chuột vào file `index.html` để mở trong trình duyệt").
+     2. Cách thử nghiệm các tính năng mới vừa được thêm.
+     3. Hướng dẫn sao lưu hoặc hoàn tác nếu cần.
 
 5. **Đồng bộ tiến độ**:
    - Cập nhật kết quả hoàn thành vào `docs/PROGRESS.md` và `docs/HANDOFF.md`.
