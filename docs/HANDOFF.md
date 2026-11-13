@@ -18,41 +18,58 @@ This repository develops a personal-first Non-Tech Workspace Bootstrap Kit. It c
 - Keep technical agent materials in an organized technical area; use .agents for new Antigravity workspace customizations.
 - Antigravity is the main agent, but do not abandon other-agent compatibility.
 - Research and reuse existing repositories before writing new components.
-- Two priority upstream repositories: https://github.com/morluto/rea and https://github.com/storytold/craft-anything.
-- The six mandatory context files live in this repository's docs folder: PRD.md, ARCHITECTURE.md, DESIGN.md, RULES.md, TASKS.md, PROGRESS.md.
-- Maintain PLAN.md, HANDOFF.md, AI_UPDATE_PROMPT.md and SOURCE_AUDIT.md as needed.
-- The docs folder contains context, decisions, plans, and progress only; no product source or user deliverables.
+- Priority upstream repositories: https://github.com/morluto/rea and https://github.com/storytold/craft-anything.
+- Six mandatory context files live in this repository's docs folder: PRD.md, ARCHITECTURE.md, DESIGN.md, RULES.md, TASKS.md, PROGRESS.md.
+- Maintain PLAN.md, HANDOFF.md, AI_UPDATE_PROMPT.md, and SOURCE_AUDIT.md.
+- docs contains context, decisions, plans, status, and research only; no product source or user deliverables.
 
 ## 3. Current verified findings
 
-- REA is MIT-licensed. Its current package metadata reports 6.9.0.
-- REA has a client definition for Antigravity and records personal-scope paths under ~/.gemini/config.
-- REA installation documentation says setup previews proposed configuration changes and asks for approval; it documents agent-specific skill locations.
-- Google's Antigravity docs describe workspace-local .agents customization directories, skills, MCP configuration, and AGENTS.md/GEMINI.md.
-- Craft Anything's current README identifies it as early alpha.
-- Craft Anything provides LICENSE-MIT and LICENSE-APACHE, a NOTICE, and ATTRIBUTION.md.
-- Craft Anything's AGENTS.md expressly says original work only and prohibits copying code, scripts, schemas, names, assets, or wording from another project.
-- Craft Anything's current Antigravity grant row declares no tool server and no approval integration. Do not treat its Antigravity adapter as a safe integration template.
+### REA
+- License MIT; inspected main commit 54906fdb1fc735b507961b2954f6968775cae4f6.
+- Setup/SetupPlan build actions before applying them, support dry-run, show a plan, and ask approval.
+- SetupRecoveryBackup uses exclusive copy behavior and verifies backup bytes.
+- ClientConfigurationTransaction serializes configuration writes for a resolved path.
+- SetupSkill checks skill directories and path conditions.
+- Doctor is a read-only structured readiness workflow.
+- Exact files and reuse boundaries are recorded in SOURCE_AUDIT.md.
 
-See SOURCE_AUDIT.md for exact links and revisions.
+### Agent compatibility
+- Antigravity, Cursor, and OpenCode document .agents/skills discovery.
+- Claude Code project skills use .claude/skills. Its AGENTS.md behavior is conditional; a CLAUDE.md @AGENTS.md import is documented.
+- Root AGENTS.md plus agent-specific adapters is the current proposed pattern, not runtime tested.
+- Detailed paths, scan behavior, and sources are in AGENT_COMPATIBILITY.md.
+
+### Office-file candidate research
+- MarkItDown: broad document-to-Markdown extraction candidate; not a high-fidelity output conversion tool.
+- pypdf: PDF extraction/structure candidate; scanned PDFs need OCR separately.
+- python-docx: DOCX creation and controlled-edit candidate; does not target legacy DOC.
+- pandas: tabular analysis candidate.
+- openpyxl: XLSX/XLSM candidate with XML security considerations and maintenance freshness concerns.
+- No dependency has been approved or installed.
+- Detailed limits and sources are in FILE_WORKFLOWS_RESEARCH.md.
+
+### Craft Anything
+- Its AGENTS.md explicitly says original work only and forbids copying code, scripts, schemas, names, assets, or wording.
+- Use high-level UX observations only.
+- Its Antigravity grants row currently reports no tool server and no approval integration.
 
 ## 4. What has NOT been done
 
 - No product code or workspace generator has been written.
-- No PDF/Word/Excel dependency has been chosen.
-- No Antigravity live integration test has run.
-- No other-agent adapter has been tested.
-- No final source mapping or architecture has been approved.
+- No OCR engine has been selected.
+- No live agent integration has been tested.
+- No office-document benchmark has been run.
+- No final architecture or dependency stack has been approved.
 
 ## 5. Exact next actions
 
-1. Continue inspecting REA's setup implementation, configuration merge/write behavior, backups, diagnostics, client registry, skill installation, and associated tests.
-2. Inspect relevant Craft Anything UX and status documents only; respect its original-work-only restriction.
-3. Research PDF, DOCX, XLSX, CSV, and image processing alternatives from primary documentation and maintained repositories.
-4. Verify official customization paths for Claude Code, Cursor, and OpenCode.
-5. Complete SOURCE_AUDIT.md with exact files, commit SHAs, licenses, and REUSED / ADAPTED / ORIGINAL / RESEARCH NEEDED labels.
-6. Present findings and unresolved choices before implementing P01.
+1. Research OCR candidates, including Vietnamese support, offline capability, license, packaging, and maintenance.
+2. Create representative public/synthetic fixtures for searchable PDF, scanned PDF, DOCX, XLSX with formulas/macros/formatting, CSV, and mixed folders.
+3. Define comparison criteria and inspect candidate behavior without using private user documents.
+4. Complete P00 recommendations and obtain owner approval for implementation boundaries.
+5. Do not start P01 code until P00 decisions are accepted.
 
 ## 6. Instructions to the next AI
 
-Read AI_UPDATE_PROMPT.md first, then this HANDOFF.md and all six context files. Verify the current repository branch and git status before changing anything. Do not assume prior chat history is available. Continue at P00-05/P00-06/P00-07; do not jump to coding.
+Read AI_UPDATE_PROMPT.md first, then this HANDOFF.md and all six context files. Verify the current repository branch and Git status before changes. Do not assume prior chat history is available. Continue at P00-06 and P00-08; do not jump to implementation.

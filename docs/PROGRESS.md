@@ -2,35 +2,47 @@
 
 - Last updated: 2026-11-13
 - Overall status: P00 IN PROGRESS
-- Latest repository commit before this baseline: 57d223d83860fa24b9f02e66463e539dcc5d6288 (initial commit)
+- Repository branch: main
+- Previous commit: c0b439d373571e24af4e44fb54470654c37ba4c2
 
-## 2026-11-13 — Project baseline and initial source audit
+## 2026-11-13 — P00 deeper source audit
 
 ### Completed in this session
-- Confirmed the destination repository is kimducanh27-cpu/REA-kit-agy, public, with main as the default branch.
-- Confirmed the connected GitHub integration has admin and push permissions.
-- Confirmed the repository initially contained only a short README.
-- Inspected REA README, package metadata, MIT license, AGENTS.md, Antigravity client registration in SupportedClients.ts, and installation guide.
-- Inspected Craft Anything README, current status document, MIT and Apache license texts, NOTICE, ATTRIBUTION.md, AGENTS.md, and the Antigravity adapter grant declaration.
-- Inspected Google's current Antigravity customization-discovery and /learn documentation.
-- Identified a critical limitation: Craft Anything's current Antigravity adapter declares no tool server and no approval integration, so it is not a safe adapter template for this kit.
+- Inspected REA setup planning, approval, dry-run, client configuration transaction, recovery backup, skills validation, doctor workflow, interactive setup, and filesystem regression tests.
+- Confirmed REA builds a setup plan, exposes dry-run, asks for approval, and only then applies selected actions.
+- Confirmed REA recovery backup uses exclusive copy behavior, preserves original bytes, and verifies the resulting backup.
+- Confirmed REA serializes configuration transactions per resolved path.
+- Confirmed REA Doctor is a read-only structured readiness workflow.
+- Reviewed current official customization documentation for Antigravity, Claude Code, Cursor, and OpenCode.
+- Recorded the cross-agent discovery matrix and adapter implications in AGENT_COMPATIBILITY.md.
+- Researched candidate document-processing projects and documented capabilities, licenses, maintenance signals, and limitations in FILE_WORKFLOWS_RESEARCH.md.
+- Expanded SOURCE_AUDIT.md with exact source mappings and file-level reuse boundaries.
 
 ### Evidence-backed findings
-- REA package metadata currently identifies package version 6.9.0 and MIT license.
-- REA's current Antigravity client definition points to a personal config path under ~/.gemini/config and a personal skills path under ~/.gemini/config/skills.
-- Google's Antigravity docs document project-local .agents/skills and .agents/mcp_config.json, plus workspace AGENTS.md/GEMINI.md.
-- Craft Anything's README identifies its status as early alpha.
-- Craft Anything's AGENTS.md expressly prohibits copying source code, scripts, schemas, names, assets, or wording from other projects.
+- Antigravity, Cursor, and OpenCode document project skill discovery from .agents/skills/.
+- Claude Code currently documents project skills in .claude/skills/ and has conditional AGENTS.md behavior; a CLAUDE.md @AGENTS.md import is an official compatibility mechanism.
+- MarkItDown is a broad candidate for extracting mixed documents into Markdown for AI analysis, but its README says it is not intended for high-fidelity document conversion for human consumption and includes input/network security cautions.
+- pypdf 7.0.1 was released on 2026-11-10; pypdf documentation warns scanned/image-only PDFs may yield little or no extracted text.
+- python-docx 1.2.0 is a candidate for DOCX creation and controlled updates, not legacy DOC.
+- openpyxl official documentation recommends defusedxml for certain XML attack protections; inspected PyPI metadata shows an older latest release date of 2024-06-28, so maintenance freshness is a concern.
+- No candidate dependency has been selected or installed.
 
 ### Not completed
 - No product source code or executable kit functionality has been created.
-- No office-document library or script has been selected.
-- No live installation or workflow test has been performed in Antigravity, Claude Code, Cursor, or OpenCode.
-- No generated user workspace has been tested.
-- No final architecture or dependency stack has been approved.
+- No OCR engine has been selected.
+- No live agent integration test has been performed.
+- No representative office-document fixture benchmark has run.
+- No final dependency stack or implementation architecture has been approved.
 
 ### Next work
-1. Continue P00 with a file-by-file source audit of reusable REA setup and client integration mechanisms.
-2. Research document-processing workflows from maintained repositories and official library documentation.
-3. Verify official cross-agent rules and skill discovery paths.
-4. Present the final source map and implementation boundaries before P01.
+1. Research OCR candidates with Vietnamese support, local processing, licensing, packaging, and maintenance status.
+2. Compare extraction and editing candidates against representative public/synthetic PDF, DOCX, XLSX, and scanned-PDF fixtures.
+3. Confirm the exact P00 implementation boundary and unresolved choices with the owner.
+4. Only then begin P01 Workspace Foundation.
+
+## 2026-11-13 — Initial repository baseline
+
+- Confirmed destination repository: kimducanh27-cpu/REA-kit-agy.
+- Created the six mandatory context files plus PLAN.md, HANDOFF.md, AI_UPDATE_PROMPT.md, and SOURCE_AUDIT.md.
+- Initial source inspection found REA as an implementation reference and Craft Anything as high-level UX observation only.
+- No product implementation was performed.

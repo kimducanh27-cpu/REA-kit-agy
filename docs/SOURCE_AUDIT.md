@@ -1,114 +1,151 @@
 # SOURCE AUDIT — REA-kit-agy
 
 - Audit date: 2026-11-13
-- Status: INITIAL AUDIT / PARTIAL
-- Purpose: source provenance, reuse boundary, and evidence for P00
+- Status: INITIAL SOURCE MAP COMPLETE / IMPLEMENTATION RESEARCH CONTINUES
+- Repository: https://github.com/kimducanh27-cpu/REA-kit-agy
+- Method: inspect repository contents, source files, documentation, licenses, and current branch commits. No upstream code was copied in this audit.
 
-## 1. Summary
+## 1. Executive summary
 
-The two priority repositories are not interchangeable sources.
+The two user-selected repositories have different and limited roles:
 
-- REA is the stronger candidate for studying agent client discovery, configuration registration, setup preview, approval, backup, and skill installation.
-- Craft Anything is a reference for simple-versus-advanced presentation, progress/status visibility, user approval moments, and evidence-oriented completion. Its contributor guidance forbids copying code, scripts, schemas, names, assets, or wording. Treat its material as high-level observation only.
-- Google's official Antigravity documentation is the authority for current Antigravity workspace customization discovery.
-
-No upstream source code has been copied into this repository by this audit.
+1. **morluto/rea** is the strongest implementation reference for client discovery, configuration planning, approval, backups, skill installation, diagnostics, and setup recovery. Its reverse-engineering product domain is outside this kit's office-workflow scope.
+2. **storytold/craft-anything** is a high-level product/UX observation source only. Its contributor instructions prohibit copying code, scripts, schemas, names, assets, or wording. Its Antigravity adapter currently declares no tool server and no approval integration, so it is not a safe Antigravity adapter reference.
+3. Google's current Antigravity documentation is the authority for workspace-local customization discovery.
+4. Office-file processing requires separate extraction, editing, OCR, and verification capabilities. No dependency is selected.
 
 ## 2. REA — morluto/rea
 
 Repository: https://github.com/morluto/rea
-License: MIT (repository LICENSE and package.json)
-Version observed in package.json: 6.9.0
-Main branch commit inspected: 54906fdb1fc735b507961b2954f6968775cae4f6
-Package description: reverse-engineering CLI and MCP server. Its reverse-engineering features are outside this kit's initial office-workflow scope.
+Inspected main commit: 54906fdb1fc735b507961b2954f6968775cae4f6
+Inspected package version: 6.9.0
+License: MIT
+Repository language: TypeScript
+Product focus: reverse-engineering CLI and MCP server.
 
-### Inspected sources
+### Exact source mapping
 
-| Source | What was verified | Candidate use |
-|---|---|---|
-| README.md | Setup connects selected agents, installs matching workflow instructions, and asks users to review and approve changes | ADAPTED candidate: setup UX and client selection pattern |
-| package.json | Package name rea-agents, version 6.9.0, MIT, Node engine metadata | RESEARCH reference only; do not inherit runtime requirements without checking need |
-| LICENSE | MIT license text | Reuse only with required copyright and permission notice |
-| AGENTS.md | Configuration changes should be additive/idempotent with backups; setup should preview changes and require approval; installer should not install unrelated software | ADAPTED candidate: safe configuration change principles |
-| src/application/SupportedClients.ts | Client registry; Antigravity name, personal MCP config path ~/.gemini/config/mcp_config.json, personal skill path ~/.gemini/config/skills | ADAPTED candidate: explicit per-client adapter registry |
-| docs/getting-started/installation.md | Supported clients table; setup review/approval flow; separate approval for optional installation; client-specific skill installation locations | ADAPTED candidate: installer and documentation flow |
+| Source file | Verified behavior | Kit relevance | Classification |
+|---|---|---|---|
+| README.md | Setup discovers/selects agent clients, previews planned changes, requires approval, and backs up existing configuration | Setup UX and safety flow | ADAPTED candidate |
+| package.json | Package identity, version, runtime constraints, and dependency metadata | Dependency/provenance reference | RESEARCH reference |
+| LICENSE | MIT license text | Conditions for code/documentation reuse | RESEARCH reference |
+| AGENTS.md | Configuration changes should be additive/idempotent and backed up; setup previews changes and requires approval; installer should not install unrelated software | Installation guardrails | ADAPTED candidate |
+| src/application/SupportedClients.ts | Client registry with per-client config format/path and skill destination; Antigravity entry maps personal MCP config to ~/.gemini/config/mcp_config.json and skills to ~/.gemini/config/skills | Per-agent adapter registry | ADAPTED candidate |
+| src/application/Setup.ts | Selects clients and skills, calculates planned actions, supports dry-run, confirms plan, then applies approved changes | Explicit plan/consent sequence | ADAPTED candidate |
+| src/application/SetupPlan.ts | Preflights selected clients and creates concrete setup actions; blocks unsupported or unsafe configurations | Preflight and blockers | ADAPTED candidate |
+| src/application/SetupRecoveryBackup.ts | Uses exclusive copy, preserves original bytes, verifies the resulting backup, and creates content-addressed recovery paths when a prior backup differs | Backup integrity/recovery | ADAPTED candidate |
+| src/application/ClientConfigurationTransaction.ts | Serializes read/merge/publish operations per resolved configuration path | Prevent concurrent configuration writes | ADAPTED candidate |
+| src/application/SetupSkill.ts | Resolves client skill roots, inspects directory types, rejects symbolic-link skill roots, and validates paths before publishing | Safe skill distribution | ADAPTED candidate |
+| src/application/Doctor.ts | Provides a read-only structured readiness report, with client/skill states and remediation | Health check concept | ADAPTED candidate |
+| src/cli/interactiveSetup.ts | Client selection, dry-run summary, action preview, user confirmation, and progress output | Nontechnical installer interaction | ADAPTED candidate |
+| tests/boundary/filesystem/setupConfig.test.ts | Tests preserving existing configuration and backup creation | Regression-test reference | RESEARCH reference |
+| tests/boundary/filesystem/setupSkill.test.ts | Tests recovery backup selection, rollback failures, byte preservation, and invalid skill directories | Regression-test reference | RESEARCH reference |
 
 ### Reuse boundary
 
-- Candidate REUSED/ADAPTED: only after file-by-file implementation review, preserving MIT notices and checking dependencies/provenance.
-- RESEARCH NEEDED: whether a small installer/client-registry module can be reused independently without importing REA's reverse-engineering domain or native dependencies.
-- ORIGINAL or RESEARCH NEEDED: office-document workflows are not established by the REA material inspected so far.
-- Do not copy the REA product name, branding, reverse-engineering workflows, or unrelated analysis modules into this kit.
+- MIT permits reuse subject to preserving copyright and permission notices in copies or substantial portions.
+- Check each file and bundled dependency for its own provenance before copying it.
+- A small installer/client-registry extraction may be feasible, but dependency coupling and module boundaries still need review.
+- Do not import REA's reverse-engineering domain tools, native analysis engines, product identity, or unrelated dependencies into this workspace kit.
+- The audit inspected source and tests; it did not run REA's test suite or prove a module can be extracted independently.
 
 ## 3. Craft Anything — storytold/craft-anything
 
 Repository: https://github.com/storytold/craft-anything
-Main branch commit inspected: 52f1daa668021a84e8c72f2564cf3dfe36ccec67
-README status: early alpha.
-License declaration: MIT OR Apache-2.0. Root files include LICENSE-MIT, LICENSE-APACHE, NOTICE, and ATTRIBUTION.md.
+Inspected main commit: 52f1daa668021a84e8c72f2564cf3dfe36ccec67
+Inspected README status: early alpha
+License declaration: MIT OR Apache-2.0
+Inspected legal/provenance files: LICENSE-MIT, LICENSE-APACHE, NOTICE, ATTRIBUTION.md
+No code, assets, schemas, or wording were copied.
 
-### Inspected sources
+### Exact source mapping
 
-| Source | What was verified | Permitted treatment |
+| Source | Verified observation | Kit treatment |
 |---|---|---|
-| README.md | Describes simple/default and advanced experiences, a four-stage Study/Build/Check/Ready workflow, progress, questions and approval cards | HIGH-LEVEL OBSERVATION only; independently design a different workflow and wording |
-| docs/STATUS.md | Describes what works and how it was checked; records partial areas and test evidence | HIGH-LEVEL OBSERVATION only: distinguish implemented, partial, and unverified status |
-| docs/ROADMAP.md | Uses stable task IDs, owners, statuses, pending changes, and evidence-linked completion | HIGH-LEVEL OBSERVATION only: evaluate whether a similar traceability need exists |
-| AGENTS.md | Explicit “Original work only” rule forbids copying code, scripts, schemas, names, assets, or wording from other projects | BINDING REUSE LIMIT FOR THIS PROJECT: do not copy the listed materials |
-| crates/ai/src/cli_agents/grants.rs | The current Antigravity row declares no tool server, no approval integration, and no mid-turn notes; an adjacent comment mentions a permission-bypass launch flag | DO NOT REUSE as an Antigravity integration or safety model |
-| NOTICE | Declares MIT or Apache-2.0 licensing, but brand marks are trademarks and third-party material has separate terms | Do not reuse brand assets; audit each third-party item independently |
-| ATTRIBUTION.md | Lists separate sources/licenses for bundled fonts, icons, and app imagery | Do not copy or bundle these assets without independent license review |
+| README.md | Simple and advanced user experiences; visible Study/Build/Check/Ready stages; plain-language questions and approval cards | HIGH-LEVEL UX OBSERVATION only |
+| docs/STATUS.md | Distinguishes what works from how it was checked | HIGH-LEVEL QA/status observation only |
+| docs/ROADMAP.md | Stable task IDs, status, owner, pending changes, and completion evidence | HIGH-LEVEL work-tracking observation only |
+| AGENTS.md | Explicit original-work-only instruction prohibits copying code, scripts, schemas, names, assets, or wording from other projects | DO NOT COPY those materials |
+| crates/ai/src/cli_agents/grants.rs | Antigravity row declares no tool server, no approvals, and no mid-turn notes; its comment mentions a permission-bypass launch mode | DO NOT USE as the kit's Antigravity safety or integration design |
+| NOTICE and ATTRIBUTION.md | Brand marks and bundled assets have separate restrictions and provenance | Do not reuse brand assets or third-party bundled material |
 
-### Reuse boundary
+### Treatment boundary
 
-- Allowed now: high-level observations about beginner-friendly presentation, status clarity, evidence, and asking the user when a decision belongs to them.
-- Not allowed by this project's policy: copy its code, scripts, schemas, names, assets, UI text, or documentation wording.
-- Do not treat the presence of an Antigravity adapter as proof that the adapter supports MCP tools or approval gates.
+Use only independent, high-level observations about clarity of progress, simple-versus-advanced presentation, decision ownership, and evidence-backed completion. Do not copy code, scripts, schemas, identifiers, branding, assets, UI text, or documentation wording. Recheck its status and rules before each future research pass because the repository changes quickly.
 
-## 4. Official Antigravity documentation
+## 4. Official agent customization sources
 
-| Source | Verified fact | Design implication |
-|---|---|---|
-| https://antigravity.google/docs/customization-discovery/ | Workspace scope includes .agents; supports rules, skills, agents, plugins, hooks, and mcp_config.json; root AGENTS.md/GEMINI.md are discovered; recommends .agents for new projects | Prefer workspace-local .agents for portable workspaces |
-| https://antigravity.google/docs/commands/learn/ | Workspace skill path is .agents/skills/<name>/SKILL.md; global skills use ~/.gemini/config/skills | Keep workspace-local and global installations distinct |
-| https://antigravity.google/docs/build-plugins | Plugins can bundle skills, MCP servers, agents, rules, and lifecycle hooks | Plugin packaging is a research candidate, not yet selected |
+- Antigravity customization discovery: https://antigravity.google/docs/customization-discovery/
+- Antigravity Skills: https://antigravity.google/docs/commands/learn
+- Antigravity plugin packaging: https://antigravity.google/docs/build-plugins/
+- Claude Code instruction files: https://code.claude.com/docs/en/memory
+- Claude Code skills: https://code.claude.com/docs/en/skills
+- Cursor rules: https://cursor.com/docs/rules
+- Cursor skills: https://cursor.com/docs/skills
+- OpenCode instructions: https://opencode.ai/docs/instructions
+- OpenCode skills: https://opencode.ai/docs/skills/
 
-Official docs were checked on 2026-11-13. Re-check them before implementation because agent products can change.
+Detailed findings and proposed adapters are in AGENT_COMPATIBILITY.md. These are documentation findings; live runtime support remains NOT TESTED.
 
-## 5. Initial source-to-feature map
+## 5. Office-file processing sources
 
-| Kit feature | Best current source | Classification | Status |
+Detailed capability limits and research gaps are in FILE_WORKFLOWS_RESEARCH.md.
+
+| Candidate | License/source status | Potential role | Classification |
 |---|---|---|---|
-| Antigravity workspace-local rules/skills discovery | Google official docs | REUSED AS DOCUMENTED INTERFACE | VERIFIED IN DOCS; not live-tested |
-| Antigravity personal MCP/skill registration | REA SupportedClients.ts and install guide | ADAPTED candidate | SOURCE REVIEWED; implementation not selected |
-| Client-specific registry model | REA SupportedClients.ts | ADAPTED candidate | SOURCE REVIEWED; module extraction not tested |
-| Setup preview, approval, and backup principles | REA README and AGENTS.md | ADAPTED candidate | SOURCE REVIEWED; code reuse not yet approved |
-| Beginner-friendly status and approvals | Craft Anything README | HIGH-LEVEL OBSERVATION | NOT IMPLEMENTED |
-| Office-document processing | No adequate source selected | RESEARCH NEEDED | NOT STARTED |
-| User-visible folder naming and Vietnamese quick guide | User-approved requirements | USER-SPECIFIED | NOT IMPLEMENTED |
-| Cross-agent adapter matrix | Official docs still incomplete | RESEARCH NEEDED | NOT STARTED |
+| microsoft/markitdown | MIT; main inspected at ed178952a6672abdfd35b5f9e76a80b6cefc086e | Broad read-only document-to-Markdown extraction for AI analysis | RESEARCHED CANDIDATE |
+| py-pdf/pypdf | BSD-3-Clause; main inspected at 77c9a418421b6a783b9e7795973e778f3a10fb9d; 7.0.1 released 2026-11-10 | PDF extraction and page operations | RESEARCHED CANDIDATE |
+| python-openxml/python-docx | MIT; inspected master at e45454602b53e8e572b179ccf1c91093ec9f4ed7; docs version 1.2.0 | DOCX creation and controlled updates | RESEARCHED CANDIDATE |
+| openpyxl | MIT/Expat in official docs; upstream at foss.heptapod.net; PyPI latest release metadata inspected as 2024-06-28 | XLSX/XLSM reading and writing | RESEARCHED CANDIDATE WITH MAINTENANCE CONCERN |
+| pandas | Official documentation 3.1.1 | Tabular analysis, aggregation, and export | RESEARCHED CANDIDATE |
 
-## 6. Risks and open questions
+Do not pin or install these dependencies based solely on this survey. Check current versions, transitive dependency licenses, security advisories, and representative-file behavior before selection.
 
-1. REA currently targets personal Antigravity configuration paths in its client registry, while Google's current documentation also supports workspace-local customizations. Choose the least invasive scope for the kit and test the actual app.
-2. Craft Anything is early alpha according to its README. Recheck STATUS.md and ROADMAP.md at the time any future observation is used.
-3. Craft Anything's current Antigravity adapter lacks the tool server and approval capabilities expected from a safe integrated builder.
-4. REA's MIT license does not prove every bundled submodule, dependency, or asset is MIT. Check individual provenance.
-5. The office-document processing stack remains unselected. Research PDF, DOCX, XLSX, CSV, and image sources separately.
-6. The current audit is partial. It is not a final approval to copy code.
+## 6. Initial source-to-feature map
 
-## 7. Audit references
+| Kit capability | Best current source | Classification | Status |
+|---|---|---|---|
+| Antigravity workspace-local discovery | Google official documentation | REUSE DOCUMENTED INTERFACE | Docs verified; runtime not tested |
+| Shared root instructions | Official agent documentation | ADAPTATION required for Claude behavior | Docs verified; runtime not tested |
+| Skills distribution to Antigravity/Cursor/OpenCode | Official agent documentation and REA client model | ADAPTED candidate | Docs verified; sync not implemented |
+| Claude project skill adapter | Claude Code official docs | ADAPTED candidate | Docs verified; not implemented |
+| Agent client registry | REA SupportedClients.ts | ADAPTED candidate | Source inspected |
+| Setup plan and explicit consent | REA Setup.ts, SetupPlan.ts | ADAPTED candidate | Source inspected |
+| Backup integrity and recovery | REA SetupRecoveryBackup.ts | ADAPTED candidate | Source inspected |
+| Client configuration serialization | REA ClientConfigurationTransaction.ts | ADAPTED candidate | Source inspected |
+| Read-only health check | REA Doctor.ts | ADAPTED candidate | Source inspected |
+| Beginner-facing status and approvals | High-level UX observation only | ORIGINAL design required | Not implemented |
+| Broad office-document extraction | MarkItDown | RESEARCHED CANDIDATE | Not installed or tested |
+| PDF extraction | pypdf | RESEARCHED CANDIDATE | Not installed or tested |
+| DOCX generation/editing | python-docx | RESEARCHED CANDIDATE | Not installed or tested |
+| Excel analysis | pandas | RESEARCHED CANDIDATE | Not installed or tested |
+| Excel workbook edits | openpyxl | RESEARCHED CANDIDATE | Maintenance/compatibility concern |
+| OCR | No source selected | RESEARCH NEEDED | Not started |
 
-- REA repository: https://github.com/morluto/rea
-- REA README: https://github.com/morluto/rea/blob/54906fdb1fc735b507961b2954f6968775cae4f6/README.md
-- REA license: https://github.com/morluto/rea/blob/54906fdb1fc735b507961b2954f6968775cae4f6/LICENSE
-- REA agent rules: https://github.com/morluto/rea/blob/54906fdb1fc735b507961b2954f6968775cae4f6/AGENTS.md
-- REA client registry: https://github.com/morluto/rea/blob/54906fdb1fc735b507961b2954f6968775cae4f6/src/application/SupportedClients.ts
-- REA installation guide: https://github.com/morluto/rea/blob/54906fdb1fc735b507961b2954f6968775cae4f6/docs/getting-started/installation.md
-- Craft Anything repository: https://github.com/storytold/craft-anything
-- Craft Anything README: https://github.com/storytold/craft-anything/blob/52f1daa668021a84e8c72f2564cf3dfe36ccec67/README.md
-- Craft Anything status: https://github.com/storytold/craft-anything/blob/52f1daa668021a84e8c72f2564cf3dfe36ccec67/docs/STATUS.md
-- Craft Anything agent rules: https://github.com/storytold/craft-anything/blob/52f1daa668021a84e8c72f2564cf3dfe36ccec67/AGENTS.md
-- Craft Anything adapter grants: https://github.com/storytold/craft-anything/blob/52f1daa668021a84e8c72f2564cf3dfe36ccec67/crates/ai/src/cli_agents/grants.rs
-- Craft Anything notices: https://github.com/storytold/craft-anything/blob/52f1daa668021a84e8c72f2564cf3dfe36ccec67/NOTICE
-- Craft Anything attribution: https://github.com/storytold/craft-anything/blob/52f1daa668021a84e8c72f2564cf3dfe36ccec67/ATTRIBUTION.md
+## 7. Open risks and decisions
+
+1. REA's Antigravity path in SupportedClients.ts is personal/global scope. Prefer Antigravity's workspace-local .agents layout for generated workspaces, and test before choosing an installer.
+2. Claude Code's default AGENTS.md behavior changes if a CLAUDE.md exists. The CLAUDE.md adapter must explicitly import @AGENTS.md or use a verified supported setting.
+3. Claude Code's current documented project skill path is .claude/skills; do not assume it loads .agents/skills.
+4. Antigravity's scan depth and skill manifests constrain how the skill folder tree should be generated.
+5. openpyxl's documentation identifies a non-GitHub upstream and its PyPI metadata shows an older release date. Reassess maintenance and alternatives.
+6. MarkItDown executes with current-process I/O privileges and is not a high-fidelity document conversion tool.
+7. OCR, format preservation, and representative-file test corpus remain open.
+8. No live agent or document-processing tests have been performed.
+
+## 8. Reference revisions
+
+- REA: https://github.com/morluto/rea/tree/54906fdb1fc735b507961b2954f6968775cae4f6
+- REA Setup.ts: https://github.com/morluto/rea/blob/54906fdb1fc735b507961b2954f6968775cae4f6/src/application/Setup.ts
+- REA SetupPlan.ts: https://github.com/morluto/rea/blob/54906fdb1fc735b507961b2954f6968775cae4f6/src/application/SetupPlan.ts
+- REA SetupRecoveryBackup.ts: https://github.com/morluto/rea/blob/54906fdb1fc735b507961b2954f6968775cae4f6/src/application/SetupRecoveryBackup.ts
+- REA ClientConfigurationTransaction.ts: https://github.com/morluto/rea/blob/54906fdb1fc735b507961b2954f6968775cae4f6/src/application/ClientConfigurationTransaction.ts
+- REA SetupSkill.ts: https://github.com/morluto/rea/blob/54906fdb1fc735b507961b2954f6968775cae4f6/src/application/SetupSkill.ts
+- REA Doctor.ts: https://github.com/morluto/rea/blob/54906fdb1fc735b507961b2954f6968775cae4f6/src/application/Doctor.ts
+- REA interactiveSetup.ts: https://github.com/morluto/rea/blob/54906fdb1fc735b507961b2954f6968775cae4f6/src/cli/interactiveSetup.ts
+- Craft Anything: https://github.com/storytold/craft-anything/tree/52f1daa668021a84e8c72f2564cf3dfe36ccec67
+- MarkItDown: https://github.com/microsoft/markitdown/tree/ed178952a6672abdfd35b5f9e76a80b6cefc086e
+- pypdf: https://github.com/py-pdf/pypdf/tree/77c9a418421b6a783b9e7795973e778f3a10fb9d
+- python-docx: https://github.com/python-openxml/python-docx/tree/e45454602b53e8e572b179ccf1c91093ec9f4ed7
+- openpyxl documentation: https://openpyxl.readthedocs.io/en/stable/

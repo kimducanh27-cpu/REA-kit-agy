@@ -16,20 +16,20 @@
 
 | ID | Task | Status | Evidence / exit condition |
 |---|---|---|---|
-| P00-01 | Confirm destination repository, branch, and permissions | DONE | GitHub metadata: public repo, main branch, write/admin permission available to connected integration |
-| P00-02 | Inspect REA repository identity, README, package metadata, license, and Antigravity client mapping | DONE | README, package.json, LICENSE, AGENTS.md, SupportedClients.ts inspected; see SOURCE_AUDIT.md |
-| P00-03 | Inspect Craft Anything identity, README, status, licenses/notices, contributor rules, and Antigravity adapter grant row | DONE | README, docs/STATUS.md, LICENSE-MIT, LICENSE-APACHE, NOTICE, ATTRIBUTION.md, AGENTS.md, grants.rs inspected; see SOURCE_AUDIT.md |
-| P00-04 | Verify Antigravity's current workspace-local customization discovery | DONE | Official Google docs inspected; see SOURCE_AUDIT.md |
-| P00-05 | Map reusable features to exact upstream files and licensing conditions | IN_PROGRESS | Initial mapping exists; deeper source-level review and individual-file provenance still required |
-| P00-06 | Research office-document workflow implementations and safe file operations | TODO | Identify and verify maintained source repositories/libraries before selecting dependencies |
-| P00-07 | Research official support behavior for Claude Code, Cursor, and OpenCode | TODO | Produce capability/path matrix with official references and version/date |
-| P00-08 | Produce a final P00 source audit and recommend implementation boundaries | TODO | Findings, gaps, decisions, and explicit user approvals recorded |
+| P00-01 | Confirm destination repository, branch, and permissions | DONE | GitHub metadata and initial commit verified |
+| P00-02 | Inspect REA identity, README, package metadata, license, and Antigravity client mapping | DONE | README, package.json, LICENSE, AGENTS.md, SupportedClients.ts inspected |
+| P00-03 | Inspect Craft Anything identity, status, licenses/notices, contributor rules, and Antigravity grants | DONE | README, STATUS.md, LICENSE-MIT, LICENSE-APACHE, NOTICE, ATTRIBUTION.md, AGENTS.md, grants.rs inspected |
+| P00-04 | Verify Antigravity workspace-local customization discovery | DONE | Current official Google documentation inspected |
+| P00-05 | Map candidate REA/Craft features to exact sources and reuse boundaries | DONE | Source-level mapping recorded in SOURCE_AUDIT.md |
+| P00-06 | Research office-document workflow sources and safe file operations | IN_PROGRESS | Candidate survey in FILE_WORKFLOWS_RESEARCH.md; OCR, alternatives, version/security review, and representative-file tests remain |
+| P00-07 | Research official support behavior for Claude Code, Cursor, and OpenCode | DONE | Documentation-based matrix in AGENT_COMPATIBILITY.md; runtime tests remain separate |
+| P00-08 | Finalize P00 source map and present implementation boundaries for owner approval | IN_PROGRESS | Initial findings documented; dependency choice and P01 boundary not approved |
 
 ## P01 — Workspace Foundation
 
 | ID | Task | Status | Evidence / exit condition |
 |---|---|---|---|
-| P01-01 | Define exact generated workspace structure | TODO | Source-backed and approved folder specification |
+| P01-01 | Define exact generated workspace structure | TODO | Source-backed and owner-approved folder specification |
 | P01-02 | Define user profile and sample-document templates | TODO | Templates reviewed for privacy and usability |
 | P01-03 | Define the visible one-page Vietnamese quick guide | TODO | Non-technical review completed |
 | P01-04 | Define output naming, collision, and file-state tracking | TODO | Tested behavior and explicit rules |
@@ -44,6 +44,8 @@
 | P05 | Cross-agent adapters | TODO | Per-agent support matrix backed by live tests |
 | P06 | Hard Review and release readiness | TODO | Independent audit and documented release criteria pass |
 
-## Current blockers
+## Current constraints
 
-None recorded. Unknowns and unfinished research remain tracked as TODO above.
+- No live test has run in any target agent.
+- No PDF/DOCX/XLSX/OCR dependency is approved.
+- Do not begin P01 implementation until P00 source boundaries and unresolved decisions are reviewed.
