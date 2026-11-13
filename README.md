@@ -1,32 +1,92 @@
 # REA-kit-agy
 
-**Bộ kit dùng REA để kiểm tra ứng dụng, làm rõ yêu cầu và phát triển/nâng cấp app bằng AI.**
+**Bộ kit giao diện thư mục trực quan dành cho người dùng non-tech: Kiểm tra ứng dụng, đánh giá bảo mật, làm rõ yêu cầu và phát triển/viết lại app bằng AI (Google Antigravity & REA Engine).**
 
-REA-kit-agy không phải bộ tạo workspace chung và không thay thế REA. Đây là lớp quy trình tiếng Việt đặt trên REA cùng coding agent: tiếp nhận app được phép kiểm tra, điều tra có bằng chứng, tổng hợp hiện trạng và rủi ro, hỏi người dùng những thông tin còn thiếu, chốt phạm vi, rồi hỗ trợ mở rộng hoặc viết lại app và xác minh kết quả.
+---
 
-## Quy trình
+## 1. Sơ đồ luồng hoạt động trực quan
 
-1. **Tiếp nhận app:** xác định ứng dụng, nền tảng, tài liệu/source/artifact được cung cấp, mục tiêu và quyền kiểm tra.
-2. **Kiểm tra:** chọn khả năng REA phù hợp; nếu có source repository thì coding agent đọc source trực tiếp.
-3. **Báo cáo:** tổng hợp chức năng, luồng, cấu trúc đã xác minh, vấn đề, rủi ro bảo mật, giới hạn và phần chưa biết.
-4. **Hỏi phần còn thiếu:** chỉ hỏi quyết định ảnh hưởng đến sản phẩm, kỹ thuật, dữ liệu, bảo mật hoặc triển khai.
-5. **Chọn hướng:** cải tiến app hiện tại, thêm tính năng, xây app tương thích hay viết lại; nêu lý do và đánh đổi.
-6. **Phát triển:** chốt đặc tả, triển khai trong nhánh/bản sao an toàn.
-7. **Xác minh:** kiểm thử, hard review, rà soát bảo mật trong phạm vi cho phép và bàn giao.
+```mermaid
+flowchart LR
+    subgraph Input["1. ĐẦU VÀO"]
+        A["01_THA_APP_VAO_DAY<br/>(Thả APK, ASAR, ZIP, Web)"]
+        B["02_YEU_CAU_CUA_TOI<br/>(Hồ sơ & mục tiêu cá nhân)"]
+    end
 
-## Vai trò của REA
+    subgraph Safety["BẢO MẬT & BẢO TOÀN"]
+        C["04_SAO_LUU_AN_TOAN<br/>(Tự động sao lưu bản gốc)"]
+    end
 
-REA cung cấp công cụ reverse engineering qua MCP/CLI và kết quả Evidence có nguồn gốc, coverage, limitations, unknowns. Coding agent dùng kết quả để giải thích, hỏi tiếp, lập kế hoạch, viết và kiểm thử. REA-kit-agy bổ sung quy trình tiếng Việt, báo cáo, phỏng vấn yêu cầu, quyết định hướng phát triển và các cổng an toàn.
+    subgraph Engine["XỬ LÝ TRUNG TÂM"]
+        D["AI Coding Agent + REA Engine<br/>(Skills: rea-scan, rea-interview, rea-build)"]
+    end
 
-REA không phải sandbox và không chứng nhận ứng dụng an toàn. Kit không được biến một lượt phân tích tĩnh thành kết luận bảo mật tuyệt đối.
+    subgraph Output["2. ĐẦU RA"]
+        E["03_KET_QUA_KIEM_TRA<br/>(Báo cáo hiện trạng & đặc tả chốt)"]
+        F["05_MA_NGUON_PHAT_TRIEN<br/>(Mã nguồn app mới hoàn chỉnh)"]
+    end
 
-## Trạng thái
+    A -->|Tự động sao lưu| C
+    A -->|Quét & trích xuất| D
+    B -->|Đọc mong muốn| D
+    D -->|Xuất báo cáo & hỏi| E
+    E -.->|Người dùng duyệt| D
+    D -->|Viết code & kiểm thử| F
+```
 
-- P00: nghiên cứu REA, workflow app-review và ranh giới bảo mật.
-- Chưa triển khai tính năng sản phẩm.
-- Chưa kiểm thử tích hợp end-to-end với Antigravity hay agent khác.
-- Chưa chốt nền tảng đầu tiên cho v1.
+---
 
-Đọc docs/HANDOFF.md và docs/PLAN.md để tiếp tục.
+## 2. Cấu trúc thư mục chuẩn (Self-Explanatory Tree)
 
-Nguồn lõi: https://github.com/morluto/rea
+```text
+REA-kit-agy/
+├── 01_THA_APP_VAO_DAY/             # Input: Nơi thả APK, ASAR, file zip hoặc link web
+├── 02_YEU_CAU_CUA_TOI/            # Context: Form điền khuyết mục tiêu kiểm tra
+├── 03_KET_QUA_KIEM_TRA/           # Output: Báo cáo tính năng, bảo mật và đặc tả đã chốt
+├── 04_SAO_LUU_AN_TOAN/            # Backup: Bản sao lưu gốc bất khả xâm phạm
+├── 05_MA_NGUON_PHAT_TRIEN/        # Build: Nơi lưu mã nguồn app mới và hướng dẫn chạy
+├── AGENTS.md                      # Não bộ & luật giao tiếp tiếng Việt phi kỹ thuật
+├── CLAUDE.md                      # Tương thích Claude Code (@AGENTS.md)
+├── UPSTREAMS.md                   # Đăng ký chuẩn nguồn gốc morluto/rea
+├── HUONG_DAN_SU_DUNG.md           # Hướng dẫn sử dụng 1 trang kèm câu lệnh copy-paste
+├── KIEM_TRA.bat                   # 1-click kiểm tra sức khỏe workspace (5/5)
+├── .gitignore                     # Bảo vệ bản quyền và chống rò rỉ dữ liệu cá nhân
+├── prompts/                       # Bộ câu lệnh dán theo từng tab/giai đoạn (00 đến 04)
+├── templates/                     # Khung mẫu tài liệu hợp đồng chuẩn (01 đến 04)
+├── docs/                          # Hệ thống quản lý ngữ cảnh đa phiên (Context Docs)
+└── .agents/                       # Khu vực kỹ thuật (ẩn trên Windows)
+    ├── rules/rea-workflow.md      # Luật an toàn REA
+    ├── skills/                    # Bộ 3 skills độc lập: rea-scan, rea-interview, rea-build
+    ├── state/active_case.json     # Bộ nhớ trạng thái tự động nối lại phiên làm việc
+    └── scripts/health_check.ps1   # Script kiểm tra môi trường
+```
+
+---
+
+## 3. Bộ 3 Kỹ năng độc lập (Modular Skills)
+
+1. **`rea-scan`**: Nhận diện file đầu vào, sao lưu sang `04_`, gọi công cụ REA/mã nguồn phù hợp, tự động che mờ API keys thành `[REDACTED]`, và xuất báo cáo hiện trạng vào `03_`.
+2. **`rea-interview`**: Đọc báo cáo và `02/ho-so-va-muc-tieu.md`, phỏng vấn người dùng (thiếu gì, cần nâng gì, bảo mật ra sao), và xuất file đặc tả yêu cầu đã chốt.
+3. **`rea-build`**: Triển khai mã nguồn vào `05_`, tự động chạy kiểm thử cú pháp (`KET_QUA_KIEM_THU.md`), và xuất hướng dẫn chạy app 1 trang.
+
+---
+
+## 4. Ba chốt chặn bảo vệ người dùng non-tech
+
+* **Zero-Install Runtime**: Khi viết lại app mới (Rewrite), Agent ưu tiên xuất ra **Web App độc lập (HTML/CSS/JS)** để người dùng chỉ cần nhấp đúp chuột là mở chạy ngay trên trình duyệt mà không cần cài Node.js hay Python.
+* **Provider Fallback Gate**: Nếu máy người dùng thiếu Java/JADX hoặc Ghidra, Agent tự động chuyển sang đọc tài nguyên tĩnh nhẹ nhàng, không quăng lỗi crash terminal.
+* **Verification Gate**: Bắt buộc Agent phải tự chạy lệnh kiểm tra cú pháp và xuất file `KET_QUA_KIEM_THU.md` trước khi báo hoàn thành.
+
+---
+
+## 5. Bắt đầu nhanh trong 3 bước
+
+1. Kéo thả file ứng dụng vào thư mục `01_THA_APP_VAO_DAY`.
+2. Mở file [HUONG_DAN_SU_DUNG.md](HUONG_DAN_SU_DUNG.md) hoặc [prompts/01-TAB-SCAN.md](prompts/01-TAB-SCAN.md), copy câu lệnh mẫu và dán vào chat với AI.
+3. Trả lời các câu hỏi làm rõ từ AI và nhận ứng dụng hoàn thiện tại `05_MA_NGUON_PHAT_TRIEN`.
+
+---
+
+## Nguồn gốc & Giấy phép
+* **Upstream Engine**: [morluto/rea](https://github.com/morluto/rea) (Commit `5cddc69c51a0fb18d021417199046314581ba9c2`, MIT). Chi tiết xem tại [UPSTREAMS.md](UPSTREAMS.md).
+* **Quy tắc phát triển**: *"Upstream-first, orchestration-second"*, tham khảo cấu trúc chuẩn từ [kimducanh27-cpu/app-adr-ui](https://github.com/kimducanh27-cpu/app-adr-ui).
