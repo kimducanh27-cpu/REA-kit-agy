@@ -4,7 +4,7 @@
 - Repository: https://github.com/kimducanh27-cpu/REA-kit-agy
 - Branch: main
 - Phase: P00 — REA source audit and v1 definition
-- Status: IN PROGRESS
+- Status: IN_PROGRESS
 
 ## 1. Product in one paragraph
 A Vietnamese-first kit using upstream REA and an AI coding agent to inspect an authorized app, preserve evidence, summarize features/structure/risks, ask the owner for missing product decisions, then extend or rewrite the app with tests and independent review. REA is the reverse-engineering engine; the kit adds the interview, report, decision, safety and development workflow.
@@ -40,12 +40,29 @@ Only inspect authorized targets. Static analysis by default. Runtime, debugger, 
 - OCR/file-workflow research is historical/optional only.
 
 ## 7. Exact next actions
-1. Complete the version-pinned REA capability map from the full upstream Skill, MCP contracts, target guides and relevant source files.
-2. Refine the draft report and intake/question contracts.
-3. Complete operation approvals against actual connected REA tool effects.
-4. Compare Skill-only MVP with a thin CLI wrapper.
-5. Ask the owner to choose the first end-to-end target class and approve v1 scope.
-6. Only then begin P01.
+1. Ask the owner to choose the first v1 target class: source repository, JavaScript/Electron package, Android APK, or website/browser target. Capture the authorized test input and allowed operation scope.
+2. Review the chosen route's complete active tool definitions, prerequisites and effects in the user's installed REA environment; do not infer availability from upstream docs.
+3. Finish the route-specific operation approval matrix and version-pinned capability map.
+4. Present Skill-first versus thin CLI wrapper as a PROPOSED decision; do not implement either path before approval.
+5. Obtain owner review of intake, report, security and build-route drafts; preserve unknowns and deferred decisions.
+6. Start P01 only after the owner approves the first target, v1 boundary and delivery model.
+
+## 7A. Latest context reconciliation — 2026-11-13
+
+- Read all 16 docs/ context files and root README.md.
+- Verified remote starting HEAD 7a3e5a2e4767c95cfc66de2825a22af5314515d5; tree contains README.md and docs/ only. No product source code or executable kit exists.
+- Local working tree is UNKNOWN because this connector cannot inspect the user's local checkout.
+- Upstream REA remains at inspected main SHA 5cddc69c51a0fb18d021417199046314581ba9c2; latest release is rea-agents 6.9.0 (2026-11-12), MIT, Node.js ^22.23.4 || ^24.22.1 || >=26.12.1; Skill metadata version 62.
+- Antigravity is upstream-supported (`antigravity`) with config ~/.gemini/config/mcp_config.json and Skill destination ~/.gemini/config/skills. This is not proof this kit's runtime is tested.
+- tools/list is canonical for schemas; binary_session/tool_availability reports live availability; detail=complete exposes effect data; discover_tools loads cold tools. Effect annotations are hints, not authorization.
+- Static JavaScript analysis can launch an REA worker and write temporary files without executing target code. Keep host effects distinct from target execution and interaction.
+- P00 remains IN_PROGRESS. First target class and v1 boundary are owner decisions. Skill-first delivery remains PROPOSED only.
+
+## 7B. Verification and limits
+- Source/document review was read-only; no REA runtime, provider, Android toolchain or agent integration test ran.
+- No app target, product test suite or security audit ran. No code or dependencies were added.
+- PRD.md and DESIGN.md were checked but not changed because no approved product requirement/design decision changed.
+- No local git status or git diff is available through this connector; do not report the local checkout as clean.
 
 ## 8. Next-agent instruction
 Read AI_UPDATE_PROMPT.md, this file and the six governing documents. Verify branch, commit, working tree and current upstream REA release. Continue P00 on app investigation, evidence, interview and security — not generic bootstrap or OCR. Never claim a test or integration that was not actually performed.

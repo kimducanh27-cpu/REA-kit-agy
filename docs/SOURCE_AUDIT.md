@@ -76,5 +76,42 @@ No REA source code or third-party implementation has been copied into this repo.
 ## 7. Historical research
 Craft Anything is only optional UX background, not the engine. FILE_WORKFLOWS_RESEARCH.md and OCR_RESEARCH.md are historical/optional and do not define product scope. The earlier setup-only audit used REA commit 54906fdb1fc735b507961b2954f6968775cae4f6; those findings are not the current capability baseline.
 
-## 8. Not verified
+## 8. Version-pinned Skill and MCP contract
+
+The full upstream Skill at the inspected SHA declares metadata version **62**. For a complete source repository, use ordinary repository tools and do not run REA readiness/provider commands for ordinary source-architecture analysis. Use REA when the question depends on a shipped artifact, decompilation, requested runtime evidence or version comparison.
+
+The MCP contract establishes:
+- `tools/list` is canonical for complete tool definitions and schemas.
+- `binary_session({})` reports `result.tool_availability` for current host, target, provider and client. `detail: "complete"` adds provider diagnostics and tool effect/annotation fields omitted from the summary.
+- If `REA_MCP_TOOL_CATALOG_PROFILE=hot-cold` is enabled, use `discover_tools` to load cold tools before calling them.
+- `REA_MCP_TOOL_FAMILIES` may exclude tool families. Documented examples: Android `android,adb,apktool,session`; browser `browser,pcap,session,javascript-runtime`. These are not frozen catalog values.
+- Evidence references preserve source identity, authority, provenance, coverage, limitations and unknowns. Page exhaustion never upgrades incomplete coverage.
+
+### Target-routing matrix for v1 selection
+
+| Supplied target | Upstream route | Verified prerequisites / limits | Approval boundary |
+|---|---|---|---|
+| Complete source repository | Normal coding-agent repository inspection; skip REA | Direct source, build and test inspection | Supplied/authorized repository and approved worktree only |
+| JavaScript/Electron directory or ASAR | `analyze_javascript_application` | Node range from package manifest; static JS analysis does not require native decompiler. Owned worker and temporary files are used; target app code is not executed | Artifact read scope; runtime interaction is separate |
+| Android APK code/classes/methods | `inspect_android_package`, then focused advertised tools | Full JDK 17+; `jadx-headless-mcp` 0.7.1 with SHA-256 `6e5eacf500b64292bfb73c49797c1958f6ee44646e43e868039ae7feb573ff75`; Linux also needs procps-compatible `ps`. Static parsing does not install/run APK | APK only by default; ADB, installation, device interaction and Frida require separate approval |
+| APK signing facts | `inspect_apk_signature` | Static scheme, signer fingerprint, lineage and digest self-consistency; not trust/authenticity verdict | Local artifact inspection only |
+| Existing website in user-owned browser | `list_browser_targets`, then `inspect_web_page` | Chrome-family browser with loopback CDP. Passive attach, not general automation; can affect observed session | Explicit browser/profile/origin scope; scenario navigation/click/type via `capture_browser_scenario` needs separate approval |
+| .NET assembly | `inspect_managed_artifact` | Static managed metadata/CIL; no external engine prerequisite stated | Supplied assembly only; do not execute |
+| Native binary | `open_binary`, then selected-provider tools | Hopper/Ghidra/IDA/Kuna availability depends on host and target; query `binary_session` | Disclose provider/process effects; runtime/debugger actions separately approved |
+| Shipped app exposure | `audit_release_exposure` / `rea audit-release-exposure` | Bounded static report for `.app`, install directory, ASAR or executable. Native hardening, Mach-O hardened runtime and Android manifest are not assessed by this report | Static artifact scope; no overall security verdict |
+
+This matrix does not select a v1 platform or imply every provider is installed/tested.
+
+## 9. Host effects and authorization semantics
+
+Upstream MCP does not implement owner authorization through per-call permission grants; MCP clients provide confirmation UI. Tool annotations are hints, not authorization controls. `readOnlyHint` may be false because Evidence is recorded even when the target is unchanged. `destructiveHint` may describe data loss, execution/driving of code not owned by REA, or Android device mutation.
+
+Verified examples: `analyze_javascript_application` starts an owned worker and writes private temporary files without executing supplied app code; `analyze_web_bundle` likewise uses a worker and temporary files without executing captured code; Android static analysis invokes JADX but does not install/run the APK; passive CDP attaches to an already-running browser and does not navigate; DMG inventory may launch `hdiutil`; extraction writes to a fresh output directory. Show host effects, target effects and outputs separately. “Static” does not mean “no host side effects”.
+
+## 10. Agent setup and delivery-model comparison
+
+REA 6.9.0's official installation guide lists Antigravity with client ID `antigravity`. At the inspected SHA, `src/application/SupportedClients.ts` defines MCP config path `~/.gemini/config/mcp_config.json` and upstream Skill destination `~/.gemini/config/skills`. This proves upstream setup/path support, not a working REA-kit-agy runtime integration. Upstream setup previews client changes and requests approval; it does not install Node.js, Java/JDK, JADX or native analysis engines.
+
+**Delivery evaluation — PROPOSED, not approved:** Skill-first over upstream REA MCP is the smallest initial prototype. It adds the Vietnamese workflow, authorization gates, Evidence/report contract, interview and handoff without duplicating the engine. Consider a thin wrapper only if tests prove a concrete need for case persistence, report/schema validation, cross-agent setup or automation not reasonably handled by a Skill plus existing CLI/MCP. No delivery model is owner-approved.
+## 11. Not verified
 No clean-machine REA install, agent runtime integration, app analysis with this kit, Evidence-to-report pipeline, security audit, dependency benchmark or product implementation has been performed.

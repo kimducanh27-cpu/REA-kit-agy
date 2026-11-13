@@ -6,6 +6,18 @@
 ## Objective
 Use REA plus a coding agent to inspect an authorized application, report verified behavior and scoped risks, ask the owner for missing requirements, then extend or rebuild the app with tests.
 
+## Current phase status — 2026-11-13
+
+| Phase | Status | Current condition |
+|---|---|---|
+| P00 — Understand REA and define product boundary | IN_PROGRESS | Source audit and workflow drafts are being refined; first target class and v1 boundary require owner decision |
+| P01 — Integrate REA with the first agent | TODO | Antigravity is upstream-supported; this kit's runtime is untested |
+| P02 — Investigate and assess an app | TODO | Depends on verified P01 integration |
+| P03 — Clarify requirements | TODO | Depends on an evidence-backed P02 report |
+| P04 — Select and plan development | TODO | Depends on owner decisions from P03 |
+| P05 — Build, test and hand off | TODO | Depends on approved P04 scope and rollback plan |
+
+Delivery assessment: Skill-first over upstream REA MCP is **PROPOSED**, not approved. A thin CLI wrapper remains an option only if a verified gap warrants it. See ARCHITECTURE.md and SOURCE_AUDIT.md.
 ## Phases
 
 ### P00 — Understand REA and define the product boundary

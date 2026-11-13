@@ -35,6 +35,32 @@
 5. Ask owner to select the first target class and confirm v1 boundary.
 6. Begin P01 only after the owner-approved boundary.
 
+## 2026-11-13 — Context reconciliation and version-pinned REA contract review
+
+### Completed
+- Read AI_UPDATE_PROMPT.md, all six governing context files, PLAN.md, HANDOFF.md and all supplemental docs/ context documents (16 documents total).
+- Verified remote repository state: branch main; starting HEAD 7a3e5a2e4767c95cfc66de2825a22af5314515d5. The recursive tree contained only README.md and docs/ (16 Markdown files); no product source code or executable kit was present.
+- Read project README.md and confirmed it matches the current product boundary and P00 status.
+- Rechecked upstream morluto/rea: current main SHA 5cddc69c51a0fb18d021417199046314581ba9c2; latest GitHub release rea-agents 6.9.0 published 2026-11-12; package declares MIT and Node.js ^22.23.4 || ^24.22.1 || >=26.12.1. This matches existing source-audit baseline; no version-pin change is justified.
+- Inspected the full upstream Skill routing, Evidence workflow, MCP runtime contract, Android/JavaScript/browser guides, release-exposure guide, SECURITY.md, DISCLAIMER.md, package manifest and installation docs at the pinned SHA. Skill metadata version is 62.
+- Verified Antigravity upstream setup support: client ID antigravity; config ~/.gemini/config/mcp_config.json; upstream Skill path ~/.gemini/config/skills. This is installer/path verification, not a live REA-kit-agy integration test.
+- Verified MCP semantics: tools/list is canonical; binary_session/tool_availability reflects live host/provider/target/client availability; detail=complete exposes effect/annotation details; hot/cold mode requires discover_tools; tool-family settings may intentionally scope the catalog.
+- Verified some static routes launch workers and write temporary files without executing target application code; MCP effect annotations are hints, not authorization controls.
+- Verified representative route prerequisites: JavaScript/Electron static analysis; Android static APK analysis with JDK 17+ and pinned JADX 0.7.1; passive loopback CDP attachment versus active browser scenarios; bounded release-exposure output with no security verdict.
+- Corrected non-standard task-status wording so TASKS.md and PLAN.md use only the required status enum.
+
+### Not completed / not verified
+- No REA installation, provider setup, live MCP tools/list or binary_session call was run in a user environment.
+- No Antigravity runtime or clean-workspace discovery test was performed.
+- No app target was analyzed end-to-end; no product implementation or dependency was added.
+- No product/unit/integration/security test suite was run. Source verification was read-only through GitHub content and metadata.
+- Local working-tree state is UNKNOWN: the GitHub connector exposes remote state, not the user's local checkout or uncommitted files.
+- P00 remains IN_PROGRESS. First target class and v1 boundary remain owner decisions; draft intake/report/security/delivery decisions are not approved.
+
+### Documentation synchronization
+The affected architecture, rules, workflow, security, compatibility, source audit, task, plan, progress and handoff docs are included in the documentation commits for this session. PRD.md and DESIGN.md were checked and left unchanged because no approved product requirement or UX decision changed. Historical OCR/file-workflow research remains out of scope.
+
+
 ## Historical notes
 - Earlier generic workspace bootstrap, file-workflow and OCR research is no longer the product's central direction.
 - OCR_RESEARCH.md and FILE_WORKFLOWS_RESEARCH.md remain optional historical references only. No OCR engine or document-processing dependency has been selected or installed.
