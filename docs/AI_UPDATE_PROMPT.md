@@ -7,9 +7,9 @@ Mandatory operating prompt for all agents in this repository.
 2. Read this file, HANDOFF.md, all six governing files (PRD, ARCHITECTURE, DESIGN, RULES, TASKS, PROGRESS), PLAN.md and SOURCE_AUDIT.md.
 3. Read APP_REVIEW_WORKFLOW.md, SECURITY_REVIEW_MODEL.md, INTAKE_QUESTION_LOGIC.md and AGENT_COMPATIBILITY.md.
 4. Read FILE_WORKFLOWS_RESEARCH.md and OCR_RESEARCH.md only when the approved task explicitly concerns those historical, non-core areas.
-4. Inspect actual tree, recent commits and current upstream REA release/commit.
-5. Correct stale documentation before relying on it.
-6. Identify task, acceptance criteria, authorization boundary and required approvals.
+5. Inspect actual tree, recent commits and current upstream REA release/commit.
+6. Correct stale documentation before relying on it.
+7. Identify task, acceptance criteria, authorization boundary and required approvals.
 
 ## Product identity
 REA-kit-agy is a Vietnamese-first workflow kit built around upstream REA. It helps the user provide an authorized app/project, inspect it with REA and source review, receive an evidence-backed report, answer targeted questions, approve a build route, and receive a tested improvement or rewrite.

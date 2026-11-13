@@ -47,7 +47,7 @@ Only inspect authorized targets. Static analysis by default. Runtime, debugger, 
 5. Obtain owner review of intake, report, security and build-route drafts; preserve unknowns and deferred decisions.
 6. Start P01 only after the owner approves the first target, v1 boundary and delivery model.
 
-## 7A. Latest context reconciliation — 2026-11-13
+## 8. Latest context reconciliation — 2026-11-13
 
 - Read all 16 docs/ context files and root README.md.
 - Verified remote starting HEAD 7a3e5a2e4767c95cfc66de2825a22af5314515d5; tree contains README.md and docs/ only. No product source code or executable kit exists.
@@ -56,13 +56,14 @@ Only inspect authorized targets. Static analysis by default. Runtime, debugger, 
 - Antigravity is upstream-supported (`antigravity`) with config ~/.gemini/config/mcp_config.json and Skill destination ~/.gemini/config/skills. This is not proof this kit's runtime is tested.
 - tools/list is canonical for schemas; binary_session/tool_availability reports live availability; detail=complete exposes effect data; discover_tools loads cold tools. Effect annotations are hints, not authorization.
 - Static JavaScript analysis can launch an REA worker and write temporary files without executing target code. Keep host effects distinct from target execution and interaction.
-- P00 remains IN_PROGRESS. First target class and v1 boundary are owner decisions. Skill-first delivery remains PROPOSED only.
+- P00 remains IN_PROGRESS. P00-01, P00-02, P00-03, P00-04, P00-05 and P00-08 are IN_PROGRESS; P00-06 is BLOCKED on the owner target decision; P00-07 is TODO pending delivery choice; P00-09 is DEFERRED pending a documented gap. P01–P05 are TODO. First target class and v1 boundary remain owner decisions. Skill-first delivery remains PROPOSED only.
+- Documentation commits pushed to `main`: `1f0011f055c17b79c2401ebaa1e385f3031e6a11` and `94630735be0c2af93e8eda4ac8efd7a4708cce87`.
 
-## 7B. Verification and limits
+## 9. Verification and limits
 - Source/document review was read-only; no REA runtime, provider, Android toolchain or agent integration test ran.
 - No app target, product test suite or security audit ran. No code or dependencies were added.
 - PRD.md and DESIGN.md were checked but not changed because no approved product requirement/design decision changed.
 - No local git status or git diff is available through this connector; do not report the local checkout as clean.
 
-## 8. Next-agent instruction
+## 10. Next-agent instruction
 Read AI_UPDATE_PROMPT.md, this file and the six governing documents. Verify branch, commit, working tree and current upstream REA release. Continue P00 on app investigation, evidence, interview and security — not generic bootstrap or OCR. Never claim a test or integration that was not actually performed.
