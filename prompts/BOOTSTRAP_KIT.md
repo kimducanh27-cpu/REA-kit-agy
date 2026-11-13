@@ -73,7 +73,7 @@ Tạo đầy đủ các thư mục sau:
 ---
 
 ### BƯỚC 4: TẠO BỘ CÂU LỆNH PROMPTS/ VÀ KHUNG MẪU TEMPLATES/
-1. Trong `prompts/`: Tạo đủ `00-SESSION-CONTINUITY.md`, `01-TAB-SCAN.md`, `02-TAB-SECURITY-REVIEW.md`, `03-TAB-INTERVIEW.md`, `04-TAB-BUILD.md` (tuân thủ nghiêm ngặt chuẩn Active Skill hợp đồng của `app-adr-ui`).
+1. Trong `prompts/`: Tạo đủ `00-SESSION-CONTINUITY.md`, `01-TAB-SCAN.md`, `02-TAB-SECURITY-REVIEW.md`, `03-TAB-INTERVIEW.md`, `04-TAB-BUILD.md`, `05-TAB-REVIEW.md` (tuân thủ nghiêm ngặt chuẩn Active Skill hợp đồng của `app-adr-ui`).
 2. Trong `templates/`: Tạo đủ `01-REPORT-TEMPLATE.md` (kèm Screen Inventory & State Matrix), `02-SPEC-TEMPLATE.md`, `03-RUN-GUIDE-TEMPLATE.md`, `04-TEST-RESULT-TEMPLATE.md`, `05-DESIGN-TOKEN-TEMPLATE.md`.
 3. Trong `docs/`: Tạo các file context cốt lõi `PRD.md`, `ARCHITECTURE.md`, `PROGRESS.md`, `HANDOFF.md`, `PLAN.md`, `RULES.md`, `PROMPTS.md`.
 

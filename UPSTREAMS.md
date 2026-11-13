@@ -59,7 +59,10 @@ Checked: **2026-11-13**. Primary upstream source is pinned to the exact commit S
 
 5. **Chuẩn Thẩm Định Mã Nguồn AI (Anthropic Code Review Pipeline)**: `Anthropic Claude Code Team` (*"How the Claude Code team does code review"*)
    * Nguyên tắc:
-     - Tách biệt vai trò Builder và Independent Reviewer để tránh thiên kiến xác nhận của AI.
+     - Tách biệt vai trò Builder và Independent Reviewer trong Fresh Context (`prompts/05-TAB-REVIEW.md`) để tránh thiên kiến xác nhận của AI.
+     - Quy chuẩn thẩm định tập trung tại `REVIEW.md` với Bộ lọc dẹp nhiễu (High-Signal Filter, cấm bắt bẻ phong cách).
+     - Bắt buộc xuất "Bản giải thích cho người dùng" (Explainers Over Diffs) thay vì bắt người non-tech đọc git diff.
+     - Phân tầng rủi ro tự động (Automated Risk Classifier trong `verify_code.ps1`: LOW / MEDIUM / HIGH).
      - Giới hạn cứng vòng lặp tự sửa (Review Convergence: tối đa 2 vòng) chống lặp vô tận đốt token.
-     - Phân tầng rủi ro (Risk-Tiering: Low / Medium / High) cho người non-tech nghiệm thu đúng trọng tâm.
-     - Chốt chặn an toàn tối hậu bằng cơ chế Rollback tự động (`HOAN_TAC.bat` và thư mục `.backup/`).
+     - Chốt chặn trách nhiệm con người ("You Land It, You Own It" Accountability Sign-off).
+     - Chốt chặn an toàn tối hậu bằng cơ chế Rollback tự động (`HOAN_TAC.bat`, snapshot `.backup/`, và bộ nhớ học từ sự cố `learned_rules.json`).

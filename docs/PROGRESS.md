@@ -4,6 +4,22 @@
 - Overall: P01 IN PROGRESS (Non-tech Workspace Scaffold & REA Inspector Skill)
 - Product direction: REA-powered App Investigation & Development Kit
 
+## 2026-11-13 — Hoàn Thiện Trọn Bộ Anthropic Pipeline: Explainers Over Diffs, Tab 05 Review, Accountability & Risk Classifier
+
+### Completed
+- Hoàn thành phiên Grilling về 4 mảnh ghép cuối cùng từ bài viết *"How the Claude Code team does code review"*:
+  1. **Bản giải thích cho người dùng thay vì đọc diff (Explainers Over Diffs)**:
+     - Bắt buộc xuất mục Plain-Language Explainer trong `templates/03-RUN-GUIDE-TEMPLATE.md` và `templates/04-TEST-RESULT-TEMPLATE.md` trả lời 3 câu hỏi (vừa sửa gì, tại sao, giao diện khác ở đâu) bằng tiếng Việt đời thường.
+  2. **Thẩm định độc lập trong Fresh Context (`prompts/05-TAB-REVIEW.md`)**:
+     - Tạo Tab Prompt 05 cho phép mở cửa sổ chat sạch hoàn toàn độc lập với lượt viết code, xóa sạch thiên kiến AI.
+  3. **Hộp kiểm trách nhiệm con người ("You Land It, You Own It")**:
+     - Bổ sung ô kiểm tra trách nhiệm vận hành tại Tầng 4 của `templates/04-TEST-RESULT-TEMPLATE.md`.
+  4. **Tự động phân loại rủi ro trong `verify_code.ps1` (Automated Risk Classifier)**:
+     - Tự động quét và phát hiện các hành vi gọi mạng (`fetch`, `http`), storage (`localStorage`), gán cờ `LOW / MEDIUM / HIGH`.
+  5. **Đồng bộ hóa hệ sinh thái**:
+     - Cập nhật `UPSTREAMS.md`, `README.md`, `prompts/BOOTSTRAP_KIT.md`, và `docs/HANDOFF.md`.
+     - Health check đạt 6/6 PASSED.
+
 ## 2026-11-13 — Nâng Cấp Chuyên Sâu Anthropic Pipeline: REVIEW.md, High-Signal Filter, Incidents-to-Evals & Staged Preview
 
 ### Completed

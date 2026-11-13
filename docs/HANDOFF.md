@@ -25,7 +25,7 @@ A Vietnamese-first kit using upstream REA (https://github.com/morluto/rea) and G
   - `KIEM_TRA.bat` (1-click health check launcher for Windows)
   - `HOAN_TAC.bat` (1-click rollback launcher to restore latest working snapshot)
 - Process Playbook & Templates (app-adr-ui alignment):
-  - `prompts/`: 00-SESSION-CONTINUITY, 01-TAB-SCAN, 02-TAB-SECURITY-REVIEW, 03-TAB-INTERVIEW, 04-TAB-BUILD, BOOTSTRAP_KIT
+  - `prompts/`: 00-SESSION-CONTINUITY, 01-TAB-SCAN, 02-TAB-SECURITY-REVIEW, 03-TAB-INTERVIEW, 04-TAB-BUILD, 05-TAB-REVIEW, BOOTSTRAP_KIT
   - `templates/`: 01-REPORT-TEMPLATE, 02-SPEC-TEMPLATE, 03-RUN-GUIDE-TEMPLATE, 04-TEST-RESULT-TEMPLATE, 05-DESIGN-TOKEN-TEMPLATE
 - Antigravity integration:
   - 4 skills: 1 upstream engine skill (`.agents/skills/reverse-engineer-anything/`) + 3 orchestration skills (`rea-scan`, `rea-interview`, `rea-build`)

@@ -53,7 +53,7 @@ REA-kit-agy/
 ├── KIEM_TRA.bat                   # 1-click kiểm tra sức khỏe workspace & runtime (6/6)
 ├── HOAN_TAC.bat                   # 1-click hoàn tác về bản chạy tốt gần nhất (Rollback)
 ├── .gitignore                     # Bảo vệ bản quyền và chống rò rỉ dữ liệu cá nhân
-├── prompts/                       # Bộ câu lệnh dán theo từng tab/giai đoạn (00 đến 04)
+├── prompts/                       # Bộ câu lệnh dán theo từng tab/giai đoạn (00 đến 05)
 ├── templates/                     # Khung mẫu tài liệu hợp đồng chuẩn (01 đến 05)
 ├── docs/                          # Hệ thống quản lý ngữ cảnh đa phiên (Context Docs)
 └── .agents/                       # Khu vực kỹ thuật (ẩn trên Windows)
