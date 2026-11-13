@@ -5,35 +5,39 @@ description: Lập kế hoạch kiến trúc, triển khai mã nguồn ứng d�
 
 # KỸ NĂNG: PHÁT TRIỂN & VIẾT LẠI ỨNG DỤNG (REA-BUILD)
 
-Kỹ năng chuyên biệt cho giai đoạn sinh mã nguồn, thẩm định chất lượng và kiểm thử, đối chiếu chuẩn quy trình `docs/APP_REVIEW_WORKFLOW.md` và mô hình **Anthropic Code Review Pipeline** (*"How the Claude Code team does code review"*).
+Kỹ năng chuyên biệt cho giai đoạn sinh mã nguồn, thẩm định chất lượng và kiểm thử, tuân thủ hợp đồng thẩm định tại `REVIEW.md` và mô hình **Anthropic Code Review Pipeline** (*"How the Claude Code team does code review"*).
 
 ---
 
 ## 1. QUY TRÌNH TRIỂN KHAI 5 BƯỚC
 
-1. **Kiểm tra điều kiện tiên quyết & Hợp đồng giao diện (Preflight & Design System 3 Tầng)**:
-   - Đọc file đặc tả yêu cầu đã chốt trong `03_KET_QUA_KIEM_TRA/`. (Nếu chưa có đặc tả: Nhắc nhở người dùng chạy `rea-interview` trước).
-   - **Bắt buộc đọc và áp dụng `02_YEU_CAU_CUA_TOI/design.md` đủ 3 tầng**:
-     * *Tầng 1 (Tokens)*: Ánh xạ bảng màu, font chữ, bo góc vào biến `:root` của CSS và Tailwind utility classes. Cấm hardcode mã màu lung tung.
-     * *Tầng 2 (Components)*: Tuân thủ quy chuẩn style cho các nút bấm, thẻ card, input, dialog, header.
-     * *Tầng 3 (UI States)*: Triển khai bắt buộc 4 trạng thái giao diện: Loading (skeleton/spinner), Empty (biểu tượng + CTA tạo mới), Success (toast thông báo), Error (thông báo lỗi + nút Thử lại). Không để màn hình trắng hoặc đơ trong bất kỳ hoàn cảnh nào.
+1. **Kiểm tra điều kiện tiên quyết, Tiêu chuẩn Review & Bài học quá khứ**:
+   - Đọc file đặc tả yêu cầu đã chốt trong `03_KET_QUA_KIEM_TRA/`. (Nếu chưa có: Nhắc người dùng chạy `rea-interview` trước).
+   - **Bắt buộc đọc `REVIEW.md`**: Nắm vững tiêu chí kiểm toán độc lập 4 tầng, bộ lọc dẹp nhiễu và phân tầng rủi ro.
+   - **Đọc `.agents/state/learned_rules.json` (Incidents to Evals)**: Nạp danh sách các quy tắc phòng ngừa từ các lỗi từng xảy ra trong quá khứ để không bao giờ tái phạm.
+   - **Áp dụng hợp đồng `02_YEU_CAU_CUA_TOI/design.md` đủ 3 tầng**:
+     * *Tầng 1 (Tokens)*: Bảng màu, typography, radius đưa vào CSS `:root` và Tailwind classes.
+     * *Tầng 2 (Components)*: Style chuẩn cho nút, thẻ, ô nhập liệu, header.
+     * *Tầng 3 (UI States)*: 4 trạng thái bắt buộc: Loading, Empty, Success, Error Recovery.
 
 2. **Tự động sao lưu Snapshot trước khi sửa code (Automated Rollback Snapshot)**:
    - Nếu trong `05_MA_NGUON_PHAT_TRIEN/` đã có file mã nguồn cũ: Tự động copy toàn bộ vào thư mục `05_MA_NGUON_PHAT_TRIEN/.backup/YYYYMMDD_HHmmss/`.
    - Đảm bảo người dùng luôn có thể nhấp đúp file **`HOAN_TAC.bat`** để quay về phiên bản ổn định gần nhất.
 
-3. **Triển khai mã nguồn tại `05_MA_NGUON_PHAT_TRIEN/` (Lean Build & Surgical Patch)**:
-   - **Khi Viết mới / Nâng cấp (Build App — Lean Build)**: Chỉ triển khai đúng các tính năng đã chốt trong đặc tả, tuyệt đối không over-engineering. Ưu tiên công nghệ Web độc lập (HTML5 + Tailwind CDN + Alpine/Vanilla JS + Lucide Icons) để người non-tech nhấp đúp chuột mở chạy ngay trên trình duyệt.
-   - **Khi Sửa lỗi (Fix App — Surgical Patch)**: Chỉ chỉnh sửa ở phạm vi hẹp nhất có trách nhiệm gây ra lỗi, không xóa ghi đè lan man các hàm đang hoạt động tốt.
+3. **Triển khai mã nguồn & Bản xem trước theo giai đoạn (Staged Preview)**:
+   - **Khi Viết mới (Rewrite — Lean Build)**: Triển khai trực tiếp vào `05_MA_NGUON_PHAT_TRIEN/index.html`.
+   - **Khi Nâng cấp / Sửa lỗi (Staged Preview)**:
+     * Xuất ra file `05_MA_NGUON_PHAT_TRIEN/preview.html` để người dùng mở xem thử song song, giữ nguyên `index.html` đang chạy ổn định.
+     * Chỉ khi người dùng xác nhận nghiệm thu đạt yêu cầu, AI mới chuyển nội dung từ `preview.html` sang `index.html` chính thức.
+   - **Học từ sự cố (Incidents to Evals)**: Khi người dùng yêu cầu sửa lỗi hoặc vừa bấm hoàn tác, AI phân tích nguyên nhân gốc rễ và tự động bổ sung 1 quy tắc mới vào `.agents/state/learned_rules.json`.
 
-4. **Cổng kiểm soát chất lượng 4 tầng & Thẩm định độc lập (Anthropic Governance Pipeline)**:
+4. **Cổng kiểm soát chất lượng 4 tầng & Thẩm định độc lập (Anthropic Model)**:
    - *Triết lý: Dùng công cụ xác định cho lỗi xác định; dùng AI độc lập cho phần suy luận; phân tầng rủi ro để con người nghiệm thu đúng trọng tâm.*
    - **Tầng 1 (Kiến trúc)**: Kiểm tra cấu trúc ranh giới Web độc lập, không phụ thuộc môi trường ngoài.
-   - **Tầng 2 (Công cụ xác định)**: Chạy script `powershell -ExecutionPolicy Bypass -File .agents/scripts/verify_code.ps1`. Script này kiểm tra cú pháp HTML/JS và quét leak secret. Bắt buộc phải đạt Exit Code 0.
+   - **Tầng 2 (Công cụ xác định)**: Chạy script `powershell -ExecutionPolicy Bypass -File .agents/scripts/verify_code.ps1`. Bắt buộc đạt Exit Code 0.
    - **Tầng 3 (Thẩm định độc lập — Independent AI Reviewer)**:
-     * *Trục 1 (Standards)*: Đối chiếu `02_YEU_CAU_CUA_TOI/design.md` (Tokens, Components, 4 UI States).
-     * *Trục 2 (Spec)*: Đối chiếu `03_.../dac-ta-yeu-cau-da-chot.md` (Tính năng chốt, bảo toàn logic cũ).
-     * **Quy tắc hội tụ (Review Convergence)**: Nếu phát hiện lỗi, Builder Agent chỉ được phép tự sửa **tối đa 2 vòng**. Sau 2 vòng nếu vẫn lỗi thì dừng lại và báo cáo rõ điểm nghẽn cho người dùng, không chạy lặp vô tận đốt token.
+     * Áp dụng **Bộ lọc dẹp nhiễu (High-Signal Filter)** theo `REVIEW.md`: Chỉ báo cáo vi phạm hợp đồng (Spec, Design Tokens, 4 UI States, rò rỉ secret). Nghiêm cấm bắt bẻ phong cách viết mã râu ria làm phiền người non-tech.
+     * **Quy tắc hội tụ (Review Convergence)**: Builder Agent chỉ được phép tự sửa **tối đa 2 vòng**. Nếu sau 2 vòng vẫn lỗi thì dừng lại báo cáo điểm nghẽn, tuyệt đối không lặp vô tận đốt token.
    - **Tầng 4 (Phân tầng rủi ro & Nghiệm thu)**:
      * Phân loại rủi ro: **Thấp** (UI/text), **Vừa** (Form/logic local), **Cao** (API ngoài/secret).
      * Xuất file **`05_MA_NGUON_PHAT_TRIEN/KET_QUA_KIEM_THU.md`** theo mẫu `templates/04-TEST-RESULT-TEMPLATE.md`.

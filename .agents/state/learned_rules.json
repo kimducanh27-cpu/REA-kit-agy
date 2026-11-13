@@ -1,0 +1,8 @@
+[
+  {
+    "rule_id": "RULE-INIT-001",
+    "trigger_event": "INITIALIZATION",
+    "description": "Không bao giờ tự ý xóa các trường dữ liệu người dùng đang nhập khi xảy ra lỗi mạng hoặc lỗi API.",
+    "preventive_action": "Bảo toàn 100% form input value khi chuyển sang Error State, hiển thị nút Retry."
+  }
+]

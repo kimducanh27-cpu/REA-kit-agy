@@ -23,11 +23,11 @@ if ($allDirsOk) {
 }
 
 # 2. Kiểm tra tài liệu hướng dẫn và luật chơi cốt lõi
-if ((Test-Path "AGENTS.md") -and (Test-Path "HUONG_DAN_SU_DUNG.md")) {
-    Write-Host "[OK] (2/6) File luật AGENTS.md và Hướng dẫn sử dụng đã sẵn sàng." -ForegroundColor Green
+if ((Test-Path "AGENTS.md") -and (Test-Path "HUONG_DAN_SU_DUNG.md") -and (Test-Path "REVIEW.md")) {
+    Write-Host "[OK] (2/6) File luật AGENTS.md, REVIEW.md và Hướng dẫn sử dụng đã sẵn sàng." -ForegroundColor Green
     $score++
 } else {
-    Write-Host "[!] (2/6) Thiếu AGENTS.md hoặc HUONG_DAN_SU_DUNG.md." -ForegroundColor Red
+    Write-Host "[!] (2/6) Thiếu AGENTS.md, HUONG_DAN_SU_DUNG.md hoặc REVIEW.md." -ForegroundColor Red
 }
 
 # 3. Kiểm tra Kỹ năng: 3 Skills điều phối + 1 Skill lõi Upstream
@@ -51,17 +51,20 @@ if (Test-Path ".agents\rules\rea-workflow.md") {
     Write-Host "[!] (4/6) Thiếu luật an toàn trong .agents\rules." -ForegroundColor Red
 }
 
-# 5. Kiểm tra Bộ nhớ ngữ cảnh (docs/)
+# 5. Kiểm tra Bộ nhớ ngữ cảnh (docs/) & Bộ nhớ sự cố (state/)
 $docs = @("docs\PRD.md", "docs\ARCHITECTURE.md", "docs\PROGRESS.md", "docs\HANDOFF.md", "docs\PLAN.md")
 $allDocsOk = $true
 foreach ($doc in $docs) {
     if (-not (Test-Path $doc)) { $allDocsOk = $false }
 }
+if (-not (Test-Path ".agents\state\learned_rules.json") -or -not (Test-Path ".agents\state\active_case.json")) {
+    $allDocsOk = $false
+}
 if ($allDocsOk) {
-    Write-Host "[OK] (5/6) Bộ hồ sơ ngữ cảnh (Context Docs) hoàn chỉnh." -ForegroundColor Green
+    Write-Host "[OK] (5/6) Bộ hồ sơ ngữ cảnh (Context Docs) và Bộ nhớ sự cố (State) hoàn chỉnh." -ForegroundColor Green
     $score++
 } else {
-    Write-Host "[!] (5/6) Thiếu một số tài liệu trong thư mục docs/." -ForegroundColor Red
+    Write-Host "[!] (5/6) Thiếu một số tài liệu trong docs/ hoặc file state." -ForegroundColor Red
 }
 
 # 6. Kiểm tra REA Engine & MCP Runtime trên máy

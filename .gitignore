@@ -15,6 +15,7 @@
 .agents/state/*
 !.agents/state/.gitkeep
 !.agents/state/active_case.json
+!.agents/state/learned_rules.json
 
 # File hệ thống và bộ nhớ tạm
 *.log

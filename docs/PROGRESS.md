@@ -4,6 +4,22 @@
 - Overall: P01 IN PROGRESS (Non-tech Workspace Scaffold & REA Inspector Skill)
 - Product direction: REA-powered App Investigation & Development Kit
 
+## 2026-11-13 — Nâng Cấp Chuyên Sâu Anthropic Pipeline: REVIEW.md, High-Signal Filter, Incidents-to-Evals & Staged Preview
+
+### Completed
+- Hoàn thành phiên Grilling về 4 nâng cấp chuyên sâu kế thừa từ bài viết *"How the Claude Code team does code review"*:
+  1. **Khởi tạo Hợp đồng Thẩm định riêng biệt (`REVIEW.md`)**:
+     - Quy chuẩn hóa toàn bộ checklist kiểm toán độc lập 4 tầng, ranh giới Zero-Install, bảo vệ secret, và phân tầng rủi ro.
+  2. **Bộ lọc dẹp nhiễu phản hồi (High-Signal Filter)**:
+     - Nghiêm cấm AI Reviewer bắt bẻ phong cách viết mã (code style/comment) làm phiền người non-tech; chỉ báo cáo vi phạm hợp đồng (Spec, Tokens, 4 UI States, cú pháp).
+  3. **Cơ chế ghi nhớ học từ sự cố (Incidents to Evals)**:
+     - Tạo bộ nhớ `.agents/state/learned_rules.json`: Mỗi lần có sự cố hoặc người dùng hoàn tác, AI tự động đúc rút quy tắc cấm để không bao giờ tái phạm.
+  4. **Bản xem trước an toàn theo giai đoạn (Staged Preview)**:
+     - Khi nâng cấp/sửa lỗi, AI xuất ra `05_MA_NGUON_PHAT_TRIEN/preview.html` để người dùng duyệt trước; chỉ chuyển thành `index.html` khi người dùng phê duyệt.
+  5. **Đồng bộ hóa hệ sinh thái**:
+     - Cập nhật `.agents/skills/rea-build/SKILL.md`, `.agents/scripts/health_check.ps1`, `prompts/04-TAB-BUILD.md`, `README.md`, `prompts/BOOTSTRAP_KIT.md`, `docs/HANDOFF.md`.
+     - Health check đạt 6/6 PASSED.
+
 ## 2026-11-13 — Tích Hợp Mô Hình Anthropic Code Review (Independent Reviewer, Convergence & 1-Click Rollback)
 
 ### Completed

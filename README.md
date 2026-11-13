@@ -47,6 +47,7 @@ REA-kit-agy/
 ├── 05_MA_NGUON_PHAT_TRIEN/        # Build: Nơi lưu mã nguồn app mới và hướng dẫn chạy
 ├── AGENTS.md                      # Não bộ & luật giao tiếp tiếng Việt phi kỹ thuật
 ├── CLAUDE.md                      # Tương thích Claude Code (@AGENTS.md)
+├── REVIEW.md                      # Hợp đồng thẩm định độc lập & bộ lọc dẹp nhiễu
 ├── UPSTREAMS.md                   # Đăng ký chuẩn nguồn gốc morluto/rea
 ├── HUONG_DAN_SU_DUNG.md           # Hướng dẫn sử dụng 1 trang kèm câu lệnh copy-paste
 ├── KIEM_TRA.bat                   # 1-click kiểm tra sức khỏe workspace & runtime (6/6)
@@ -80,8 +81,8 @@ REA-kit-agy/
 * **Zero-Install Runtime**: Khi viết lại app mới (Rewrite), Agent ưu tiên xuất ra **Web App độc lập (HTML/CSS/JS)** để người dùng chỉ cần nhấp đúp chuột là mở chạy ngay trên trình duyệt mà không cần cài Node.js hay Python.
 * **Provider Fallback Gate**: Nếu máy người dùng thiếu Java/JADX hoặc Ghidra, Agent tự động chuyển sang đọc tài nguyên tĩnh nhẹ nhàng, không quăng lỗi crash terminal.
 * **Design System 3 Tầng**: Mọi giao diện đều được quản lý bằng `design.md` (Tokens ➔ Components ➔ 4 Trạng thái UI), đảm bảo app không bao giờ bị đơ hoặc trắng trang.
-* **Cổng thẩm định độc lập & Giới hạn hội tụ (Anthropic Model)**: Dùng công cụ xác định (`verify_code.ps1`) bắt lỗi cú pháp, kết hợp AI Reviewer độc lập thẩm định 2 trục (Standards & Spec). Khống chế tối đa 2 vòng tự sửa để chống lặp vô tận đốt token.
-* **Lá chắn hoàn tác 1-Click (`HOAN_TAC.bat`)**: Tự động lưu snapshot phiên bản ổn định vào `05_MA_NGUON_PHAT_TRIEN/.backup/`. Nếu bản mới lỗi, người dùng chỉ cần nhấp đúp `HOAN_TAC.bat` để khôi phục tức thì.
+* **Cổng thẩm định độc lập & Bộ lọc dẹp nhiễu (REVIEW.md)**: Thẩm định 2 trục (Standards & Spec) theo `REVIEW.md`, cấm bắt bẻ phong cách viết mã râu ria. Khống chế tối đa 2 vòng tự sửa để chống lặp vô tận đốt token.
+* **Xem trước Staged Preview & Hoàn tác 1-Click (`HOAN_TAC.bat`)**: Xuất `preview.html` xem thử trước khi ghi đè `index.html`. Tự động lưu snapshot vào `.backup/`, hỗ trợ khôi phục tức thì và nạp bài học vào `learned_rules.json` (Incidents to Evals).
 
 ---
 

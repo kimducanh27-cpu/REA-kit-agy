@@ -20,6 +20,7 @@ A Vietnamese-first kit using upstream REA (https://github.com/morluto/rea) and G
   - `AGENTS.md` (Vietnamese non-tech communication, REA routing, untrusted data rules)
   - `CLAUDE.md` (Using verified `@AGENTS.md` import pattern)
   - `UPSTREAMS.md` (Upstream register pinned to morluto/rea SHA 5cddc69c51a0fb18d021417199046314581ba9c2)
+  - `REVIEW.md` (Independent code review contract, high-signal filter, and risk-tiering)
   - `HUONG_DAN_SU_DUNG.md` (1-page quick start cheat sheet)
   - `KIEM_TRA.bat` (1-click health check launcher for Windows)
   - `HOAN_TAC.bat` (1-click rollback launcher to restore latest working snapshot)
