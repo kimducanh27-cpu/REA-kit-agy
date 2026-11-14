@@ -26,11 +26,11 @@ Present a concise briefing to the user (tuyệt đối không in stack trace hay
 - 📍 **Giai đoạn & Bước hiện tại**: [`current_phase` · `current_step` · `current_gate_status`]
 - 🧠 **Bộ nhớ kỹ thuật đã nạp**: [Xác nhận đã nạp `MEMORY.md` và `learned_rules.json`]
 - 🚦 **Trạng thái 6 Cổng Kiểm Soát (Quality Gates)**:
-  * Gate 01 (Baseline Verified): [TRUE / FALSE]
-  * Gate 02 (Audit Passed): [TRUE / FALSE]
-  * Gate 03 (Spec Frozen): [TRUE / FALSE]
-  * Gate 04 (Build QA Passed): [TRUE / FALSE]
-  * Gate 05 (Hard Verify Passed): [TRUE / FALSE]
-  * Gate 06 (Handoff Signed): [TRUE / FALSE]
+  * Gate 01 (Baseline Verified): [PASS / NOT_RUN / REVOKED / FAIL]
+  * Gate 02 (Audit Passed): [PASS / NOT_RUN / REVOKED / FAIL]
+  * Gate 03 (Spec Frozen): [PASS / NOT_RUN / REVOKED / FAIL]
+  * Gate 04 (Build QA Passed): [PASS / NOT_RUN / REVOKED / FAIL]
+  * Gate 05 (Hard Verify Passed): [PASS / NOT_RUN / REVOKED / FAIL]
+  * Gate 06 (Handoff Signed): [PASS / NOT_RUN / REVOKED / FAIL]
 - 💡 **Chỉ dẫn bước tiếp theo**: [Chỉ định rõ tệp Tab Prompt cần dán tiếp theo từ `prompts/01-TAB-DISCOVERY.md` đến `prompts/06-CONSOLIDATION-AND-MEMORY.md`]
 ```

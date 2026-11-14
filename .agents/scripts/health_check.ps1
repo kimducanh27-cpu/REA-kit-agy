@@ -67,9 +67,15 @@ if ($allSkillsOk) {
 }
 
 # 4. Kiểm tra Luật an toàn (Rules)
-if (Test-Path (Join-Path $repoRoot ".agents/rules/rea-workflow.md")) {
-    Write-Host "[OK] (4/6) Luật an toàn và bảo vệ dữ liệu đã được kích hoạt." -ForegroundColor Green
-    $score++
+$rulePath = Join-Path $repoRoot ".agents/rules/rea-workflow.md"
+if (Test-Path $rulePath) {
+    $ruleContent = Get-Content -LiteralPath $rulePath -Raw -Encoding UTF8
+    if ($ruleContent -match '(?m)^trigger:\s*always_on') {
+        Write-Host "[OK] (4/6) Luật an toàn và bảo vệ dữ liệu đã kích hoạt (trigger: always_on verified)." -ForegroundColor Green
+        $score++
+    } else {
+        Write-Host "[!] (4/6) Luật an toàn thiếu 'trigger: always_on' trong frontmatter (Antigravity sẽ bỏ qua rule)!" -ForegroundColor Red
+    }
 } else {
     Write-Host "[!] (4/6) Thiếu luật an toàn trong .agents/rules." -ForegroundColor Red
 }
@@ -115,12 +121,13 @@ try {
 }
 
 if ($mcpOk) {
-    Write-Host "[OK] (6/6) REA Engine & MCP Server đã kết nối sẵn sàng (Antigravity aligned)." -ForegroundColor Green
+    Write-Host "[OK] (6/6) REA Registration: ALIGNED (Antigravity client configuration verified)." -ForegroundColor Green
+    Write-Host "     [i] Lưu ý: Để gọi tool trực tiếp (RUNTIME_CONNECTED), cần có phiên Antigravity đang hoạt động." -ForegroundColor Gray
     $score++
 } else {
-    Write-Host "[!] (6/6) REA Engine chưa kết nối hoặc chưa cài đặt vào Antigravity." -ForegroundColor Yellow
-    Write-Host "     -> Khắc phục: Chạy lệnh sau để tự động cài đặt REA vào Antigravity:" -ForegroundColor Gray
-    Write-Host "        npx -y rea-agents setup --client antigravity --yes" -ForegroundColor Cyan
+    Write-Host "[!] (6/6) REA Engine chưa đăng ký hoặc cấu hình chưa khớp với Antigravity." -ForegroundColor Yellow
+    Write-Host "     -> Khắc phục: Chạy lệnh sau để tự động cấu hình REA vào Antigravity:" -ForegroundColor Gray
+    Write-Host "        npx -y rea-agents@6.9.0 setup --client antigravity --yes" -ForegroundColor Cyan
 }
 
 # 7. Kiểm tra Android CLI Tooling & Device Hub Readiness (V1 Target Class: Android APK)

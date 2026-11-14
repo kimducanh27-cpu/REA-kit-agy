@@ -1,6 +1,7 @@
 ---
 description: Bắt buộc tuân thủ quy trình REA an toàn, 6 Stage · 14 Bước và 6 Cổng kiểm soát trong workspace REA-kit-agy
 globs: "**/*"
+trigger: always_on
 ---
 
 # QUY TẮC AN TOÀN & BẢO TOÀN DỮ LIỆU REA

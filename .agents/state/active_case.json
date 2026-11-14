@@ -1,8 +1,10 @@
-{
+﻿{
   "schema_version": 2,
   "case_id": "CASE-INITIAL",
   "target_name": null,
   "target_class": "ANDROID_APK",
+  "development_strategy": null,
+  "delivery_platform": null,
   "build_strategy": null,
   "build_route": null,
   "current_phase": "STAGE_00_BOOTSTRAP",
@@ -12,12 +14,55 @@
   "revision": 1,
   "backup_verified": false,
   "gates": {
-    "gate_01_baseline_verified": false,
-    "gate_02_audit_passed": false,
-    "gate_03_spec_frozen": false,
-    "gate_04_build_qa_passed": false,
-    "gate_05_hard_verify_passed": false,
-    "gate_06_handoff_signed": false
+    "gate_01_baseline_verified": {
+      "state": "NOT_RUN",
+      "baseline_type": null,
+      "evidence": [],
+      "evidence_sha256": null,
+      "approved_by": null,
+      "approved_at": null,
+      "revoked_reason": null
+    },
+    "gate_02_audit_passed": {
+      "state": "NOT_RUN",
+      "evidence": [],
+      "evidence_sha256": null,
+      "approved_by": null,
+      "approved_at": null,
+      "revoked_reason": null
+    },
+    "gate_03_spec_frozen": {
+      "state": "NOT_RUN",
+      "evidence": [],
+      "evidence_sha256": null,
+      "approved_by": null,
+      "approved_at": null,
+      "revoked_reason": null
+    },
+    "gate_04_build_qa_passed": {
+      "state": "NOT_RUN",
+      "evidence": [],
+      "evidence_sha256": null,
+      "approved_by": null,
+      "approved_at": null,
+      "revoked_reason": null
+    },
+    "gate_05_hard_verify_passed": {
+      "state": "NOT_RUN",
+      "evidence": [],
+      "evidence_sha256": null,
+      "approved_by": null,
+      "approved_at": null,
+      "revoked_reason": null
+    },
+    "gate_06_handoff_signed": {
+      "state": "NOT_RUN",
+      "evidence": [],
+      "evidence_sha256": null,
+      "approved_by": null,
+      "approved_at": null,
+      "revoked_reason": null
+    }
   },
   "artifacts": {
     "backup_file": null,
@@ -34,7 +79,7 @@
   "metrics": {
     "coverage_score": null,
     "unknowns_count": 0,
-    "risk_level": "LOW",
+    "risk_level": "UNASSESSED",
     "review_convergence_rounds": 0,
     "max_convergence_rounds": 2
   },
@@ -42,7 +87,7 @@
     "REJECT_GATE_03": {
       "revert_to_phase": "STAGE_03_PRODUCT_DEFINITION",
       "revert_to_step": "06_REA_INTERVIEW",
-      "reset_gates": [
+      "revoke_gates": [
         "gate_03_spec_frozen",
         "gate_04_build_qa_passed",
         "gate_05_hard_verify_passed",
@@ -52,7 +97,7 @@
     "REJECT_GATE_04": {
       "revert_to_phase": "STAGE_04_IMPLEMENTATION",
       "revert_to_step": "09_REA_BUILD",
-      "reset_gates": [
+      "revoke_gates": [
         "gate_04_build_qa_passed",
         "gate_05_hard_verify_passed",
         "gate_06_handoff_signed"
@@ -61,13 +106,13 @@
     "REJECT_GATE_05": {
       "revert_to_phase": "STAGE_04_IMPLEMENTATION",
       "revert_to_step": "09_REA_BUILD",
-      "reset_gates": [
+      "revoke_gates": [
         "gate_04_build_qa_passed",
         "gate_05_hard_verify_passed",
         "gate_06_handoff_signed"
       ]
     }
   },
-  "last_updated": "2026-11-14T08:35:00+07:00",
-  "notes": "Hệ thống máy trạng thái 6 Giai đoạn STAGE_00_BOOTSTRAP .. STAGE_05_VALIDATION · 14 Bước (V1.1 Target: ANDROID_APK)"
+  "last_updated": "2026-11-14T09:00:00+07:00",
+  "notes": "Hệ thống máy trạng thái 6 Giai đoạn STAGE_00_BOOTSTRAP .. STAGE_05_VALIDATION · 14 Bước (Target: ANDROID_APK)"
 }

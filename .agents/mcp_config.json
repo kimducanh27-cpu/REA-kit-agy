@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "rea": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "rea-agents@6.9.0",
+        "serve"
+      ],
+      "description": "Reverse Engineer Anything (REA) MCP Server (Workspace Scope for REA-kit-agy)"
+    }
+  }
+}

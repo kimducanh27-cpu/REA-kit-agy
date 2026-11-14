@@ -45,6 +45,32 @@
         "CAPTURE"
       ]
     },
+    "development_strategy": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "enum": [
+        "STRATEGY_1_EXTEND",
+        "STRATEGY_2_FEATURE_BRANCH",
+        "STRATEGY_3_COMPATIBLE_CLEANROOM",
+        "STRATEGY_4_FULL_REWRITE",
+        null
+      ]
+    },
+    "delivery_platform": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "enum": [
+        "ROUTE_A_WEB_ZERO_INSTALL",
+        "ROUTE_B_ANDROID_NATIVE",
+        "ROUTE_C_PATCH_HYBRID",
+        "ROUTE_D_DESKTOP_ELECTRON",
+        null
+      ]
+    },
     "build_strategy": {
       "type": [
         "string",
@@ -67,6 +93,7 @@
         "ROUTE_A_WEB_ZERO_INSTALL",
         "ROUTE_B_ANDROID_NATIVE",
         "ROUTE_C_PATCH_HYBRID",
+        "ROUTE_D_DESKTOP_ELECTRON",
         null
       ]
     },
@@ -125,24 +152,67 @@
         "gate_05_hard_verify_passed",
         "gate_06_handoff_signed"
       ],
-      "properties": {
-        "gate_01_baseline_verified": {
-          "type": "boolean"
-        },
-        "gate_02_audit_passed": {
-          "type": "boolean"
-        },
-        "gate_03_spec_frozen": {
-          "type": "boolean"
-        },
-        "gate_04_build_qa_passed": {
-          "type": "boolean"
-        },
-        "gate_05_hard_verify_passed": {
-          "type": "boolean"
-        },
-        "gate_06_handoff_signed": {
-          "type": "boolean"
+      "patternProperties": {
+        "^gate_0[1-6]": {
+          "oneOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "object",
+              "required": [
+                "state"
+              ],
+              "properties": {
+                "state": {
+                  "type": "string",
+                  "enum": [
+                    "NOT_RUN",
+                    "BLOCKED",
+                    "PASS",
+                    "FAIL",
+                    "REVOKED"
+                  ]
+                },
+                "baseline_type": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "evidence": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "evidence_sha256": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "approved_by": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "approved_at": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "revoked_reason": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                }
+              }
+            }
+          ]
         }
       }
     },
@@ -237,6 +307,7 @@
         "risk_level": {
           "type": "string",
           "enum": [
+            "UNASSESSED",
             "LOW",
             "MEDIUM",
             "HIGH"

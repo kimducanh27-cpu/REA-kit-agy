@@ -7,11 +7,11 @@ Checked: **2026-11-13**. Primary upstream source is pinned to the exact commit S
 ## 1. Upstream Engine: morluto/rea
 
 - **Repository**: https://github.com/morluto/rea
-- **Inspected main SHA**: `5cddc69c51a0fb18d021417199046314581ba9c2`
-- **Package name**: `rea-agents`
-- **Package version**: `6.9.0` (published 2026-11-12)
+- **Release Tag**: `rea-agents-6.9.0`
+- **Pinned Commit**: `5cddc69c51a0fb18d021417199046314581ba9c2`
+- **Package name**: `rea-agents@6.9.0` (published 2026-11-12)
 - **Declared License**: MIT
-- **Primary Source Skill**: `.agents/skills/reverse-engineer-anything/SKILL.md` (Blob SHA: `5cddc69c51a0fb18d021417199046314581ba9c2`)
+- **Primary Source Skill**: `.agents/skills/reverse-engineer-anything/SKILL.md` (Upstream Skill Version: `v62`, kèm 8 references đầy đủ gồm `desktop-build.md`)
 - **Key References**:
   - `docs/guides/javascript/javascript-application-workflows.md`
   - `docs/guides/android/android-analysis.md`
@@ -24,8 +24,8 @@ Checked: **2026-11-13**. Primary upstream source is pinned to the exact commit S
 ## 2. Handling & Policy (Upstream-First, Orchestration-Second)
 
 1. **Không viết lại lõi REA (Nguyên văn Upstream Engine)**:
-   * File `.agents/skills/reverse-engineer-anything/SKILL.md` và 7 file trong `references/` được giữ nguyên văn 100% từ upstream `morluto/rea`.
-   * REA chịu trách nhiệm toàn bộ tầng phân tích dịch ngược, trích xuất cấu trúc và cung cấp bằng chứng (Evidence) qua 229 MCP tools.
+   * File `.agents/skills/reverse-engineer-anything/SKILL.md` và 8 file trong `references/` được giữ nguyên văn từ upstream `morluto/rea` (Skill v62).
+   * REA chịu trách nhiệm toàn bộ tầng phân tích dịch ngược, trích xuất cấu trúc và cung cấp bằng chứng (Evidence) qua danh mục MCP tools của server.
    * REA-kit-agy tuyệt đối không sửa đổi engine của REA hoặc tự tạo một bản fork giả mạo.
 
 2. **Ranh giới bộ kit (Orchestration Layer)**:
@@ -35,9 +35,10 @@ Checked: **2026-11-13**. Primary upstream source is pinned to the exact commit S
      - Phỏng vấn yêu cầu theo `docs/INTAKE_QUESTION_LOGIC.md`.
      - Điều phối sinh mã nguồn và kiểm chứng độc lập (`05_`).
 
-3. **Kiểm tra tương thích Runtime (Automated Doctor Check)**:
-   * `health_check.ps1` tự động thực thi `npx -y rea-agents doctor --client antigravity --json` để đảm bảo MCP server `rea` đã được đăng ký và sẵn sàng trong client.
-   * Lệnh cài đặt tự động khi thiếu: `npx -y rea-agents setup --client antigravity --yes`.
+3. **Kiểm tra tương thích Runtime & Ranh giới Riêng tư (Scoped Privacy Statement)**:
+   * **Môi trường thực thi**: Engine dịch ngược (JADX, Apktool, REA MCP) thực thi hoàn toàn cục bộ trên máy trạm của người dùng.
+   * **Truyền dữ liệu (Data Egress)**: Việc gửi dữ liệu ngữ cảnh ra ngoài internet phụ thuộc vào AI Agent Provider được cấu hình (ví dụ: Google Antigravity, Anthropic Claude, hoặc Local LLM). Bộ kit áp dụng chính sách che mờ 100% bí mật `[REDACTED]` trước khi đưa vào context.
+   * `health_check.ps1` kiểm tra đăng ký MCP client (`REGISTRATION_ALIGNED`). Lệnh cấu hình chính xác: `npx -y rea-agents@6.9.0 setup --client antigravity --yes`.
 
 ---
 

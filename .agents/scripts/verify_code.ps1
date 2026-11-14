@@ -68,6 +68,21 @@ function Remove-CommentsAndStrings {
     })
 }
 
+# Single-Pass Alternation Regex: Khớp comment VÀ chuỗi ký tự, nhưng CHỈ xóa comment, GIỮ NGUYÊN chuỗi ký tự.
+# Ngăn chặn lỗi regex vô tình xóa 'http://...' hoặc '//' bên trong chuỗi string.
+function Remove-CommentsOnly {
+    param([string]$Code)
+    if ([string]::IsNullOrEmpty($Code)) { return "" }
+    $pattern = '(?s)(/\*.*?\*/)|(?m)(//[^\r\n]*)|(<!--.*?-->)|("(?:\\.|[^"\\\r\n])*")|(''(?:\\.|[^''\\\r\n])*'')|(`(?:\\.|[^`\\])*`)'
+    return [regex]::Replace($Code, $pattern, {
+        param($m)
+        if ($m.Groups[1].Success -or $m.Groups[2].Success -or $m.Groups[3].Success) {
+            return ""
+        }
+        return $m.Value
+    })
+}
+
 # 1. Kiểm tra kiến trúc & file khởi động (Route A Web Zero-Install vs Route B/C Android)
 Write-Host "`n[1. KIẾN TRÚC & FILE ENTRY]" -ForegroundColor Yellow
 $htmlFiles = @(Get-ChildItem -LiteralPath $resolvedTarget -Filter "*.html" -Recurse | Where-Object { $_.FullName -notmatch $backupPathRegex })
@@ -139,7 +154,8 @@ function Test-JsCodeBlock {
             Write-Host " [FAIL] ${SourceLabel} không cân bằng ngoặc nhọn: {$openBraces mở, $closeBraces đóng}" -ForegroundColor Red
             return $false
         } else {
-            Write-Host " [PASS] ${SourceLabel} cân bằng ngoặc nhọn ($openBraces cặp)." -ForegroundColor Green
+            Write-Host " [WARN - HEURISTIC ONLY] ${SourceLabel}: Node.js không khả dụng; chỉ kiểm tra cân bằng ngoặc nhọn ($openBraces cặp, chưa qua AST compiler)." -ForegroundColor Yellow
+            $script:hasHeuristicJs = $true
             return $true
         }
     }
@@ -226,8 +242,8 @@ $codeFilesToCheck = @(Get-ChildItem -LiteralPath $resolvedTarget -Recurse -File 
 foreach ($f in $codeFilesToCheck) {
     $rawCode = Get-Content -LiteralPath $f.FullName -Raw -Encoding UTF8
     if ([string]::IsNullOrEmpty($rawCode)) { continue }
-    # Loại bỏ comment dòng/khối để không bắt nhầm URL/hàm trong chú thích
-    $codeNoComments = [regex]::Replace($rawCode, '(?s)/\*.*?\*/|(?m)//[^\r\n]*|<!--.*?-->', '')
+    # Loại bỏ comment dòng/khối, GIỮ NGUYÊN chuỗi string để không làm đứt đoạn URL http://
+    $codeNoComments = Remove-CommentsOnly -Code $rawCode
 
     # Chỉ dấu HIGH RISK (Web & Android Native: Outbound Network, Dynamic Code Eval, Shell Exec, Insecure Cleartext HTTP)
     if ($codeNoComments -match '\bfetch\s*\(') { $highRiskIndicators += "$($f.Name): Gọi mạng fetch()" }
@@ -316,6 +332,9 @@ if ($hasError) {
 } else {
     Write-Host " KẾT QUẢ: KIỂM CHỨNG XÁC ĐỊNH THÀNH CÔNG (PASSED - EXIT 0)" -ForegroundColor Green
     Write-Host " Phân loại rủi ro: [$riskLevel] | Sẵn sàng cho nghiệm thu người dùng." -ForegroundColor Green
+    if ($script:hasHeuristicJs) {
+        Write-Host " [LƯU Ý]: Kiểm tra JS chạy ở chế độ HEURISTIC do thiếu Node.js runtime." -ForegroundColor Yellow
+    }
     Write-Host "==========================================================" -ForegroundColor Cyan
     exit 0
 }

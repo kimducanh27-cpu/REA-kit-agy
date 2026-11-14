@@ -120,10 +120,10 @@ switch ($Action) {
             $paddedId = "{0:D4}" -f [int]$Id
         }
 
-        $targetFile = Get-ChildItem -Path $adrDir -Filter "*$paddedId*.md" | Select-Object -First 1
-        if (-not $targetFile) {
-            $targetFile = Get-ChildItem -Path $adrDir -Filter "*$Id*.md" | Select-Object -First 1
-        }
+        # Khớp chính xác ID ở đầu tên tệp bằng anchored regex, chống trùng lặp wildcard như 0001 vs 00010
+        $targetFile = Get-ChildItem -Path $adrDir -Filter "*.md" | Where-Object {
+            $_.Name -match "^$paddedId(-.*)?\.md$" -or $_.Name -match "^$Id(-.*)?\.md$"
+        } | Select-Object -First 1
 
         if (-not $targetFile) {
             Write-Host "[!] Không tìm thấy ADR nào khớp với ID hoặc tên: '$Id'" -ForegroundColor Red
@@ -142,6 +142,22 @@ switch ($Action) {
         Write-Host "================================================================================" -ForegroundColor Cyan
 
         $adrs = Get-AdrList
+        if ($adrs.Count -eq 0) {
+            Write-Host "[FAIL] Không tìm thấy bản ghi ADR nào trong $adrDir (thư mục rỗng)!" -ForegroundColor Red
+            exit 1
+        }
+
+        $allValid = $true
+
+        # Kiểm tra trùng lặp ID
+        $idGroups = @($adrs | Group-Object Id | Where-Object { $_.Count -gt 1 })
+        if ($idGroups.Count -gt 0) {
+            foreach ($grp in $idGroups) {
+                Write-Host " [FAIL] Phát hiện trùng lặp mã ID ADR '$($grp.Name)': $($grp.Group.File -join ', ')" -ForegroundColor Red
+            }
+            $allValid = $false
+        }
+
         $requiredSections = @(
             "## Context and Problem Statement",
             "## Decision Drivers",
@@ -150,8 +166,8 @@ switch ($Action) {
             "## Pros and Cons of the Options",
             "## Links"
         )
+        $validStatuses = @("PROPOSED", "ACCEPTED", "REJECTED", "DEPRECATED", "SUPERSEDED")
 
-        $allValid = $true
         $score = 0
 
         foreach ($adr in $adrs) {
@@ -163,6 +179,8 @@ switch ($Action) {
             }
             if (-not ($content -match '(?m)^-\s*Status:\s*.+')) {
                 $missing += "Trường '- Status:'"
+            } elseif (-not ($validStatuses -contains $adr.Status.ToUpper())) {
+                $missing += "Trường '- Status:' không hợp lệ: '$($adr.Status)' (phải là PROPOSED, ACCEPTED, REJECTED, DEPRECATED, hoặc SUPERSEDED)"
             }
 
             foreach ($sec in $requiredSections) {

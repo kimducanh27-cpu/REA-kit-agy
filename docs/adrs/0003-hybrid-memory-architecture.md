@@ -18,7 +18,7 @@ How should REA-kit-agy structure its state persistence and memory model to ensur
 
 ## Decision Drivers
 
-* **Strict Local-First Privacy:** Case files, decompiled code, evidence, and user decisions must never leave the local workstation; zero external cloud database or telemetry dependencies.
+* **Strict Local-First Workspace Persistence:** Case files, decompiled code, evidence, and user decisions are stored strictly in local files; no external cloud database or hosted telemetry services are required.
 * **Deterministic Session Continuity:** Work must survive agent interruptions, IDE restarts, or model context resets without losing user interview answers, gate status, or previous scan results.
 * **Context Budget Optimization:** Raw evidence and decompiled files must be queried on-demand; the active conversation context should only hold concise, high-signal state representations.
 * **Auditability and Rollback Safety:** Every gate transition, architectural decision, and code modification must be traceably recorded and reversible.
@@ -36,7 +36,7 @@ Chosen option: **Option 3: Four-Tier Local Hybrid Memory Architecture**.
 The system partitions case memory into four complementary tiers, all residing strictly in local workspace storage:
 
 ### Layer 1: Transcripts & Event Logs (Ground-Truth Session Ledger)
-- **Files:** `.agents/state/cases/session_<TIMESTAMP>.md`, Git commit history.
+- **Files:** `.agents/state/events.jsonl` (append-only JSONL event log), `.agents/state/cases/session_<TIMESTAMP>.md`, Git commit history.
 - **Role:** Searchable event log of commands executed, REA Evidence IDs collected, test verdicts, and user decisions. Serves as the ground-truth baseline for retroactive verification during offline consolidation (*Dreaming*).
 
 ### Layer 2: Memory Notes (Salient Observations, Strategies & Trap Warnings)
@@ -53,7 +53,7 @@ The system partitions case memory into four complementary tiers, all residing st
 
 ### Positive Consequences
 
-* **Complete Privacy Compliance:** Zero bytes leave the local filesystem; compliant with strict enterprise data residency and NDA requirements.
+* **Local Storage Privacy:** All case files, evidence, and state ledgers remain on the local filesystem without external database dependencies; model context egress depends on the configured agent provider, with secret redaction applied prior to context injection.
 * **Rock-Solid Crash Recovery:** If a terminal session dies or the agent window is refreshed, reading `.agents/state/active_case.json` immediately restores exact phase, step, gate, and next action pointers.
 * **Lean Token Consumption:** Heavy decompiled artifacts remain on disk in `03_KET_QUA_KIEM_TRA/` and are read selectively via targeted tool calls rather than dumped into conversation prompts.
 * **Deterministic Gate Enforcement:** Quality gates are explicit boolean checks recorded in Tier 2, preventing agents from skipping validation steps.

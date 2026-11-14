@@ -39,8 +39,11 @@ Kế hoạch trong `03_KET_QUA_KIEM_TRA/KE_HOACH_TRIEN_KHAI.md` bắt buộc chi
    👉 `03_KET_QUA_KIEM_TRA/KE_HOACH_TRIEN_KHAI.md`.
 3. **Trình bày và xin phê duyệt CỔNG 03 (`gate_03_spec_frozen`)**:
    - **Khi người dùng xác nhận "Đồng ý"**:
-     * Cập nhật `.agents/state/active_case.json`: `gates.gate_03_spec_frozen = true`, `current_gate_status = "GATE_03_PASSED"`, `next_prompt_guide = "Dán 'prompts/04-TAB-IMPLEMENTATION.md' để bắt đầu viết code và kiểm thử QA."`.
+     * Chạy lệnh mở cổng:
+       `powershell -NoProfile -ExecutionPolicy Bypass -File .\.agents\scripts\gate.ps1 open 3 -Evidence 03_KET_QUA_KIEM_TRA/dac-ta-yeu-cau-da-chot.md -ApprovedBy "user"`
+     * Cập nhật `next_prompt_guide = "Dán 'prompts/04-TAB-IMPLEMENTATION.md' để bắt đầu viết code và kiểm thử QA."`.
      * Đồng bộ bảng tiến độ trong `docs/PROGRESS.md`.
    - **Khi người dùng yêu cầu sửa lại (Reject Loop — Gate Invalidation Invariant)**:
+     * Chạy lệnh tự động thu hồi cổng và tăng revision:
+       `powershell -NoProfile -ExecutionPolicy Bypass -File .\.agents\scripts\gate.ps1 reject 3 -Reason "Người dùng yêu cầu chỉnh sửa lại đặc tả hoặc thiết kế giao diện."`
      * Giữ nguyên bản cũ, tạo bản revision mới (`dac-ta-yeu-cau-da-chot_v2.md` / `KE_HOACH_TRIEN_KHAI_v2.md`).
-     * Trong `active_case.json`: Tăng `revision += 1`, đặt `gates.gate_03_spec_frozen = false`, `gates.gate_04_build_qa_passed = false`, `gates.gate_05_hard_verify_passed = false`, `gates.gate_06_handoff_signed = false`, và lùi `current_step` về `"06_REA_INTERVIEW"`.

@@ -7,8 +7,18 @@
 
 ---
 
-## 1. Tóm Tắt Kết Quả Đối Chiếu & Phương Pháp Kiểm Chứng
+## 1. Tóm Tắt Kết Quả Đối Chiếu, Hợp Đồng Môi Trường & Phương Pháp Kiểm Chứng
 
+### 1.1 Hợp Đồng Môi Trường Kiểm Thử (Test Environment Contract)
+- **Thiết bị / Trình giả lập**: [Ví dụ: Pixel 7 Pro AVD / Chrome Desktop 124.0]
+- **Hệ điều hành / API Level**: [Ví dụ: Android 14 API 34 / Windows 11 x64]
+- **Độ phân giải & Mật độ điểm ảnh**: [Ví dụ: 1080x2400 @ 420dpi / 1920x1080 @ 1.0x]
+- **Tỷ lệ phông chữ (Font Scale)**: [Ví dụ: 1.0x]
+- **Giao diện & Ngôn ngữ (Theme & Locale)**: [Ví dụ: Sáng (Light) / vi-VN]
+- **Mã băm dữ liệu mẫu (Seed Data SHA-256)**: [Mã băm dữ liệu mock hoặc N/A]
+- **Ngưỡng dung sai khác biệt (Diff Threshold)**: [Ví dụ: 0% logic, Visual layout match with user approval]
+
+### 1.2 Phương Pháp Kiểm Chứng Sử Dụng
 - **Tổng số tính năng đem so sánh**: [Số lượng]
 - **Tỷ lệ tương thích yêu cầu**: [Ví dụ: 100%]
 - **Build Route đã chọn**: `[ ] Route A (Web App Zero-Install)` | `[ ] Route B (Android Native Project)` | `[ ] Route C (Patch APK / Hybrid)`

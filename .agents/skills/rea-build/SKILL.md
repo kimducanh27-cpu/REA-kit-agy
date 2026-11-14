@@ -36,7 +36,9 @@ Kỹ năng chuyên biệt cho **STAGE_04 (Implementation)** và **STAGE_05 (Vali
 5. **MỞ CỔNG 04 (`gate_04_build_qa_passed = true`)**:
    - Khi `verify_code.ps1` đạt `Exit Code 0` và Independent Review PASS:
    - Xuất báo cáo vào `03_KET_QUA_KIEM_TRA/KET_QUA_KIEM_THU.md` theo `templates/04-TEST-RESULT-TEMPLATE.md`.
-   - Cập nhật `active_case.json`: `gates.gate_04_build_qa_passed = true`, `current_gate_status = "GATE_04_PASSED"`, `metrics.risk_level` (`LOW`/`MEDIUM`/`HIGH`), `next_prompt_guide = "Dán 'prompts/05-TAB-VALIDATION.md' để chạy nghiệm thu Hard Verify và bàn giao."`.
+   - Chạy lệnh mở cổng:
+     `powershell -NoProfile -ExecutionPolicy Bypass -File .\.agents\scripts\gate.ps1 open 4 -Evidence 03_KET_QUA_KIEM_TRA/KET_QUA_KIEM_THU.md -ApprovedBy "independent-reviewer"`
+   - Cập nhật `next_prompt_guide = "Dán 'prompts/05-TAB-VALIDATION.md' để chạy nghiệm thu Hard Verify và bàn giao."`.
    - Đồng bộ `docs/PROGRESS.md`.
 
 ---
@@ -56,13 +58,20 @@ Kỹ năng chuyên biệt cho **STAGE_04 (Implementation)** và **STAGE_05 (Vali
 3. Xuất bảng đối chiếu 3 cột (Khớp 100% / Khác biệt có chủ đích / Nâng cấp mới) theo `templates/08-HARD-VERIFY-TEMPLATE.md` vào:
    👉 `03_KET_QUA_KIEM_TRA/BAO_CAO_NGHIEM_THU_HARD_VERIFY.md`.
 4. **Xử lý kết quả CỔNG 05 (`gate_05_hard_verify_passed`)**:
-   - **Khi người dùng xác nhận ĐẠT**: Cập nhật `gates.gate_05_hard_verify_passed = true`, `current_gate_status = "GATE_05_PASSED"`.
+   - **Khi người dùng xác nhận ĐẠT**:
+     * Chạy lệnh mở cổng:
+       `powershell -NoProfile -ExecutionPolicy Bypass -File .\.agents\scripts\gate.ps1 open 5 -Evidence 03_KET_QUA_KIEM_TRA/BAO_CAO_NGHIEM_THU_HARD_VERIFY.md -ApprovedBy "user"`
    - **Khi người dùng yêu cầu sửa (Reject Loop — Gate Invalidation Invariant)**:
+     * Chạy lệnh tự động thu hồi cổng và quay lui:
+       `powershell -NoProfile -ExecutionPolicy Bypass -File .\.agents\scripts\gate.ps1 reject 5 -Reason "Người dùng yêu cầu điều chỉnh lại tính năng hoặc giao diện sau khi đối chiếu 1-1."`
      * Xuất `03_KET_QUA_KIEM_TRA/FIX_PLAN_v2.md`.
-     * Trong `active_case.json`: Tăng `revision += 1`, **bắt buộc hạ `gates.gate_04_build_qa_passed = false` và `gates.gate_05_hard_verify_passed = false`**, reset `metrics.review_convergence_rounds = 0`, lùi `current_phase = "STAGE_04_IMPLEMENTATION"` và `current_step = "09_REA_BUILD"`.
+     * Reset `metrics.review_convergence_rounds = 0`.
 
 ### Bước 13: Release & Handoff (Đóng Gói & Bàn Giao)
 1. Cập nhật `active_case.json`: `current_step = "13_RELEASE_AND_HANDOFF"`.
 2. Xuất gói bàn giao kèm Plain-Language Explainer và hướng dẫn `HOAN_TAC.bat` theo `templates/09-HANDOFF-BUNDLE-TEMPLATE.md` vào:
    👉 `05_MA_NGUON_PHAT_TRIEN/BAN_GIAO_SAN_PHAM.md`.
-3. **MỞ CỔNG 06 (`gate_06_handoff_signed = true`)**: Khi người dùng ký nhận bàn giao, cập nhật `gates.gate_06_handoff_signed = true`, `current_gate_status = "GATE_06_COMPLETED"`, đồng bộ `docs/PROGRESS.md` và `docs/HANDOFF.md`.
+3. **MỞ CỔNG 06 (`gate_06_handoff_signed = true`)**:
+   - Khi người dùng ký nhận bàn giao:
+     `powershell -NoProfile -ExecutionPolicy Bypass -File .\.agents\scripts\gate.ps1 open 6 -Evidence 05_MA_NGUON_PHAT_TRIEN/BAN_GIAO_SAN_PHAM.md -ApprovedBy "user"`
+   - Đồng bộ `docs/PROGRESS.md` và `docs/HANDOFF.md`.

@@ -112,14 +112,20 @@ TEST RESULT (QA Pass/Fail)
 FINAL ACCEPTANCE (Hard Verify 1-1)
 ```
 
-## 6.2. Lộ trình phân loại Script Registry (6 Nhóm Kiểm Tra)
+## 6.2. Phân loại Script Registry (Hiện diện Thực tế vs Lộ trình Dự kiến)
 
-1. **Workspace**: `health_check.ps1`, `validate-kit.ps1` (Kiểm tra cấu trúc thư mục, Rules, Context, REA Doctor).
-2. **Intake**: `preflight.ps1`, `verify-backup.ps1` (Kiểm kê đầu vào, tính SHA-256, đối chiếu bản sao lưu).
-3. **Evidence**: `validate-evidence.py`, `validate-report.py`, `validate-coverage.py` (Kiểm toán Evidence ID, độ phủ, che mờ secrets).
-4. **Workflow**: `validate-case-state.py`, `validate-handoff.py` (Kiểm định máy trạng thái `active_case.json`, hợp đồng bàn giao `HANDOFF.json`).
-5. **Engineering**: `verify_code.ps1`, `build-profile.ps1`, `run-tests.ps1`, `rollback.ps1` (Kiểm tra cú pháp, build, test, khôi phục đệ quy).
-6. **Memory**: `validate-memory.py`, `memory-eval.py` (Kiểm định tính xác thực của Memory Notes, loại bỏ mâu thuẫn).
+### A. Bộ Script Khả Dụng Trong Gói (`.agents/scripts/` — Đã kiểm thử & Vận hành):
+1. **`health_check.ps1`**: Kiểm định môi trường workspace, cấu trúc thư mục, rules (`trigger: always_on`), kỹ năng, tài liệu ngữ cảnh, và đăng ký REA MCP.
+2. **`adr.ps1`**: Quản trị danh mục Quyết định Kiến trúc chuẩn MADR (`list`, `show`, `new`, `validate`, `status`).
+3. **`gate.ps1`**: Quản trị máy trạng thái 6 cổng kiểm soát, cưỡng chế thứ tự tuần tự, ghi nhận bằng chứng SHA-256, thực thi tự động thu hồi cổng khi reject loop (`validate`, `status`, `open`, `reject`, `event`), và đồng bộ `events.jsonl`.
+4. **`rollback.ps1`**: Khôi phục mã nguồn nguyên tử 2 giai đoạn (Staging Atomic Swap) kèm tệp `manifest.json` SHA-256, bảo vệ ReparsePoint (symlink/junction) và chống hoàn tác vào snapshot rỗng.
+5. **`verify_code.ps1`**: Kiểm tra xác định mã nguồn (cú pháp HTML, cú pháp JS qua `node --check` hoặc heuristic ngoặc nhọn, quét rò rỉ secret nhạy cảm [REDACTED], phân loại rủi ro tự động LOW/MEDIUM/HIGH, và cấu trúc Android).
+
+### B. Lộ trình Mở rộng Tương lai (`[PLANNED / ROADMAP]`):
+- **Intake**: `preflight.ps1`, `verify-backup.ps1` (Tự động hóa sâu checksum cho các định dạng binary phức tạp ngoài APK).
+- **Evidence**: `validate-evidence.py`, `validate-report.py`, `validate-coverage.py` (Parser AST chuyên sâu cho Evidence ID).
+- **Workflow**: `validate-handoff.py` (Tự động ký số điện tử hợp đồng bàn giao).
+- **Memory**: `memory-eval.py` (Đo lường độ lệch tri thức tự động khi kích thước transcript vượt 100MB).
 
 ## 7. Security boundaries
 

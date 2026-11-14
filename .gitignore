@@ -11,15 +11,32 @@
 05_MA_NGUON_PHAT_TRIEN/*
 !05_MA_NGUON_PHAT_TRIEN/.gitkeep
 
-# Trạng thái xử lý nội bộ
+# Trạng thái xử lý nội bộ & Bộ nhớ 4 tầng
 .agents/state/*
 !.agents/state/.gitkeep
 !.agents/state/active_case.json
 !.agents/state/learned_rules.json
 !.agents/state/MEMORY.md
+!.agents/state/events.jsonl
 !.agents/state/cases/
 .agents/state/cases/*
 !.agents/state/cases/.gitkeep
+
+# Bí mật, khóa riêng tư, chứng chỉ, token & credentials (P2-15)
+.env*
+!.env.example
+*.pem
+*.key
+*.keystore
+*.jks
+*.p12
+*.pfx
+credentials.*
+id_rsa*
+id_ed25519*
+*.token
+.npmrc
+.gradle/
 
 # File hệ thống và bộ nhớ tạm
 *.log

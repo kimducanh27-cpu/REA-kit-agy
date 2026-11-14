@@ -48,5 +48,7 @@ Kỹ năng chuyên trách kiểm toán độc lập cho **Bước 05 (`05_REA_AU
   1. Đã hoàn thành `03_KET_QUA_KIEM_TRA/bao-cao-hien-trang.md` có gắn Evidence IDs.
   2. Đã che mờ 100% secrets `[REDACTED]` trong báo cáo.
   3. Đã xuất `03_KET_QUA_KIEM_TRA/UNKNOWNS_AND_COVERAGE.md` đầy đủ.
-- **Nếu đạt**: Cập nhật `active_case.json` (`gates.gate_02_audit_passed = true`, `current_gate_status = "GATE_02_PASSED"`, `next_prompt_guide = "Dán 'prompts/03-TAB-PRODUCT-DEFINITION.md' để phỏng vấn chốt yêu cầu và lập kế hoạch."`) và đồng bộ `docs/PROGRESS.md`.
-- **Nếu chưa đạt (Reject Loop)**: Lùi `current_step` về `"04_REA_INVESTIGATE"` để điều tra bổ sung.
+- **Nếu đạt**: Thực thi lệnh mở cổng kiểm soát:
+  `powershell -NoProfile -ExecutionPolicy Bypass -File .\.agents\scripts\gate.ps1 open 2 -Evidence 03_KET_QUA_KIEM_TRA/bao-cao-hien-trang.md -ApprovedBy "rea-audit"`
+  Đồng bộ bảng tiến độ trong `docs/PROGRESS.md`.
+- **Nếu chưa đạt (Reject Loop)**: Lùi `current_step` về `"04_REA_INVESTIGATE"` để điều tra bổ sung, không mở Cổng 02.

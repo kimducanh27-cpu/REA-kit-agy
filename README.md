@@ -1,4 +1,4 @@
-# REA-kit-agy
+﻿# REA-kit-agy
 
 **Bộ kit giao diện thư mục trực quan dành cho người dùng non-tech: Kiểm tra ứng dụng, bóc tách cấu trúc, làm rõ yêu cầu và phát triển/viết lại app bằng AI (Google Antigravity & REA Engine) theo chuẩn 6 Phase · 14 Bước.**
 
@@ -126,24 +126,27 @@ REA-kit-agy/
 │   │   └── 0006-cli-adr-management.md
 │   └── PRD.md, RULES.md, PLAN.md, TASKS.md, SOURCE_AUDIT.md...
 └── .agents/                       # Khu vực kỹ thuật (ẩn trên Windows)
-    ├── rules/rea-workflow.md      # Luật an toàn REA
+    ├── mcp_config.json            # Cấu hình MCP phạm vi workspace (pin rea-agents@6.9.0)
+    ├── rules/rea-workflow.md      # Luật an toàn REA (trigger: always_on)
     ├── skills/                    # Kỹ năng lõi REA gốc v62 + Bộ 6 skills điều phối tiếng Việt
     │   ├── reverse-engineer-anything/ # Upstream REA v62 (229 tools, 8 references)
-    │   ├── rea-scan/              # Điều phối Intake & Scan
-    │   ├── rea-audit/             # Kiểm toán bằng chứng độc lập & Coverage
-    │   ├── rea-interview/         # Phỏng vấn người dùng & 4 Build Routes
-    │   ├── rea-plan/              # Lập kiến trúc & chia Vertical Slices
-    │   ├── rea-build/             # Triển khai mã nguồn theo lát cắt & bàn giao
+    │   ├── rea-scan/              # Điều phối Intake & Scan (Steps 01-04)
+    │   ├── rea-audit/             # Kiểm toán bằng chứng độc lập & Coverage (Step 05)
+    │   ├── rea-interview/         # Phỏng vấn người dùng & Strategies / Routes (Steps 06-07)
+    │   ├── rea-plan/              # Lập kiến trúc & chia 6 Vertical Slices (Step 08)
+    │   ├── rea-build/             # Triển khai mã nguồn theo lát cắt & bàn giao (Steps 09-13)
     │   └── memory-consolidation/  # Nuôi dưỡng bộ nhớ Anthropic Dreaming
     ├── state/                     # Bộ nhớ 4 tầng theo chuẩn Anthropic
-    │   ├── active_case.json       # Máy trạng thái 6 Gates & 14 Steps v2
+    │   ├── active_case.json       # Máy trạng thái 6 Gates & 14 Steps v2 (State objects)
+    │   ├── events.jsonl           # Nhật ký sự kiện append-only bất biến (Layer 1)
     │   ├── learned_rules.json     # Bộ nhớ học từ sự cố (Incidents to Evals)
-    │   ├── MEMORY.md              # Bảng chỉ mục tri thức bền vững (Layer 2)
+    │   ├── MEMORY.md              # Bảng chỉ mục tri thức bền vững có provenance (Layer 2)
     │   └── cases/                 # Nhật ký phiên cô lập (Layer 1 Transcripts)
     └── scripts/                   # Bộ script kiểm tra xác định & an toàn
         ├── health_check.ps1       # Kiểm tra sức khỏe môi trường (6/6)
+        ├── gate.ps1               # Quản trị máy trạng thái 6 cổng & tự động thu hồi
         ├── verify_code.ps1        # Kiểm tra cú pháp & phân tầng rủi ro
-        ├── rollback.ps1           # Hoàn tác 1-click an toàn ReparsePoint
+        ├── rollback.ps1           # Hoàn tác nguyên tử 2 giai đoạn kèm SHA-256 manifest
         └── adr.ps1                # Quản lý ADR chuẩn MADR không dependency
 ```
 
@@ -210,3 +213,4 @@ Muốn nhân bản toàn bộ bộ kit này sang một thư mục rỗng bất k
 - ⏪ **Lá chắn hoàn tác an toàn cao (ReparsePoint Safe Rollback)**: Bổ sung cơ chế chống xóa xuyên qua Symlink/Junction và xoay vòng tự động 10 bản sao lưu gần nhất.
 - 🧩 **Bộ 6 Local Skills độc quyền**: Tách bạch rõ vai trò của Investigator (`rea-scan`), Auditor (`rea-audit`), Planner (`rea-plan`), Builder (`rea-build`) và Memory Manager (`memory-consolidation`).
 - 🧠 **Cơ chế Anthropic Dreaming**: Lưu trữ tri thức bền vững vào `MEMORY.md`, đối chiếu nguồn gốc thực tế và tinh gọn ngữ cảnh nạp vào đầu phiên.
+

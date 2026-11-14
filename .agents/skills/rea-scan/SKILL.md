@@ -27,13 +27,15 @@ Kỹ năng chuyên biệt cho **STAGE_01 (Bước 01 & 02)** và **STAGE_02 (Bư
    - **Chụp ảnh màn hình Baseline**: Dùng `android screen capture -o 01_THA_APP_VAO_DAY/baseline/screen_01.png` hoặc REA MCP `capture_adb_screen` (tham số JSON bắt buộc: `serial` và `output_directory` — lưu ý dùng đúng `output_directory` dạng snake_case với đường dẫn tuyệt đối tới thư mục chưa có file trùng tên theo *morluto/rea Issue #7550 & #7437*).
    - **Trích xuất cây phân cấp UI**: Chạy `android layout --full` để lưu JSON hierarchy vào `01_THA_APP_VAO_DAY/baseline/layout_01.json`.
      * *Lưu ý giới hạn (Issue #5033)*: Với màn hình viết bằng Jetpack Compose, `uiautomator` / `android layout` chỉ trả về các node có khai báo semantics.
-2. **Cơ chế Fallback Tĩnh 3 Lớp (Khi không có AVD / Thiết bị thật)**:
-   - Không dừng quy trình hay báo lỗi crash; đánh dấu runtime là `SKIPPED (Static Fallback)` và thực hiện bóc tách tĩnh 3 lớp:
-     * **Lớp 1 — Cấu trúc Package, Manifest & Classes (JADX)**: Gọi `inspect_android_package` với đường dẫn tuyệt đối của APK. *(Lưu ý: `inspect_android_package` chỉ trả về package identity, permissions, class inventory và raw `AndroidManifest.xml` text; nó KHÔNG trả về `res/layout/*.xml` hay `drawables` theo Issue #4448)*.
-     * **Lớp 2 — Bảng chuỗi & Tài nguyên (Apktool)**: Gọi `decode_android_resources` (yêu cầu `apktool >= 2.9.2` để chống lỗ hổng Path Traversal CVE-2024-21633 / Issue #3438) để lấy `strings.xml` và resource tables.
+2. **Phân loại Baseline: Runtime vs Static Fallback (P2-13)**:
+   - **Nhánh A — Runtime Baseline (`BASELINE_RUNTIME_VERIFIED`)**: Khi có AVD / thiết bị thật, chụp ảnh màn hình và trích xuất `android layout --full`. Lưu `baseline_type = "BASELINE_RUNTIME_VERIFIED"`.
+   - **Nhánh B — Static Baseline (`BASELINE_STATIC_ONLY`)**: Khi không có AVD / thiết bị, đánh dấu runtime là `SKIPPED (Static Fallback)` và bóc tách tĩnh 3 lớp:
+     * **Lớp 1 — Cấu trúc Package, Manifest & Classes (JADX)**: Gọi `inspect_android_package` với đường dẫn tuyệt đối của APK. *(Lưu ý: `inspect_android_package` chỉ trả về package identity, permissions, class inventory và raw `AndroidManifest.xml` text; KHÔNG trả về `res/layout/*.xml` hay `drawables`)*.
+     * **Lớp 2 — Bảng chuỗi & Tài nguyên (Apktool)**: Gọi `decode_android_resources` (yêu cầu `apktool >= 2.9.2` chống CVE-2024-21633) để lấy `strings.xml` và resource tables.
      * **Lớp 3 — Danh mục File & Assets (`res/layout/*.xml`, `assets/`)**: Gọi `open_binary` + `inspect_artifact` / `extract_artifact` để lấy cây file vật lý trong gói APK.
-3. **MỞ CỔNG 01 (`gate_01_baseline_verified = true`)**:
-   - Cập nhật `active_case.json`: `current_step = "02_REFERENCE_BASELINE"`, `current_gate_status = "GATE_01_PASSED"`, `gates.gate_01_baseline_verified = true`.
+     * *(Lưu ý quan trọng: Toàn bộ các nhận định phụ thuộc runtime lúc này phải đánh dấu là `UNKNOWN`, không dùng tài nguyên tĩnh làm baseline pixel cho Gate 05)*.
+3. **Báo cáo Hoàn tất Bước 02 & Đề nghị Coordinator Mở CỔNG 01**:
+   - Chạy lệnh: `powershell -NoProfile -ExecutionPolicy Bypass -File .\.agents\scripts\gate.ps1 open 1 -Evidence 01_THA_APP_VAO_DAY/baseline/layout_01.json` (hoặc manifest tĩnh).
    - Đồng bộ bảng tiến độ trong `docs/PROGRESS.md`.
 
 ---
