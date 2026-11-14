@@ -1,214 +1,220 @@
 ---
 name: rea-interview
-description: Phụ trách độc quyền Bước 06 (REA Adaptive Interview & Art Direction) và Bước 07 (Spec & Anti-Slop Design Gate) trong STAGE_03 (Product Definition). Điều hướng phỏng vấn thích ứng theo 6 Domain chuyên biệt, vận hành Question Necessity Engine (8 bộ lọc triệt tiêu câu hỏi thừa), Decision & Constraint Engine (Question/Decision/Assumption Records), xử lý linh hoạt 3 chế độ thiết kế (DESIGN_REUSE_EXACT, DESIGN_STYLE_SPECIFIED, DESIGN_STRUCTURAL_EXPLORATION - chỉ kích hoạt 3 concepts khi người dùng yêu cầu khám phá cấu trúc), thiết lập Art Direction, soạn thảo Copy Deck thực tế (cấm Lorem Ipsum), xử lý 4 trạng thái UI bắt buộc, khóa Design Tokens 3 tầng và xuất bộ đặc tả Markdown đóng băng. Ranh giới tuyệt đối: KHÔNG VIẾT CODE trong giai đoạn này.
+description: Điều phối phân hệ Phỏng vấn Thích ứng (Adaptive Interview Engine) tại Bước 06 (06_REA_INTERVIEW) và Thiết kế Đặc tả Chống UI Slop tại Bước 07 (07_SPEC_AND_DESIGN) thuộc STAGE_03 · PRODUCT DEFINITION. Vận hành hợp đồng 12 bước (Context Ingestion -> Goal Decomposition -> Question Selection -> Answer Interpretation -> State Update -> Sufficiency Exit Gate), 10 Domain kiến thức chuyên sâu, Question Necessity Engine (8 bộ lọc triệt tiêu câu hỏi thừa), Decision & Constraint Engine (Question/Decision/Assumption/Conflict Records trong .agents/state/interview_state.json qua script interview.ps1), phân biệt rõ ràng nhu cầu mạng sản phẩm với quyền thực thi của Agent, xử lý 10 loại câu trả lời và phát hiện mâu thuẫn (Contradiction Resolution), chống lặp câu hỏi, điều tiết 3 chế độ thiết kế (DESIGN_REUSE_EXACT, DESIGN_STYLE_SPECIFIED, DESIGN_STRUCTURAL_EXPLORATION), khóa Design Tokens 3 tầng và xuất bộ đặc tả Markdown đóng băng. Ranh giới tuyệt đối: KHÔNG VIẾT CODE trong giai đoạn này.
 ---
 
-# KỸ NĂNG: PHỎNG VẤN THÍCH ỨNG & THIẾT KẾ ĐẶC TẢ ANTI-SLOP (REA-INTERVIEW)
+# KỸ NĂNG: PHỎNG VẤN THÍCH ỨNG & THIẾT KẾ ĐẶC TẢ SẢN PHẨM (REA-INTERVIEW)
 
-Kỹ năng chuyên biệt cho **Bước 06 (`06_REA_INTERVIEW`)** và **Bước 07 (`07_SPEC_AND_DESIGN`)** thuộc **STAGE_03 · PRODUCT DEFINITION** theo quy chuẩn `docs/WORKFLOW_LIFECYCLE.md` và `docs/ADAPTIVE_INTERVIEW_FRAMEWORK.md`.
+Kỹ năng chuyên biệt cho **Bước 06 (`06_REA_INTERVIEW`)** và **Bước 07 (`07_SPEC_AND_DESIGN`)** thuộc **STAGE_03 · PRODUCT DEFINITION** theo quy chuẩn `docs/WORKFLOW_LIFECYCLE.md`, `docs/ADAPTIVE_INTERVIEW_FRAMEWORK.md`, và `docs/INTAKE_QUESTION_LOGIC.md`.
 
-> ⚠️ **RANH GIỚI KIẾN TRÚC BẮT BUỘC**:
-> Trong toàn bộ STAGE_03, Agent tuyệt đối **KHÔNG ĐƯỢC VIẾT CODE, KHÔNG TẠO WORKING PROTOTYPE, KHÔNG SỬA DESIGN SYSTEM NGOÀI HỢP ĐỒNG**. Chỉ tạo hồ sơ đặc tả Markdown có cấu trúc, bố cục phân cấp, hồ sơ quyết định và Copy Deck thực tế.
-
----
-
-## 1. TỔNG QUAN KIẾN TRÚC THÍCH ỨNG (ADAPTIVE ARCHITECTURE)
-
-Quy trình phỏng vấn định hình sản phẩm của REA-kit-agy không sử dụng bảng khảo sát cứng nhắc làm phiền người dùng. Quy trình hoạt động dựa trên 4 khối động cơ phối hợp chặt chẽ:
-
-```
-┌────────────────────────────────────────────────────────────────────────┐
-│                   HỆ THỐNG PHỎNG VẤN THÍCH ỨNG (REA-INTERVIEW)         │
-├────────────────────────────────────────────────────────────────────────┤
-│ 1. ĐIỀU HƯỚNG TÊN MIỀN (DOMAIN ROUTING ENGINE)                         │
-│    Tự động phân loại mục tiêu người dùng vào 1 trong 6 Domain chuyên sâu│
-│    (App Opt, Security, Feature Add, Feature Opt, Bug Fix, UX/UI).      │
-├────────────────────────────────────────────────────────────────────────┤
-│ 2. ĐỘNG CƠ SÀNG LỌC CÂU HỎI (QUESTION NECESSITY ENGINE - 8 FILTERS)    │
-│    Loại bỏ 100% câu hỏi thừa đã biết, tự kiểm tra được, hoặc rủi ro thấp│
-│    trước khi gửi cho người dùng.                                       │
-├────────────────────────────────────────────────────────────────────────┤
-│ 3. ĐỘNG CƠ QUYẾT ĐỊNH & GIẢ ĐỊNH (DECISION & CONSTRAINT ENGINE)         │
-│    Theo dõi và đóng băng Question Record, Decision Record, Assumption  │
-│    Record có tính minh bạch và truy xuất ngược.                        │
-├────────────────────────────────────────────────────────────────────────┤
-│ 4. ĐIỀU TIẾT KHÁM PHÁ THIẾT KẾ (DESIGN EXPLORATION CONTROLLER)         │
-│    Không ép buộc 3 concepts đại trà. Tự động chuyển đổi giữa:          │
-│    - DESIGN_REUSE_EXACT (Khớp 1-1, bỏ qua 3 concepts)                  │
-│    - DESIGN_STYLE_SPECIFIED (Theo phong cách chỉ định, bỏ 3 concepts)  │
-│    - DESIGN_STRUCTURAL_EXPLORATION (Bắt buộc 3 concepts cấu trúc)      │
-└────────────────────────────────────────────────────────────────────────┘
-```
+> ⚠️ **RANH GIỚI KIẾN TRÚC BẮT BUỘC (SPEC-FIRST BOUNDARY)**:
+> Trong toàn bộ STAGE_03, Agent tuyệt đối **KHÔNG ĐƯỢC VIẾT CODE SẢN PHẨM, KHÔNG TẠO WORKING PROTOTYPE, KHÔNG SỬA MÃ NGUỒN NGOÀI HỢP ĐỒNG ĐẶC TẢ**. Chỉ xây dựng các tài liệu Markdown có cấu trúc, hồ sơ quyết định, hợp đồng giao diện chống UI Slop và Copy Deck thực tế.
 
 ---
 
-## 2. ĐIỀU HƯỚNG TÊN MIỀN PHỎNG VẤN (DOMAIN ROUTING)
+## 1. HỢP ĐỒNG THỰC THI 12 BƯỚC (12-STEP ADAPTIVE EXECUTION CONTRACT)
 
-Tại đầu Bước 06, Agent đọc tài liệu đầu vào và phân loại mục tiêu chính của case vào 1 trong 6 Domain chuyên biệt để nạp tài liệu hướng dẫn tương ứng từ thư mục `.agents/skills/rea-interview/domains/`:
-
-| Mã Domain | Tệp Hướng Dẫn Chuyên Sâu | Trọng Tâm Phỏng Vấn & Đặc Tả |
-| :--- | :--- | :--- |
-| `APP_OPTIMIZATION` | `domains/app-optimization.md` | Hiệu năng hệ thống (FPS, Jank), Cold Start, RAM/Heap, Pin, ANR, Baseline trước/sau. |
-| `SECURITY_HARDENING` | `domains/security-hardening.md` | Tài sản mã nguồn, Auth & Session, Keystore, Cấm Cleartext, Root Policy, R8, Screen leak. |
-| `FEATURE_ADDITION` | `domains/feature-addition.md` | Kết quả người dùng (Outcome) ➔ Quy chuẩn hành vi ➔ Đặc tả triển khai, Non-Goals, Schemas. |
-| `FEATURE_OPTIMIZATION` | `domains/feature-optimization.md` | Nguyên nhân gốc rễ (RCA), Bảo toàn hành vi 100%, Mục tiêu KPI Before/After, Surgical fix. |
-| `BUG_FIX` | `domains/bug-fix.md` | Kịch bản tái hiện (STR), Phân loại RCA, Bán kính tác động, Rào chắn kiểm thử tự động. |
-| `UX_UI_IMPROVEMENT` | `domains/ux-ui-improvement.md` | Phân loại 3 nhánh (Visual / UX Flow / Refinement), Chế độ thiết kế, Anti-Slop, Copy Deck. |
-
----
-
-## 3. ĐỘNG CƠ SÀNG LỌC CÂU HỎI (QUESTION NECESSITY ENGINE)
-
-Mọi câu hỏi tiềm năng đều phải vượt qua chuỗi **8 bộ lọc tuần tự** tương ứng với công thức logic $Ask(q)$. Nếu vi phạm bất kỳ bộ lọc tiêu cực nào hoặc không đáp ứng tiêu chí bắt buộc, câu hỏi **BỊ HỦY BỎ**, **TỰ ĐƯỢC AGENT QUYẾT ĐỊNH KỸ THUẬT**, hoặc **CHUYỂN THÀNH GIẢ ĐỊNH MẶC ĐỊNH**:
+Phân hệ phỏng vấn thích ứng vận hành như một **động cơ quyết định (Decision-Driven Interview Engine)**, không bao giờ dùng bảng khảo sát tĩnh:
 
 ```
-[Ý định hỏi] ──► [Filter 1: Known?] ────────► ĐÃ BIẾT? ────────► HUỶ BỎ
-              ──► [Filter 2: Inspectable?] ──► TỰ ĐỌC ĐƯỢC? ───► TỰ ĐỌC & HUỶ BỎ
-              ──► [Filter 3: Evidence?] ─────► ĐÃ CÓ BẰNG CHỨNG?► TRÍCH DẪN & HUỶ BỎ
-              ──► [Filter 4: Impact?] ───────► KHÔNG ẢNH HƯỞNG?► HUỶ BỎ (TRIVIA)
-              ──► [Filter 5 & 6: Risk/Rev?] ──► RỦI RO THẤP & DỄ ĐẢO NGƯỢC? ──► ÁP DỤNG GIẢ ĐỊNH AN TOÀN
-              ──► [Filter 7: Ownership?] ────► NGOÀI THẨM QUYỀN PO? ──────────► TỰ RA QUYẾT ĐỊNH KỸ THUẬT
-              ──► [Filter 8: Timing?] ───────► CHƯA CẦN BÂY GIỜ?─────────────► HOÃN ĐẾN STAGE SAU (DEFER)
-                                              │
-                      ┌───────────────────────┘
-                      ▼
-            VƯỢT QUA CẢ 8 BỘ LỌC ──► ĐẶT CÂU HỎI NGẮN GỌN CHO NGƯỜI DÙNG
-```
-
-### Chi Tiết 8 Bộ Lọc:
-1. **Filter 1 - Known (Đã biết)**: Thông tin đã có trong `02_YEU_CAU_CUA_TOI/ho-so-va-muc-tieu.md`, lịch sử trò chuyện, hoặc hồ sơ trước đó? Nếu CÓ ➔ **CẤM HỎI LẠI**.
-2. **Filter 2 - Inspectable (Tự kiểm tra được)**: Thông tin có thể xác định rõ ràng qua phân tích tĩnh, đọc `AndroidManifest.xml`, `build.gradle`, assets, layout XML, hay mã nguồn gốc? Nếu CÓ ➔ **TỰ ĐỌC VÀ KHÔNG HỎI**.
-3. **Filter 3 - Evidence (Bằng chứng thực tế)**: Đã có ảnh chụp màn hình thực tế (từ Bước 02), logcat hiện trạng, hoặc báo cáo Bước 04 chứng minh hành vi? Nếu CÓ ➔ **TRÍCH DẪN BẰNG CHỨNG, KHÔNG HỎI MƠ HỒ**.
-4. **Filter 4 - Decision Impact (Ảnh hưởng quyết định)**: Câu trả lời có làm thay đổi trực tiếp kiến trúc, phạm vi, hoặc code ở Stage 04 không? Nếu KHÔNG (câu hỏi râu ria, hình thức) ➔ **LOẠI BỎ NGAY**.
-5. **Filter 5 - Risk (Mức độ rủi ro)**: Có liên quan đến thất thoát dữ liệu, vi phạm pháp lý/bảo mật, hoặc hành động phá hủy không? Nếu RỦI RO CAO ➔ **BẮT BUỘC HỎI**.
-6. **Filter 6 - Reversibility (Tính thuận nghịch)**: Quyết định là cửa hai chiều (Two-Way Door - dễ sửa đổi sau bằng 1 dòng config) hay cửa một chiều (One-Way Door - thay đổi cấu trúc nền tảng không thể hoàn tác)? Nếu THUẬN NGHỊCH VÀ RỦI RO THẤP ➔ **CHỌN MẶC ĐỊNH AN TOÀN, GHI VÀO ASSUMPTION RECORD**. Nếu là Cửa Một Chiều ($\neg Reversible$) ➔ Bắt buộc hỏi hoặc xin phê duyệt.
-7. **Filter 7 - Ownership (Thẩm quyền quyết định)**: Người dùng là chủ sản phẩm (Product Owner) định hướng giá trị nghiệp vụ, không phải kỹ sư triển khai. Không hỏi người dùng về thư viện nội bộ, pattern, hoặc cú pháp. Khi $Ownership = \text{FALSE}$ ➔ **AGENT TỰ RA QUYẾT ĐỊNH KỸ THUẬT & KHÓA VÀO SPEC NỘI BỘ**.
-8. **Filter 8 - Timing (Đúng thời điểm)**: Thông tin này có cần thiết ngay trong Stage 03 để đóng băng đặc tả không, hay đến Stage 04/05 mới dùng? Nếu chưa cần ➔ **HOÃN LẠI (DEFER)**.
-
----
-
-## 4. ĐỘNG CƠ THEO DÕI QUYẾT ĐỊNH & GIẢ ĐỊNH (DECISION & CONSTRAINT ENGINE)
-
-Mọi diễn biến trong phỏng vấn phải được chuẩn hóa thành 3 loại bản ghi:
-
-### 4.1 Question Record (Hồ Sơ Câu Hỏi)
-Theo dõi các câu hỏi đã vượt qua 8 bộ lọc:
-```markdown
-- **Mã câu hỏi**: `Q-[DOMAIN]-[STT]`
-- **Nội dung hỏi**: [Câu hỏi cô đọng bằng tiếng Việt đời thường]
-- **Kết quả 8 bộ lọc**: [Đạt chuẩn Impact + One-Way Door / Risk]
-- **Trạng thái**: `PENDING` | `ANSWERED` | `DEFERRED`
-- **Câu trả lời nhận được**: [Tóm tắt ý của người dùng]
-```
-
-### 4.2 Decision Record (Hồ Sơ Quyết Định)
-Đóng băng các quyết định đã được người dùng chốt hoặc thống nhất:
-```markdown
-- **Mã quyết định**: `DECISION-[DOMAIN]-[STT]`
-- **Ngữ cảnh & Vấn đề**: [Vấn đề kỹ thuật / nghiệp vụ]
-- **Quyết định đã chốt**: [Lựa chọn chính thức]
-- **Hệ quả kiến trúc**: [Ảnh hưởng đến module nào ở Stage 04]
-- **Trạng thái**: `CLOSED` (Đã chốt) | `FROZEN` (Đã đóng băng tại Gate 03)
-```
-
-### 4.3 Assumption Record (Hồ Sơ Giả Định Mặc Định)
-Ghi nhận các quyết định hai chiều mà Agent tự chọn mặc định an toàn, tuân thủ chặt chẽ vòng đời kiểm soát giả định:
-```markdown
-- **Mã giả định**: `ASSUMPTION-[DOMAIN]-[STT]`
-- **Hạng mục & Giá trị mặc định**: [Ví dụ: Giới hạn Cache 50MB, Debounce 300ms]
-- **Cơ sở kỹ thuật**: [Best-practice của nền tảng]
-- **Mức độ rủi ro (risk_level)**: `BENIGN` (Vô hại: Style, Padding) | `CRITICAL` (Nghiêm trọng: Data retention, Sync, Root policy)
-- **Mức độ thuận nghịch**: `HIGH` (Dễ đảo ngược)
-- **Nhiệm vụ kiểm chứng**: [Kịch bản kiểm thử ở Bước 10 / 12]
-- **Trạng thái (status)**: `ACTIVE` | `INVALIDATED` | `SUPERSEDED`
-- **Thời điểm thu hồi (invalidated_at)**: null
-- **Lý do thu hồi (revocation_reason)**: null
-- **Các phụ thuộc hạ nguồn (downstream_dependencies)**: []
+USER GOAL (Mục tiêu người dùng)
+    ↓
+1. CONTEXT INGESTION (Nạp hồ sơ, ghi chú, yêu cầu ban đầu)
+    ↓
+2. EVIDENCE ANALYSIS (Đối chiếu bằng chứng thực tế từ APK / Code / Báo cáo hiện trạng)
+    ↓
+3. GOAL DECOMPOSITION (Bóc tách mục tiêu thành các bài toán cốt lõi)
+    ↓
+4. MISSING INFORMATION ANALYSIS (Xác định khoảng trống thông tin)
+    ↓
+5. DECISION IMPACT ANALYSIS (Đánh giá mức độ ảnh hưởng đến quyết định kỹ thuật/nghiệp vụ)
+    ↓
+6. QUESTION CANDIDATE GENERATION (Sinh ứng viên câu hỏi theo 10 Domain)
+    ↓
+7. NEXT BEST QUESTION SELECTION (Chọn câu hỏi giá trị nhất qua Question Necessity Engine)
+    ↓
+8. ANSWER INTERPRETATION (Phân loại & diễn giải 10 loại câu trả lời của người dùng)
+    ↓
+9. INTERVIEW STATE UPDATE (Cập nhật .agents/state/interview_state.json qua interview.ps1)
+    ↓
+10. CONTRADICTION & REPETITION CHECK (Phát hiện mâu thuẫn & chống lặp câu hỏi)
+    ↓
+11. SUFFICIENCY RE-EVALUATION (Đánh giá tính đầy đủ qua Interview Exit Gate)
+    ↓
+12. CONTINUE (Hỏi tiếp câu giá trị nhất) HOẶC COMPLETE (Chuyển sang Bước 07 lập đặc tả)
 ```
 
 ---
 
-## 5. BƯỚC 06: QUY TRÌNH PHỎNG VẤN & THIẾT LẬP ART DIRECTION
+## 2. NGUYÊN TẮC: BẰNG CHỨNG TRƯỚC CÂU HỎI (EVIDENCE BEFORE QUESTIONS)
 
-### 5.1 Khảo Sát Nhu Cầu & Đọc Đầu Vào Đóng Băng
-1. Đọc đồng thời 3 nguồn tài liệu đầu vào:
-   - `02_YEU_CAU_CUA_TOI/ho-so-va-muc-tieu.md` (mong muốn ban đầu của người dùng).
-   - `03_KET_QUA_KIEM_TRA/bao-cao-hien-trang.md` (hiện trạng ứng dụng gốc từ Bước 04).
-   - `03_KET_QUA_KIEM_TRA/UNKNOWNS_AND_COVERAGE.md` (sổ theo dõi điểm mù từ Bước 05).
-2. Cập nhật trạng thái chờ người dùng:
-   - Ghi vào `.agents/state/active_case.json`: `current_phase = "STAGE_03_PRODUCT_DEFINITION"`, `current_step = "06_REA_INTERVIEW"`, `current_gate_status = "GATE_03_WAITING_USER_INPUT"`.
+Trước khi gửi bất kỳ câu hỏi nào cho người dùng, Agent **BẮT BUỘC** phải rà soát toàn bộ context hiện có:
+- Yêu cầu ban đầu: `02_YEU_CAU_CUA_TOI/ho-so-va-muc-tieu.md`.
+- Báo cáo hiện trạng: `03_KET_QUA_KIEM_TRA/bao-cao-hien-trang.md`.
+- Sổ theo dõi điểm mù: `03_KET_QUA_KIEM_TRA/UNKNOWNS_AND_COVERAGE.md`.
+- Bộ nhớ ngữ cảnh: `.agents/state/MEMORY.md`.
+- Trạng thái ca làm việc: `.agents/state/active_case.json` và `.agents/state/interview_state.json`.
 
-### 5.2 Phân Loại Chế Độ Khám Phá Thiết Kế (Design Exploration Mode)
-Agent xác định chế độ phù hợp:
-1. **`DESIGN_REUSE_EXACT`**:
-   - Khi người dùng muốn làm bản sao 1-1 chính xác hoặc tái lập giao diện cũ.
-   - **HÀNH ĐỘNG**: Tuyệt đối **KHÔNG ĐƯỢC ÉP BUỘC ĐỀ XUẤT 3 CONCEPT**. Trích xuất ngay bảng màu, kích thước từ UI cũ, chuyển thẳng sang lập đặc tả Bước 07.
-   - **RÀO CHẮN BẮT BUỘC**:
-     * **Sanitary Ergonomic Lint**: Tự động mở rộng touch target lên tối thiểu 48x48dp, nâng tương phản chữ đạt chuẩn WCAG AA (4.5:1), chuyển hardcode `px` sang `dp/sp`, và bổ sung 4 UI states nếu app cũ thiếu sót (luôn bảo toàn dữ liệu form theo `RULE-INIT-001`).
-     * **Legal Asset Decoupling Protocol**: Tuyệt đối không trích xuất logo thương hiệu đã đăng ký, hình ảnh độc quyền hoặc font chữ thương mại chưa cấp phép. Tự động bóc tách và thay thế bằng placeholder trung tính (`ic_brand_placeholder.xml`) hoặc font mã nguồn mở tương đương.
-2. **`DESIGN_STYLE_SPECIFIED`**:
-   - Khi người dùng đã nêu rõ tên phong cách cụ thể (ví dụ: "Material You Dark", "Nordic Minimalist", "Cupertino iOS").
-   - **HÀNH ĐỘNG**: Tuyệt đối **KHÔNG ĐƯỢC ÉP BUỘC ĐỀ XUẤT 3 CONCEPT**. Tuân thủ trực tiếp phong cách người dùng đã chọn để lập hồ sơ Art Direction và đặc tả.
-3. **`DESIGN_STRUCTURAL_EXPLORATION`**:
-   - Kích hoạt **DUY NHẤT** khi người dùng muốn tái thiết kế toàn diện, khám phá bố cục mới, hoặc chưa định hình phong cách cụ thể.
-   - **HÀNH ĐỘNG**: Bắt buộc đề xuất **3 Concept có cấu trúc tổ chức thông tin khác biệt** (không chỉ đổi màu):
-     * **Concept A (Task-First Focus)**: Tập trung tối đa vào hành động cốt lõi khi mở màn hình.
-     * **Concept B (Content-First / Editorial)**: Dàn trang dạng bài viết/tạp chí; phân cấp chữ nghệ thuật và thoáng đãng.
-     * **Concept C (Contextual / Progressive Flow)**: Màn hình biến đổi tuần tự thích ứng theo trạng thái hoàn thành của người dùng.
-
-### 5.3 Thiết Lập Art Direction & Tự Phản Biện Chống UI Slop
-Dù ở chế độ nào, Agent phải hoàn thiện 7 thành phần Art Direction theo `templates/12-ART-DIRECTION-TEMPLATE.md`:
-1. **Product Personality**: Bản sắc sản phẩm (ví dụ: Tinh giản, Đáng tin cậy, Trầm tĩnh).
-2. **Visual Thesis**: Ý tưởng thị giác chủ đạo xuyên suốt.
-3. **Layout Philosophy**: Triết lý tổ chức không gian (ví dụ: Khối liền mạch, tận dụng khoảng trắng có chủ đích).
-4. **Typography Hierarchy**: Phân cấp chữ có chủ đích (Display, Headline, Body, Label).
-5. **Density & Spacing**: Mật độ thông tin trên màn hình (Compact / Regular / Spacious).
-6. **Signature Element**: Một điểm nhấn nhận diện đặc trưng đáng nhớ.
-7. **Forbidden Anti-patterns**: Các lối thiết kế sáo mòn cấm kỵ (card tràn lan vô nghĩa, gradient trôi nổi, icon trang trí thừa thãi).
-
-### 5.4 Lệnh Phê Duyệt Bố Cục (Human Gate 1)
-- Đối với `DESIGN_STRUCTURAL_EXPLORATION`: Người dùng chọn concept và xác nhận:
-  👉 **`APPROVE SCREEN COMPOSITION`**
-- Đối với `DESIGN_REUSE_EXACT` hoặc `DESIGN_STYLE_SPECIFIED`: Người dùng phê duyệt bố cục trực tiếp theo hướng dẫn hoặc tự động chuyển tiếp hợp lệ sang Bước 07.
+### Phân Loại Dữ Liệu Theo 6 Nhãn Tin Cậy:
+1. `VERIFIED_FACT`: Dữ liệu đã được kiểm chứng trực tiếp từ mã nguồn, manifest, API, hoặc ảnh chụp màn hình baseline (ví dụ: package name, minSdk, các lớp Java/Kotlin). **CẤM HỎI LẠI**.
+2. `USER_STATED`: Mong muốn hoặc yêu cầu người dùng đã trực tiếp phát biểu trong tin nhắn hoặc tài liệu hồ sơ. **CẤM HỎI LẠI TRỪ KHI XẢY RA MÂU THUẪN**.
+3. `AI_INFERENCE`: Suy luận logic của Agent từ các dữ kiện có sẵn. **KHÔNG ĐƯỢC COI LÀ FACT; PHẢI NÊU RÕ LÀ ĐỀ XUẤT**.
+4. `ASSUMPTION`: Giả định kỹ thuật mặc định do Agent thiết lập khi người dùng không biết. **PHẢI GHI RÕ RỦI RO VÀ RÀO CHẮN KIỂM CHỨNG**.
+5. `UNKNOWN`: Điểm mù thông tin chưa có lời giải và chưa có giả định. Cần xác định xem có ảnh hưởng trực tiếp đến Stage 04 hay không.
+6. `CONFLICT`: Hai luồng dữ liệu hoặc yêu cầu mâu thuẫn trực tiếp với nhau. **BẮT BUỘC LÀM RÕ**.
 
 ---
 
-## 6. BƯỚC 07: SPEC & DESIGN GATE (States, Copy Deck & Tokens)
+## 3. MƯỜI TÊN MIỀN KIẾN THỨC PHỎNG VẤN (10 ADAPTIVE DOMAINS)
 
-Sau khi bố cục được thông qua, Agent chuyển sang Bước 07 để đóng băng toàn bộ hợp đồng đặc tả:
+Agent tự động định tuyến mục tiêu của ca làm việc vào một hoặc nhiều trong số 10 Domain chuyên biệt trong thư mục `.agents/skills/rea-interview/domains/`:
 
-### 6.1 Bố Cục Màn Hình & Co Giãn (Screen Composition & Responsive Spec)
-1. Xuất `03_KET_QUA_KIEM_TRA/01_SCREEN_COMPOSITION.md`:
-   - Vị trí các thành phần và thứ tự ưu tiên thị giác.
-   - Khoảng cách, phân vùng và cách tổ chức luồng mắt đọc.
-2. Xuất `03_KET_QUA_KIEM_TRA/02_RESPONSIVE_SPEC.md`:
-   - Quy chuẩn Responsive theo **Window Size Classes** (Compact, Medium, Expanded).
-   - Khả năng tương thích Foldable Posture và Insets (Edge-to-Edge display).
+| STT | Mã Domain | Tệp Hướng Dẫn | Trọng Tâm Điều Tra |
+| :--- | :--- | :--- | :--- |
+| 1 | `APPLICATION_DIAGNOSIS` | `domains/application-diagnosis.md` | Tái hiện lỗi (STR), phân tích RCA, ranh giới vá lỗi, rào chắn chống hồi quy. |
+| 2 | `PERFORMANCE_OPTIMIZATION`| `domains/performance-optimization.md`| FPS/Jank, Cold Start < 1.2s, RAM Heap, Pin, ANR, đo lường Baseline trước/sau. |
+| 3 | `ARCHITECTURE_MAINTAINABILITY`| `domains/architecture-maintainability.md`| Phân tách module, giảm coupling, tương thích DB Migration, Clean Architecture. |
+| 4 | `SECURITY_PRIVACY` | `domains/security-privacy.md` | DataStore + Tink, KeyStore Cipher, Google Play Integrity, cấm Cleartext HTTP. |
+| 5 | `FEATURE_DISCOVERY` | `domains/feature-discovery.md` | Bóc tách User Outcome, quy chuẩn hành vi, đặc tả kỹ thuật, Non-Goals. |
+| 6 | `FEATURE_OPTIMIZATION` | `domains/feature-optimization.md` | Điểm nghẽn thao tác, bảo toàn 100% nghiệp vụ cũ, chỉ số Before/After. |
+| 7 | `UX_WORKFLOWS` | `domains/ux-workflows.md` | Luồng tác vụ chính, 3 Design Modes, Anti-Slop, 4 UI States, Copy Deck thực tế. |
+| 8 | `PLATFORM_COMPATIBILITY` | `domains/platform-compatibility.md` | Android 14/15 (Insets, 16 KB Page-Size), thiết bị cấu hình thấp, Foldable. |
+| 9 | `REQUIREMENTS_PRIORITIZATION`| `domains/requirements-prioritization.md`| Ma trận MoSCoW, ranh giới MVP, đánh đổi (Bảo mật vs Tốc độ khởi động). |
+| 10 | `ACCEPTANCE_CRITERIA` | `domains/acceptance-criteria.md` | Đặc tả Given/When/Then có thể kiểm chứng được, lượng hóa mọi tiêu chí định tính. |
 
-### 6.2 Xử Lý Triệt Để 4 Trạng Thái Giao Diện (State Composition)
-Xuất `03_KET_QUA_KIEM_TRA/03_STATE_COMPOSITION.md` xử lý đầy đủ:
-1. **Loading State**: Skeleton loader tương ứng khung giao diện thật (không chỉ dùng vòng quay spinner mơ hồ).
-2. **Empty State**: Minh họa rõ ràng + thông điệp thân thiện + Nút hành động kêu gọi (CTA) cụ thể.
-3. **Success State**: Toast hoặc animation xác nhận hoàn thành tác vụ tức thì (<100ms feedback).
+---
+
+## 4. ĐỘNG CƠ SÀNG LỌC CÂU HỎI (QUESTION NECESSITY ENGINE)
+
+### 4.1 Heuristic Ưu Tiên Câu Hỏi:
+$$\text{Question Priority} = \text{Decision Impact} \times \text{Information Gap} \times \text{Risk Relevance} \times \text{Uncertainty}$$
+
+*Không áp đặt số lượng câu hỏi cố định (3-5 câu)*. Phỏng vấn dừng lại ngay khi thông tin đã đạt ngưỡng đầy đủ (Sufficiency).
+
+### 4.2 Tám Bộ Lọc Triệt Tiêu Câu Hỏi Thừa:
+1. **Filter 1 - Known (Đã biết)**: Thông tin đã có trong hồ sơ hoặc tin nhắn? ➔ **HUỶ BỎ**.
+2. **Filter 2 - Inspectable (Tự đọc được)**: Có thể xác định từ manifest, mã nguồn, assets, layout XML? ➔ **TỰ ĐỌC & HUỶ BỎ**.
+3. **Filter 3 - Evidence (Có bằng chứng)**: Đã có ảnh chụp baseline hoặc báo cáo kiểm toán chứng minh? ➔ **TRÍCH DẪN & HUỶ BỎ**.
+4. **Filter 4 - Decision Impact (Ảnh hưởng quyết định)**: Câu trả lời có làm đổi kiến trúc hoặc code ở Stage 04 không? ➔ Nếu KHÔNG: **HUỶ BỎ (TRIVIA)**.
+5. **Filter 5 & 6 - Risk / Reversibility (Rủi ro & Thuận nghịch)**: Rủi ro thấp và là cửa hai chiều (Two-Way Door)? ➔ **TỰ CHỌN GIẢ ĐỊNH AN TOÀN, LƯU VÀO ASSUMPTION RECORD**.
+6. **Filter 7 - Ownership (Thẩm quyền quyết định)**: Người dùng là PO. Khi câu hỏi thuộc về chi tiết cài đặt kỹ thuật thuần túy ($Ownership = \text{FALSE}$) ➔ **AGENT TỰ RA QUYẾT ĐỊNH KỸ THUẬT & KHÓA VÀO SPEC NỘI BỘ (NHÁNH 5)**.
+7. **Filter 8 - Timing (Đúng thời điểm)**: Thông tin có cần ngay trong Stage 03 để đóng băng đặc tả không? ➔ Nếu chưa cần: **HOÃN SANG GIAI ĐOẠN SAU (DEFER)**.
+
+### 4.3 Tách Bạch Nhu Cầu Sản Phẩm Với Quyền Thực Thi Của Agent (R10):
+- Hỏi người dùng về hành vi sản phẩm: "Ứng dụng cần hoạt động ngoại tuyến hoàn toàn hay có kết nối đồng bộ máy chủ?"
+- **TUYỆT ĐỐI KHÔNG HỎI** người dùng về các cờ bảo mật nội bộ của Agent như `-AllowHighRisk`. Quyền thực thi của Agent do Coordinator và Scoped Rules quản lý độc lập.
+
+---
+
+## 5. DIỄN GIẢI CÂU TRẢ LỜI & QUẢN TRỊ MÂU THUẪN (CONTRADICTION MANAGEMENT)
+
+### 5.1 Xử Lý 10 Loại Phản Hồi Từ Người Dùng:
+1. **Rõ ràng (Clear)**: Tiếp nhận, ghi nhận vào `Decision Record`, chuyển sang câu hỏi tiếp theo hoặc kết thúc.
+2. **Một phần (Partial)**: Ghi nhận phần đã rõ, chỉ hỏi thêm đúng chi tiết còn thiếu.
+3. **Mơ hồ (Ambiguous)**: Nêu 2-3 kịch bản diễn giải cụ thể để người dùng chọn, không hỏi chung chung.
+4. **Không biết (Unknown / I don't know)**: Không ép người dùng chọn. Đưa ra giải pháp kỹ thuật an toàn nhất (Safe Default), giải thích lý do ngắn gọn và ghi vào `Assumption Record`.
+5. **Có điều kiện (Conditional)**: Ghi nhận điều kiện (`IF ... THEN ...`) vào bảng quy tắc nghiệp vụ.
+6. **Nhiều lựa chọn (Multiple choices)**: Phân rã thành danh sách ưu tiên.
+7. **Mâu thuẫn (Conflicting)**: Kích hoạt quy trình Contradiction Resolution (Mục 5.2).
+8. **Ngoài phạm vi (Out-of-scope)**: Nhẹ nhàng ghi nhận vào danh mục `Non-Goals` hoặc `Future Backlog`.
+9. **Yêu cầu mới (New requirement)**: Đánh giá độ ưu tiên, cập nhật danh sách mục tiêu.
+10. **Thay đổi phạm vi (Scope change)**: Kích hoạt quy trình Scope Change Handling (Mục 5.4).
+
+### 5.2 Xử Lý Mâu Thuẫn (Contradiction Resolution — R6):
+Ví dụ điển hình:
+- *Ý 1*: "Ứng dụng chạy offline 100%."
+- *Ý 2*: "Cần đăng nhập Google và tự động đồng bộ lên đám mây."
+
+Hành động bắt buộc:
+1. **KHÔNG** tự ý xóa hay ghi đè câu trả lời trước.
+2. Ghi nhận mâu thuẫn qua CLI:
+   `powershell -File .agents/scripts/interview.ps1 record-conflict -ConflictId "CONF-01" -Explanation "Mâu thuẫn giữa yêu cầu chạy offline 100% và tính năng đăng nhập Google/Cloud Sync" -Severity "CRITICAL"`
+3. Trình bày xung đột cho người dùng bằng ngôn ngữ dễ hiểu kèm 3 lựa chọn kiến trúc:
+   - *Phương án A*: Ứng dụng ngoại tuyến hoàn toàn (Offline-Only, không đăng nhập cloud).
+   - *Phương án B*: Ưu tiên ngoại tuyến (Offline-First, lưu trữ cục bộ, chỉ đồng bộ khi người dùng chủ động kết nối tài khoản Google).
+   - *Phương án C*: Ứng dụng trực tuyến (Online-First, có bộ nhớ đệm tạm thời).
+4. Cập nhật quyết định sau khi người dùng xác nhận và lưu vết lịch sử.
+
+### 5.3 Chống Lặp Câu Hỏi (Repetition Prevention — R7):
+Chỉ được phép lặp lại câu hỏi khi thỏa mãn ít nhất 1 trong 4 điều kiện:
+1. Thông tin thu thập trước đó không đủ để đưa ra quyết định kiến trúc.
+2. Bằng chứng mới phát hiện làm vô hiệu hóa câu trả lời cũ.
+3. Bản chất quyết định đã thay đổi do sự thay đổi của một module liên đới.
+4. Cần sự phê duyệt xác nhận bắt buộc trước khi đóng băng (Explicit Confirmation).
+*Lý do lặp lại phải được ghi nhận rõ ràng vào trường `Reason` của Question Record.*
+
+### 5.4 Xử Lý Thay Đổi Phạm Vi (Scope Change Handling — R8):
+Khi người dùng thay đổi ý định:
+1. Ghi nhận Scope Change qua CLI:
+   `powershell -File .agents/scripts/interview.ps1 record-scope-change -ChangeId "CHG-01" -PreviousScope "..." -NewScope "..."`
+2. Truy vết các quyết định bị ảnh hưởng (`Affected Decisions`).
+3. **GIỮ NGUYÊN 100% CÁC QUYẾT ĐỊNH KHÔNG BỊ ẢNH HƯỞNG**.
+4. Tính toán lại khoảng trống thông tin và chỉ hỏi bổ sung những gì liên quan đến phạm vi mới.
+
+---
+
+## 6. HỆ THỐNG TRẠNG THÁI PHỎNG VẤN & CÔNG CỤ CLI
+
+Toàn bộ dữ liệu phỏng vấn được lưu trữ có cấu trúc tại `.agents/state/interview_state.json` và đồng bộ vào `active_case.json`.
+
+### Lệnh Điều Khiển CLI (`interview.ps1`):
+```powershell
+# Xem trạng thái tổng quan
+powershell -NoProfile -ExecutionPolicy Bypass -File .agents/scripts/interview.ps1 status
+
+# Ghi nhận mục tiêu
+powershell -NoProfile -ExecutionPolicy Bypass -File .agents/scripts/interview.ps1 record-goal -GoalId "GOAL-01" -Description "..." -Priority "P0_CRITICAL"
+
+# Ghi nhận câu hỏi
+powershell -NoProfile -ExecutionPolicy Bypass -File .agents/scripts/interview.ps1 record-question -QuestionId "Q-01" -Text "..." -Reason "..." -Domain "FEATURE_DISCOVERY"
+
+# Ghi nhận câu trả lời
+powershell -NoProfile -ExecutionPolicy Bypass -File .agents/scripts/interview.ps1 record-answer -AnswerId "ANS-01" -QuestionId "Q-01" -Answer "..." -Type "CLEAR"
+
+# Ghi nhận quyết định
+powershell -NoProfile -ExecutionPolicy Bypass -File .agents/scripts/interview.ps1 record-decision -DecisionId "DEC-01" -Description "..." -SelectedOption "..." -ApprovalStatus "APPROVED"
+
+# Ghi nhận giả định
+powershell -NoProfile -ExecutionPolicy Bypass -File .agents/scripts/interview.ps1 record-assumption -AssumptionId "ASM-01" -Description "..." -Rationale "..." -RiskLevel "BENIGN"
+
+# Ghi nhận mâu thuẫn
+powershell -NoProfile -ExecutionPolicy Bypass -File .agents/scripts/interview.ps1 record-conflict -ConflictId "CONF-01" -Explanation "..." -Severity "MAJOR"
+
+# Đánh giá tính đầy đủ (Exit Gate)
+powershell -NoProfile -ExecutionPolicy Bypass -File .agents/scripts/interview.ps1 evaluate-sufficiency
+```
+
+---
+
+## 7. CỔNG NGHIỆM THU ĐẦY ĐỦ THÔNG TIN (INTERVIEW EXIT GATE — R3)
+
+Trước khi đóng băng đặc tả tại Bước 07/08, Agent **BẮT BUỘC** chạy kiểm tra tự động:
+`powershell -NoProfile -ExecutionPolicy Bypass -File .agents/scripts/interview.ps1 evaluate-sufficiency`
+
+### Tiêu Chuẩn Thông Qua Cổng:
+- **`SUFFICIENT`**: Toàn bộ mục tiêu hoạt động đã có quyết định tương ứng; không còn mâu thuẫn nghiêm trọng chưa giải quyết; không còn giả định rủi ro cao (`CRITICAL`) chưa được người dùng duyệt. Cho phép chuyển sang Bước 07 và xuất bản đặc tả đóng băng.
+- **`BLOCKED`**: Tồn tại mâu thuẫn chưa giải quyết (`CRITICAL`/`MAJOR`) hoặc giả định nghiêm trọng chưa được duyệt. **CẤM ĐÓNG BĂNG ĐẶC TẢ**.
+- **`NEEDS_INPUT`**: Còn câu hỏi đang chờ trả lời hoặc mục tiêu chưa có định hướng. Tiếp tục hỏi câu hỏi ưu tiên cao nhất.
+
+*Tách biệt rõ ràng*:
+- Phê duyệt bố cục giao diện: **`APPROVE SCREEN COMPOSITION`**
+- Phê duyệt tính đầy đủ & đặc tả: **`APPROVE UI SPEC`**
+- Đóng băng toàn diện: **`FREEZE UI SPEC`**
+
+---
+
+## 8. ĐẶC TẢ CHỐNG UI SLOP & 3 CHẾ ĐỘ THIẾT KẾ (ANTI-SLOP GOVERNANCE)
+
+### 8.1 Ba Chế Độ Khám Phá Bố Cục:
+1. **`DESIGN_REUSE_EXACT`**: Tái lập 1-1 ứng dụng cũ. Bỏ qua 3 concepts. Bắt buộc Sanitary Ergonomic Lint (nâng touch target lên 48dp, độ tương phản WCAG AA 4.5:1, bảo toàn form input theo `RULE-INIT-001`) và Legal Asset Decoupling (thay logo/font độc quyền bằng placeholder).
+2. **`DESIGN_STYLE_SPECIFIED`**: Người dùng nêu rõ phong cách (Material You, Minimalist). Bỏ qua 3 concepts. Tuân thủ phong cách chỉ định.
+3. **`DESIGN_STRUCTURAL_EXPLORATION`**: Người dùng muốn khám phá giao diện mới. Bắt buộc xây dựng 3 Concept có cấu trúc thông tin khác biệt sâu sắc (Concept A: Task-Centric, Concept B: Content-First, Concept C: Contextual Flow).
+
+### 8.2 Bốn Trạng Thái Giao Diện Bắt Buộc (Bước 07):
+1. **Loading State**: Skeleton loader tương ứng khung giao diện thật.
+2. **Empty State**: Minh họa rõ ràng + thông điệp thân thiện + Nút hành động kêu gọi (CTA).
+3. **Success State**: Toast hoặc animation xác nhận hoàn thành tức thì (<100ms feedback).
 4. **Error / Recovery State**: Banner thông báo nguyên nhân bằng tiếng Việt đời thường + Nút "Thử lại", **bảo toàn 100% dữ liệu form người dùng đang nhập dở theo `RULE-INIT-001`**.
-5. *Trạng thái đặc thù*: Quyền bị từ chối (`Permission Denied`), Mạng chập chờn (`Partial Data`), và Hộp thoại xác nhận phá hủy (`Destructive Confirmation`).
 
-### 6.3 Soạn Thảo Copy Deck Thực Tế (CẤM Placeholder Slop)
-Xuất `03_KET_QUA_KIEM_TRA/04_COPY_DECK.md` theo mẫu `templates/13-COPY-DECK-TEMPLATE.md`:
-- **NGHIÊM CẤM**: `Lorem ipsum`, `Sample text`, hoặc các câu chào generic như `Welcome back!` ở mọi nơi.
-- Định nghĩa nội dung văn bản thực tế cho toàn bộ nhãn, tiêu đề, nút bấm, thông báo lỗi bằng tiếng Việt chuẩn mực.
-- Quy định giới hạn ký tự, cách xuống dòng, và độ dài dự phòng khi chuyển đổi ngôn ngữ.
-
-### 6.4 Khóa Hợp Đồng Design Tokens 3 Tầng
-Xuất `02_YEU_CAU_CUA_TOI/design.md` theo `templates/05-DESIGN-TOKEN-TEMPLATE.md`:
-- **Tầng 1 (Primitive Tokens)**: Bảng màu Hex, Typography scale, Spacing (4dp grid), Radius, Shadows.
-- **Tầng 2 (Semantic Tokens)**: Nút bấm (Primary, Secondary, Destructive), Input field, Cards, Header.
-- **Tầng 3 (Platform Native Tokens)**: Ánh xạ chuẩn Android Jetpack Compose (`Theme.kt`, `Color.kt`) hoặc Web CSS `:root`.
-
-### 6.5 Xuất Đặc Tả Sản Phẩm & Lệnh Phê Duyệt Đóng Băng (Human Gate 2)
-1. Xuất tổng hợp đặc tả vào `03_KET_QUA_KIEM_TRA/dac-ta-yeu-cau-da-chot.md` theo `templates/02-SPEC-TEMPLATE.md`.
-2. Trình bày cho người dùng phê duyệt:
-   👉 **`APPROVE UI SPEC`**
-3. Sau khi người dùng duyệt `APPROVE UI SPEC`:
-   - Ghi nhận trạng thái hoàn thành Bước 07.
-   - Chuyển giao ngay cho **`rea-plan`** tại Bước 08 để lập kế hoạch 6 Milestones và đóng băng đặc tả qua lệnh `FREEZE UI SPEC`.
+### 8.3 Soạn Thảo Copy Deck Thực Tế (templates/13):
+CẤM 100% `Lorem ipsum`, `Sample text`, hoặc các câu generic như `Welcome back!`. Mọi nút bấm, tiêu đề, nhãn, thông báo lỗi phải là tiếng Việt chuẩn mực, có giới hạn ký tự và ngắt dòng.

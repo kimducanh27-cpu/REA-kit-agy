@@ -15,6 +15,7 @@
 .agents/state/*
 !.agents/state/.gitkeep
 !.agents/state/active_case.json
+!.agents/state/interview_state.json
 !.agents/state/learned_rules.json
 !.agents/state/MEMORY.md
 !.agents/state/events.jsonl

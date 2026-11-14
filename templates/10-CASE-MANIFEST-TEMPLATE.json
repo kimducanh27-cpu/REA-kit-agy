@@ -274,6 +274,13 @@
           ],
           "example": "01_THA_APP_VAO_DAY/baseline/"
         },
+        "interview_state": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "example": ".agents/state/interview_state.json"
+        },
         "scan_report": {
           "type": [
             "string",
@@ -361,6 +368,25 @@
         "max_convergence_rounds": {
           "type": "integer",
           "default": 2
+        }
+      }
+    },
+    "interview": {
+      "type": "object",
+      "properties": {
+        "state_file": { "type": "string" },
+        "status": {
+          "type": "string",
+          "enum": ["NOT_STARTED", "IN_PROGRESS", "SUFFICIENT", "BLOCKED", "COMPLETED"]
+        },
+        "session_id": { "type": ["string", "null"] },
+        "active_goals_count": { "type": "integer", "minimum": 0 },
+        "decisions_count": { "type": "integer", "minimum": 0 },
+        "unresolved_conflicts_count": { "type": "integer", "minimum": 0 },
+        "critical_assumptions_count": { "type": "integer", "minimum": 0 },
+        "sufficiency_verdict": {
+          "type": ["string", "null"],
+          "enum": ["PENDING", "SUFFICIENT", "BLOCKED", "NEEDS_INPUT", null]
         }
       }
     },

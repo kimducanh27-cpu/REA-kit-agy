@@ -133,15 +133,19 @@ flowchart TD
 ### STAGE 03 · PRODUCT DEFINITION — Định Hình Sản Phẩm & Kế Hoạch
 *Tương ứng Tab Prompt: `prompts/03-TAB-PRODUCT-DEFINITION.md`*
 
-#### Bước 06: REA Interview (Phỏng Vấn Người Dùng Thân Thiện)
+#### Bước 06: REA Interview (Phỏng Vấn Thích Ứng Định Hướng Quyết Định)
 - **Hành động Agent**:
-  1. Đọc `02_YEU_CAU_CUA_TOI/ho-so-va-muc-tieu.md` và `UNKNOWNS_AND_COVERAGE.md`.
-  2. Đặt từ 3 đến 5 câu hỏi tiếng Việt đời thường, tập trung vào:
-     - Giữ lại chức năng nào của app gốc?
-     - Bỏ qua hoặc sửa đổi chức năng nào?
-     - Cần bổ sung tính năng mới hoặc đổi giao diện ra sao?
-     - Chọn 1 trong 4 hướng phát triển: (1) Tiếp tục phát triển trên source hiện tại, (2) Tạo nhánh riêng cô lập tính năng, (3) Xây dựng bản tương thích mới (Android Native via Android CLI hoặc Web App Zero-Install), (4) Viết lại hoàn toàn.
-     - Xử lý các điểm mù (Unknowns) bằng phương án nào?
+  1. Nạp bằng chứng từ `02_YEU_CAU_CUA_TOI/ho-so-va-muc-tieu.md`, `03_KET_QUA_KIEM_TRA/bao-cao-hien-trang.md`, và `UNKNOWNS_AND_COVERAGE.md`.
+  2. Tuân thủ hợp đồng 12 bước Decision-Driven Interview Engine (`docs/INTAKE_QUESTION_LOGIC.md` và `docs/ADAPTIVE_INTERVIEW_FRAMEWORK.md`).
+  3. Định tuyến câu hỏi qua 10 cẩm nang chuyên môn trong `.agents/skills/rea-interview/domains/`. Giải thích rõ lý do, rủi ro, và hệ quả kỹ thuật.
+  4. Quản lý trạng thái phỏng vấn có cấu trúc qua script `.agents/scripts/interview.ps1` (`record-goal`, `record-question`, `record-answer`, `record-decision`, `record-assumption`, `record-conflict`, `record-scope-change`).
+  5. Đánh giá tính đầy đủ qua Interview Exit Gate (`interview.ps1 evaluate-sufficiency`). Chỉ cho phép tiến hành khi trạng thái đạt `SUFFICIENT`.
+  6. Chốt 1 trong 4 Build Routes:
+     - Route 1 (Extend): Tiếp tục phát triển trên source hiện tại của ứng dụng.
+     - Route 2 (Feature Branch): Tạo nhánh riêng để phát triển cô lập tính năng mới.
+     - Route 3 (Compatible Clean-room): Xây dựng bản tương thích mới (Android Native qua `android-cli` hoặc Web Zero-Install).
+     - Route 4 (Full Rewrite): Viết lại hoàn toàn kiến trúc mới từ đầu theo đặc tả.
+  7. Lựa chọn 1 trong 3 Design Modes (`DESIGN_REUSE_EXACT`, `DESIGN_STYLE_SPECIFIED`, `DESIGN_STRUCTURAL_EXPLORATION`). Lấy phê duyệt riêng cho bố cục màn hình (`APPROVE SCREEN COMPOSITION`) trước khi chốt spec.
 
 #### Bước 07: Spec & Design Gate (Đóng Băng Đặc Tả & Thiết Kế)
 - **Hành động Agent**:

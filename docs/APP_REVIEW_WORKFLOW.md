@@ -34,7 +34,10 @@ Include:
 Each important claim links to a source, test, capture or REA Evidence ID.
 
 ## 5. Adaptive questions
-Ask only when an answer is not already known, materially affects a decision, is needed in the current phase and cannot be handled by a reversible safe default. Explain why the question matters. Group related questions in small conversational batches. Record assumptions when the owner cannot answer.
+Follow the 12-step Decision-Driven Interview Engine contract defined in `docs/INTAKE_QUESTION_LOGIC.md` and `docs/ADAPTIVE_INTERVIEW_FRAMEWORK.md`.
+Ask only when an answer is not already known, cannot be determined by static analysis or evidence, materially affects an architectural or business decision, is needed in the current phase, and cannot be handled by a reversible safe default.
+Map inquiries across the 10 domain guides in `.agents/skills/rea-interview/domains/`. Explain why the question matters in accessible terms. Maintain structured state via `.agents/scripts/interview.ps1`.
+Detect contradictions explicitly, prevent redundant questioning, and record assumptions with verifiable tasks when the owner cannot answer.
 
 ## 6. Development route
 Prefer extending a usable source codebase. Use a focused branch for bounded features. Create a new compatible implementation when source is unavailable or the owner wants an independent product. Recommend rewrite only when current architecture, security, compatibility or economics justify it. Binary-only inspection does not recover complete source or backend; any reconstruction is a new implementation based on authorized observations and approved requirements.

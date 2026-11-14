@@ -169,25 +169,25 @@ Read and follow `AGENTS.md`, `REVIEW.md`, and `docs/WORKFLOW_LIFECYCLE.md`.
 - Host Plugin Skills: `grilling`, `ui-styling`, `design-system`, `ui-ux-pro-max`, `figma-generate-diagram`
 
 ## Điều kiện tiên quyết:
-Kiểm tra `.agents/state/active_case.json`. Nếu `gates.gate_02_audit_passed` chưa đạt (`false`), dừng lại và yêu cầu hoàn thành Stage 02 trước.
+Kiểm tra `.agents/state/active_case.json`. Nếu `gates.gate_02_audit_passed` chưa đạt (`false`), kiểm tra xem Stage 02 có được bỏ qua hợp lệ không (ví dụ trong Source-Repository Workflow WF03 với trạng thái `SKIPPED` hoặc `NOT_APPLICABLE`). Nếu không thuộc trường hợp được xóa hợp lệ, dừng lại và yêu cầu hoàn thành Stage 02 trước.
 
 You are executing **STAGE_03 · PRODUCT DEFINITION**:
 
-### BƯỚC 06: REA INTERVIEW (Phỏng Vấn Người Dùng)
-1. Đọc kỹ:
-   - `02_YEU_CAU_CUA_TOI/ho-so-va-muc-tieu.md`
-   - `03_KET_QUA_KIEM_TRA/bao-cao-hien-trang.md`
-   - `03_KET_QUA_KIEM_TRA/UNKNOWNS_AND_COVERAGE.md`
-2. Đặt từ 3 đến 5 câu hỏi tiếng Việt đời thường, tập trung vào:
-   - Mức độ tương đồng với app gốc (Giữ nguyên hay tối giản?).
-   - Phương án giải quyết các Unknowns phát hiện ở Bước 05.
-   - Các tính năng mới cần bổ sung hoặc lược bỏ.
-   - **Chốt 1 trong 4 Build Routes**:
-     * Route 1 (Extend): Tiếp tục phát triển trên source hiện tại của ứng dụng.
-     * Route 2 (Feature Branch): Tạo nhánh riêng để phát triển cô lập tính năng mới.
-     * Route 3 (Compatible Clean-room): Xây dựng bản tương thích mới (Android Native qua `android-cli` hoặc Web Zero-Install).
-     * Route 4 (Full Rewrite): Viết lại hoàn toàn kiến trúc mới từ đầu theo đặc tả.
-3. Chờ người dùng trả lời và tổng hợp thành tài liệu rõ ràng.
+### BƯỚC 06: REA INTERVIEW (Phỏng Vấn Thích Ứng Định Hướng Quyết Định)
+1. Nạp và phân loại bằng chứng từ `02_YEU_CAU_CUA_TOI/ho-so-va-muc-tieu.md`, `03_KET_QUA_KIEM_TRA/bao-cao-hien-trang.md`, và `03_KET_QUA_KIEM_TRA/UNKNOWNS_AND_COVERAGE.md`.
+2. Khởi tạo/cập nhật trạng thái phỏng vấn qua CLI `.agents/scripts/interview.ps1` (`init`, `record-goal`, `record-question`, `record-answer`).
+3. Vận hành theo Hợp đồng 12 bước Decision-Driven Interview Engine (`docs/INTAKE_QUESTION_LOGIC.md`) và 10 Cẩm nang chuyên môn trong `.agents/skills/rea-interview/domains/`.
+4. Không hỏi dồn dập, không dùng câu hỏi chung chung. Phân tích loại câu trả lời (10 Answer Types), giải quyết mâu thuẫn (Contradiction Resolution), chống lặp câu hỏi (Repetition Prevention), và thích ứng với thay đổi phạm vi (Scope Changes).
+5. **Chốt 1 trong 4 Build Routes**:
+   * Route 1 (Extend): Tiếp tục phát triển trên source hiện tại của ứng dụng.
+   * Route 2 (Feature Branch): Tạo nhánh riêng để phát triển cô lập tính năng mới.
+   * Route 3 (Compatible Clean-room): Xây dựng bản tương thích mới (Android Native qua `android-cli` hoặc Web Zero-Install).
+   * Route 4 (Full Rewrite): Viết lại hoàn toàn kiến trúc mới từ đầu theo đặc tả.
+6. **Lựa chọn 1 trong 3 Design Modes**:
+   * `DESIGN_REUSE_EXACT`: Tái tạo chuẩn xác thiết kế từ UI Evidence gốc.
+   * `DESIGN_STYLE_SPECIFIED`: Áp dụng ngôn ngữ thiết kế được chỉ định.
+   * `DESIGN_STRUCTURAL_EXPLORATION`: Khám phá cấu trúc mới với wireframe và phê duyệt riêng (`APPROVE SCREEN COMPOSITION`).
+7. **Interview Exit Gate**: Chạy `powershell -NoProfile -ExecutionPolicy Bypass -File .agents/scripts/interview.ps1 evaluate-sufficiency`. Chỉ chuyển sang Bước 07 khi tính đầy đủ đạt `SUFFICIENT`.
 
 ### BƯỚC 07: SPEC & DESIGN GATE (Đặc Tả Đóng Băng & Hợp Đồng Giao Diện)
 1. Chốt hợp đồng thiết kế **Design System 3 tầng** trong `02_YEU_CAU_CUA_TOI/design.md` (sử dụng skill `design-system` và `ui-styling`):

@@ -1,0 +1,56 @@
+{
+    "schema_version":  1,
+    "case_id":  "TEST-CASE-001",
+    "session":  {
+                    "session_id":  "INT-SESSION-20261114-113223",
+                    "status":  "IN_PROGRESS",
+                    "current_goal":  null,
+                    "current_stage":  "STAGE_03_PRODUCT_DEFINITION",
+                    "active_domain":  null,
+                    "design_mode":  null,
+                    "created_at":  "2026-11-14T11:32:23+07:00",
+                    "updated_at":  "2026-11-14T11:32:27+07:00"
+                },
+    "goals":  [
+
+              ],
+    "questions":  [
+
+                  ],
+    "answers":  [
+
+                ],
+    "decisions":  [
+
+                  ],
+    "assumptions":  [
+
+                    ],
+    "conflicts":  [
+
+                  ],
+    "unknowns":  [
+
+                 ],
+    "scope_changes":  [
+
+                      ],
+    "sufficiency_evaluation":  {
+                                   "verdict":  "NEEDS_INPUT",
+                                   "evaluated_at":  "2026-11-14T11:32:27+07:00",
+                                   "blocking_reasons":  [
+                                                            "No active goals recorded in interview state."
+                                                        ],
+                                   "deferred_decisions":  [
+
+                                                          ],
+                                   "assumptions_summary":  {
+                                                               "total":  0,
+                                                               "benign":  0,
+                                                               "critical":  0,
+                                                               "pending_approval":  0
+                                                           },
+                                   "summary":  "Interview requires additional input or decision resolution before Gate 03."
+                               },
+    "last_updated":  "2026-11-14T11:32:27+07:00"
+}

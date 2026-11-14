@@ -20,11 +20,11 @@
 
 *Liệt kê tất cả các thành phần bị làm rối (obfuscated), thư viện nhị phân (native .so/.dll), logic nghiệp vụ mã hóa hoặc endpoint chưa thể phân tích trọn vẹn:*
 
-| Mã ID | Thành phần / Module | Hiện trạng ghi nhận | Giả thuyết hành vi | Phương án xử lý (Tại Bước 06 Interview) | Mức độ rủi ro |
+| Mã ID | Thành phần / Module | Hiện trạng ghi nhận | Giả thuyết hành vi | Các phương án kỹ thuật khả thi (Trình bày kèm hệ quả tại Bước 06) | Mức độ rủi ro |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| `UNK-01` | [Ví dụ: libnative-crypto.so] | Mã máy nhị phân, không dịch ngược được C | Chứa logic mã hóa token phiên đăng nhập | Thay thế bằng chuẩn Web Crypto API tiêu chuẩn | CAO |
-| `UNK-02` | [Ví dụ: api.internal.endpoint] | URL mã hóa base64 trong asset | Endpoint đồng bộ lịch sử offline | Giữ nguyên mock data trong Web App mới | VỪA |
-| `UNK-03` | [Ví dụ: Custom UI Canvas] | Vẽ đồ thị trực tiếp bằng Canvas bytecode | Hiển thị biểu đồ realtime | Dùng Chart.js hoặc SVG thuần viết lại | THẤP |
+| `UNK-01` | [Ví dụ: libnative-crypto.so] | Mã máy nhị phân, không dịch ngược được C | Chứa logic mã hóa token phiên đăng nhập | **Tùy chọn A**: Tái sử dụng thư viện chuẩn của nền tảng đích (Android Keystore / Web Crypto).<br>**Tùy chọn B**: Giữ nguyên cơ chế mock trong môi trường thử nghiệm.<br>*Hệ quả*: Tùy chọn A cần cấu hình thêm, Tùy chọn B không phù hợp cho bản phát hành thực tế. | CAO |
+| `UNK-02` | [Ví dụ: api.internal.endpoint] | URL mã hóa base64 trong asset | Endpoint đồng bộ lịch sử offline | **Tùy chọn A**: Kết nối trực tiếp máy chủ nếu có quyền truy cập.<br>**Tùy chọn B**: Tạm thời dùng mock data và cung cấp cấu hình endpoint linh hoạt.<br>*Hệ quả*: Tùy chọn A cần xác minh chính sách mạng, Tùy chọn B cần đồng bộ lại khi bàn giao. | VỪA |
+| `UNK-03` | [Ví dụ: Custom UI Canvas] | Vẽ đồ thị trực tiếp bằng Canvas bytecode | Hiển thị biểu đồ realtime | **Tùy chọn A**: Tái hiện bằng thư viện đồ thị chuẩn (Canvas / Compose / SVG).<br>**Tùy chọn B**: Tối giản hóa thành bảng số liệu trực quan.<br>*Hệ quả*: Tùy chọn A tốn công lập trình hơn nhưng giữ trải nghiệm tương đương. | THẤP |
 
 ---
 
@@ -37,11 +37,13 @@
 
 ---
 
-## 4. Kiến Nghị Cho Bước 06 (REA Interview)
+## 4. Kiến Nghị Lựa Chọn Cho Bước 06 (REA Interview)
 
-1. **Câu hỏi trọng tâm 1**: [Ví dụ: Với module UNK-01, bạn muốn viết lại bằng Web Crypto chuẩn hay dùng mock dữ liệu?]
-2. **Câu hỏi trọng tâm 2**: [Ví dụ: Tính năng biểu đồ UNK-03 bạn có muốn nâng cấp giao diện hiện đại hơn không?]
-3. **Câu hỏi trọng tâm 3**: [Ví dụ: App mới có cần kết nối backend gốc hay chạy 100% offline trên trình duyệt?]
+*Các gợi ý dưới đây là ví dụ minh họa phương án kỹ thuật, KHÔNG PHẢI giải pháp mặc định đã định sẵn. Agent phải giải thích hệ quả bằng ngôn ngữ dễ hiểu trước khi ghi nhận quyết định của người dùng:*
+
+1. **Phương án cho module nhị phân (UNK-01)**: Trình bày sự đánh đổi giữa việc chuẩn hóa bằng thư viện nền tảng chính thống hay giữ nguyên cơ chế stub tạm thời.
+2. **Phương án cho kết nối mạng (UNK-02)**: Xác định rõ ràng nhu cầu nghiệp vụ của sản phẩm (chạy độc lập ngoại tuyến hay cần đồng bộ máy chủ nội bộ), không đánh đồng với quyền thực thi của công cụ.
+3. **Phương án cho thành phần giao diện đặc thù (UNK-03)**: Trình bày các lựa chọn hiển thị trực quan và thu thập phản hồi về mức độ ưu tiên của người dùng.
 
 ---
 *Tài liệu tự động tạo bởi Kỹ năng `rea-scan` / `rea-workflow` tại Bước 05.*
