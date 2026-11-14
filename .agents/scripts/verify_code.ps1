@@ -58,7 +58,7 @@ $hasError = $false
 function Remove-CommentsAndStrings {
     param([string]$Code)
     if ([string]::IsNullOrEmpty($Code)) { return "" }
-    $pattern = '(?s)(/\*.*?\*/)|(?m)(//[^\r\n]*)|("(?:\\.|[^"\\\r\n])*")|(''(?:\\.|[^''\\\r\n])*'')|(`(?:\\.|[^`\\])*`)'
+    $pattern = '(?s)(/\*.*?\*/)|(?m)(//[^\r\n]*)|("""[\s\S]*?""")|("(?:\\.|[^"\\\r\n])*")|(''(?:\\.|[^''\\\r\n])*'')|(`(?:\\.|[^`\\])*`)'
     return [regex]::Replace($Code, $pattern, {
         param($m)
         if ($m.Groups[1].Success -or $m.Groups[2].Success) {
@@ -73,7 +73,7 @@ function Remove-CommentsAndStrings {
 function Remove-CommentsOnly {
     param([string]$Code)
     if ([string]::IsNullOrEmpty($Code)) { return "" }
-    $pattern = '(?s)(/\*.*?\*/)|(?m)(//[^\r\n]*)|(<!--.*?-->)|("(?:\\.|[^"\\\r\n])*")|(''(?:\\.|[^''\\\r\n])*'')|(`(?:\\.|[^`\\])*`)'
+    $pattern = '(?s)(/\*.*?\*/)|(?m)(//[^\r\n]*)|(<!--.*?-->)|("""[\s\S]*?""")|("(?:\\.|[^"\\\r\n])*")|(''(?:\\.|[^''\\\r\n])*'')|(`(?:\\.|[^`\\])*`)'
     return [regex]::Replace($Code, $pattern, {
         param($m)
         if ($m.Groups[1].Success -or $m.Groups[2].Success -or $m.Groups[3].Success) {
@@ -81,6 +81,22 @@ function Remove-CommentsOnly {
         }
         return $m.Value
     })
+}
+
+function Get-ShannonEntropy {
+    param([string]$String)
+    if ([string]::IsNullOrEmpty($String)) { return 0.0 }
+    $len = $String.Length
+    $freq = @{}
+    foreach ($char in $String.ToCharArray()) {
+        if ($freq.ContainsKey($char)) { $freq[$char]++ } else { $freq[$char] = 1 }
+    }
+    $entropy = 0.0
+    foreach ($count in $freq.Values) {
+        $p = [double]$count / $len
+        $entropy -= $p * [Math]::Log($p, 2)
+    }
+    return $entropy
 }
 
 # 1. Kiểm tra kiến trúc & file khởi động (Route A Web Zero-Install vs Route B/C Android)
@@ -200,7 +216,7 @@ $leakPatterns = @(
     'AKIA[0-9A-Z]{16}',
     '-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----',
     'eyJ[A-Za-z0-9_-]{10,}\.eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}',
-    '(?i)(?:password|passwd|pwd|api[_-]?key|secret[_-]?key|access[_-]?token|auth[_-]?token|storePassword|keyPassword)\s*[:=]\s*["'']?(?!\[REDACTED\]|YOUR_|REPLACE_|TODO|EXAMPLE|<|\$\{|null|false|true|\*\*\*)[^"''\s,;]{6,}["'']?'
+    '(?i)(?:password|passwd|pwd|api[_-]?key|secret[_-]?key|access[_-]?token|auth[_-]?token|storePassword|keyPassword)\s*[:=]\s*["''](?!\[REDACTED\]|YOUR_|REPLACE_|TODO|EXAMPLE|<|\$\{)[^"''\r\n]{6,}["'']'
 )
 
 $checkExts = @(".html", ".js", ".ts", ".json", ".py", ".env", ".kt", ".kts", ".java", ".xml", ".gradle", ".properties", ".toml", ".yaml", ".yml", ".smali", ".md")
@@ -217,6 +233,8 @@ $secretFound = $false
 foreach ($f in $filesToScanSecrets) {
     $text = Get-Content -LiteralPath $f.FullName -Raw -Encoding UTF8
     if ([string]::IsNullOrEmpty($text)) { continue }
+
+    # 4.1 Quét regex rò rỉ chuỗi thô
     foreach ($pat in $leakPatterns) {
         if ($text -match $pat) {
             Write-Host " [FAIL] Phát hiện chuỗi nhạy cảm chưa che mờ [REDACTED] tại: $($f.FullName)" -ForegroundColor Red
@@ -224,9 +242,50 @@ foreach ($f in $filesToScanSecrets) {
             $hasError = $true
         }
     }
+
+    # 4.2 Quét Base64-encoded secrets: Giải mã các token base64 dài >= 24 ký tự và kiểm tra chuỗi giải mã
+    $base64Candidates = [regex]::Matches($text, '\b[A-Za-z0-9+/]{24,}={0,2}\b')
+    foreach ($candMatch in $base64Candidates) {
+        $cand = $candMatch.Value
+        try {
+            $bytes = [System.Convert]::FromBase64String($cand)
+            if ($bytes -and $bytes.Length -ge 16) {
+                $decoded = [System.Text.Encoding]::UTF8.GetString($bytes)
+                foreach ($pat in $leakPatterns) {
+                    if ($decoded -match $pat) {
+                        Write-Host " [FAIL] Phát hiện Secret mã hóa Base64 ($cand -> $pat) tại: $($f.FullName)" -ForegroundColor Red
+                        $secretFound = $true
+                        $hasError = $true
+                        break
+                    }
+                }
+            }
+        } catch {}
+    }
+
+    # 4.3 Quét chuỗi có Entropy cao (Shannon Entropy >= 4.5) được gán cho các biến nhạy cảm
+    $assignedSecretMatches = [regex]::Matches($text, '(?i)(?:password|passwd|pwd|api[_-]?key|secret[_-]?key|access[_-]?token|auth[_-]?token)\s*[:=]\s*["''](?<val>[^"''\r\n]{16,})["'']')
+    foreach ($asm in $assignedSecretMatches) {
+        $val = $asm.Groups['val'].Value
+        if ($val -notmatch '(?i)\[REDACTED\]|YOUR_|REPLACE_|TODO|EXAMPLE|<|\$\{|null|false|true|\*\*\*') {
+            $entropy = Get-ShannonEntropy -String $val
+            if ($entropy -ge 4.5) {
+                Write-Host " [FAIL] Phát hiện bí mật có độ hỗn loạn cao (Shannon Entropy: $([Math]::Round($entropy, 2))) tại: $($f.FullName)" -ForegroundColor Red
+                $secretFound = $true
+                $hasError = $true
+            }
+        }
+    }
+
+    # 4.4 Quét mảng byte Hex bí mật (16 bytes trở lên)
+    if ($text -match '(?i)(?:key|secret|token|aes|cipher)\w*\s*[:=]\s*(?:new\s+byte\[\]\s*)?\{\s*(?:0x[0-9a-f]{1,2}\s*,\s*){15,}0x[0-9a-f]{1,2}\s*\}') {
+        Write-Host " [FAIL] Phát hiện mảng Hex byte nhạy cảm nghi là khóa mã hóa tại: $($f.FullName)" -ForegroundColor Red
+        $secretFound = $true
+        $hasError = $true
+    }
 }
 if (-not $secretFound) {
-    Write-Host " [PASS] Không phát hiện API key hoặc mật khẩu thô ($($filesToScanSecrets.Count) files đã quét trên cả mã nguồn và báo cáo)." -ForegroundColor Green
+    Write-Host " [PASS] Không phát hiện API key, mật khẩu thô hoặc token mã hóa Base64/High-Entropy ($($filesToScanSecrets.Count) files đã quét trên cả mã nguồn và báo cáo)." -ForegroundColor Green
 }
 
 # 5. Phân loại rủi ro tự động (Automated Risk Classifier — Anthropic Model cho Web & Android)
@@ -249,7 +308,7 @@ foreach ($f in $codeFilesToCheck) {
     if ($codeNoComments -match '\bfetch\s*\(') { $highRiskIndicators += "$($f.Name): Gọi mạng fetch()" }
     if ($codeNoComments -match '\bXMLHttpRequest\b') { $highRiskIndicators += "$($f.Name): Gọi AJAX XMLHttpRequest" }
     if ($codeNoComments -match '\bWebSocket\b') { $highRiskIndicators += "$($f.Name): Mở kết nối WebSocket" }
-    if ($codeNoComments -match '\b(?:eval|Function)\s*\(') { $highRiskIndicators += "$($f.Name): Thực thi mã động eval()/Function()" }
+    if ($codeNoComments -cmatch '\beval\s*\(' -or $codeNoComments -cmatch '\bnew\s+Function\s*\(' -or $codeNoComments -cmatch '\bwindow\.Function\s*\(') { $highRiskIndicators += "$($f.Name): Thực thi mã động eval()/Function()" }
     if ($codeNoComments -match '\b(?:OkHttpClient|Retrofit|HttpURLConnection)\b') { $highRiskIndicators += "$($f.Name): Kết nối mạng Android (OkHttp/Retrofit/HttpURLConnection)" }
     if ($codeNoComments -match '\b(?:Runtime\.getRuntime\(\)\.exec|ProcessBuilder|DexClassLoader)\b') { $highRiskIndicators += "$($f.Name): Thực thi tiến trình/nạp mã động Android (exec/ProcessBuilder/DexClassLoader)" }
     if ($codeNoComments -match 'http://(?!www\.w3\.org/|schemas\.android\.com/|schemas\.openxmlformats\.org/|localhost|127\.0\.0\.1)') {
@@ -289,15 +348,16 @@ if ($highRiskIndicators.Count -gt 0) {
 if ($isAndroidProject) {
     Write-Host "`n[6. KIỂM TRA DỰ ÁN ANDROID (ANDROID PROJECT VERIFICATION)]" -ForegroundColor Yellow
     foreach ($m in $androidManifests) {
-        $mContent = Get-Content -LiteralPath $m.FullName -Raw -Encoding UTF8
-        if ($mContent -match "<manifest\b" -and -not ($mContent -match "</manifest\s*>")) {
-            Write-Host " [FAIL] AndroidManifest ($($m.Name)) thiếu thẻ đóng </manifest>" -ForegroundColor Red
-            $hasError = $true
-        } else {
-            Write-Host " [PASS] $($m.Name): Thẻ <manifest> hợp lệ." -ForegroundColor Green
-        }
-        if ($mContent -match "<application\b" -and -not ($mContent -match "</application\s*>")) {
-            Write-Host " [FAIL] AndroidManifest ($($m.Name)) thiếu thẻ đóng </application>" -ForegroundColor Red
+        try {
+            [xml]$xmlDoc = Get-Content -LiteralPath $m.FullName -Raw -Encoding UTF8
+            if (-not $xmlDoc.manifest) {
+                Write-Host " [FAIL] AndroidManifest ($($m.Name)) thiếu thẻ gốc <manifest>." -ForegroundColor Red
+                $hasError = $true
+            } else {
+                Write-Host " [PASS] $($m.Name): Cú pháp XML và thẻ <manifest> hợp lệ ([xml] parser)." -ForegroundColor Green
+            }
+        } catch {
+            Write-Host " [FAIL] $($m.Name): Lỗi cú pháp XML không hợp lệ: $_" -ForegroundColor Red
             $hasError = $true
         }
     }

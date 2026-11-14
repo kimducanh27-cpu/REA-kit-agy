@@ -14,7 +14,8 @@ Read and follow `AGENTS.md`, `REVIEW.md`, `.agents/state/MEMORY.md`, and `docs/W
 - Optional Host Plugins (Nếu máy có cài đặt): `android-cli`
 
 ## Điều kiện tiên quyết:
-Đọc `.agents/state/active_case.json` hoặc chạy `powershell -File .agents/scripts/gate.ps1 status`. Bắt buộc Cổng 03 đã ở trạng thái `PASS` hoặc `REUSED_VALIDATED` (Đặc tả đã đóng băng) mới được phép viết mã nguồn.
+Đọc `.agents/state/active_case.json` hoặc chạy `powershell -File .agents/scripts/gate.ps1 status`. Bắt buộc Cổng 03 đã ở trạng thái hợp lệ đã thông qua (`PASS`, `REUSED_VALIDATED`, `WAIVED`, `SKIPPED`, `NOT_APPLICABLE`) mới được phép viết mã nguồn.
+*Lưu ý khi Cổng 03 bị Miễn trừ (WAIVED / SKIPPED)*: Nếu Cổng 03 ở trạng thái `WAIVED` hoặc `SKIPPED`, tự động khởi tạo file đặc tả dự phòng `03_KET_QUA_KIEM_TRA/WAIVER_SPEC_FALLBACK.md` để ghi nhận các giả định kỹ thuật tối thiểu, phạm vi miễn trừ và rủi ro còn lại trước khi bắt tay viết mã nguồn.
 
 You are executing **STAGE_04 · IMPLEMENTATION**:
 
@@ -22,7 +23,7 @@ You are executing **STAGE_04 · IMPLEMENTATION**:
 1. Cập nhật `active_case.json`: `current_phase = "STAGE_04_IMPLEMENTATION"`, `current_step = "09_REA_BUILD"`.
 2. **LÁ CHẮN HOÀN TÁC**: Chạy lệnh tạo snapshot tự động trước khi sửa mã nguồn:
    `powershell -NoProfile -ExecutionPolicy Bypass -File .\.agents\scripts\rollback.ps1 -Snapshot`
-3. Đọc kỹ `03_KET_QUA_KIEM_TRA/KE_HOACH_TRIEN_KHAI.md`, `03_KET_QUA_KIEM_TRA/dac-ta-yeu-cau-da-chot.md`, `02_YEU_CAU_CUA_TOI/design.md` và `.agents/state/learned_rules.json`.
+3. Đọc kỹ `03_KET_QUA_KIEM_TRA/KE_HOACH_TRIEN_KHAI.md`, `03_KET_QUA_KIEM_TRA/dac-ta-yeu-cau-da-chot.md` (hoặc `03_KET_QUA_KIEM_TRA/WAIVER_SPEC_FALLBACK.md` nếu Cổng 03 được waived/skipped), `02_YEU_CAU_CUA_TOI/design.md` và `.agents/state/learned_rules.json`.
 4. Triển khai mã nguồn vào `05_MA_NGUON_PHAT_TRIEN/` theo `build_route` đã duyệt:
    - **`ROUTE_A_WEB_ZERO_INSTALL`**: `index.html`, `styles.css`, `app.js` (chạy trực tiếp trên trình duyệt, đủ 4 trạng thái UI). Nếu cập nhật app đã có, xuất `preview.html` trước.
    - **`ROUTE_B_ANDROID_NATIVE`**: Khởi tạo dự án Android chuẩn bằng `android create` hoặc Gradle + Kotlin + Jetpack Compose trong `05_MA_NGUON_PHAT_TRIEN/android/`.
@@ -30,7 +31,7 @@ You are executing **STAGE_04 · IMPLEMENTATION**:
 
 ### BƯỚC 10: BUILD QA / CODE REVIEW (Thẩm Định Độc Lập & Kiểm Soát Rủi Ro)
 1. Cập nhật `active_case.json`: `current_step = "10_BUILD_QA"`.
-2. **Thẩm định 2 trục độc lập** theo `REVIEW.md` (Trục Standards đối chiếu `design.md` & 4 UI States; Trục Spec đối chiếu `dac-ta-yeu-cau-da-chot.md`).
+2. **Thẩm định 2 trục độc lập** theo `REVIEW.md` (Trục Standards đối chiếu `design.md` & 4 UI States; Trục Spec đối chiếu `dac-ta-yeu-cau-da-chot.md` hoặc `WAIVER_SPEC_FALLBACK.md` nếu Cổng 03 được waived/skipped).
 3. **Chạy kiểm tra xác định**:
    `powershell -NoProfile -ExecutionPolicy Bypass -File .\.agents\scripts\verify_code.ps1`
    *(Chỉ thêm cờ `-AllowHighRisk` nếu đặc tả đã được người dùng phê duyệt cho phép kết nối API ngoài).*

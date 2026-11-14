@@ -74,11 +74,12 @@ Một câu hỏi tiềm năng $q$ chỉ được phép gửi tới người dùn
 
 $$Ask(q) = \neg Known(q) \land \neg Inspectable(q) \land \neg Evidence(q) \land Impact(q) \land (Risk(q) \lor \neg Reversible(q)) \land Ownership(q) \land Timing(q)$$
 
-Nếu biểu thức trên có giá trị `FALSE`, Agent xử lý theo 4 nhánh hành động tương ứng:
-1. $\text{Known}(q) \lor \text{Inspectable}(q) \lor \text{Evidence}(q) = \text{TRUE}$: **HỦY BỎ & TỰ TRÍCH XUẤT**.
+Nếu biểu thức trên có giá trị `FALSE`, Agent phân loại và xử lý theo **5 nhánh hành động tường minh**:
+1. $\text{Known}(q) \lor \text{Inspectable}(q) \lor \text{Evidence}(q) = \text{TRUE}$: **HỦY BỎ & TỰ TRÍCH XUẤT BẰNG CHỨNG**.
 2. $\text{Impact}(q) = \text{FALSE}$: **HỦY BỎ (CÂU HỎI RÂU RIA/TRIVIA)**.
-3. $\text{Reversible}(q) = \text{TRUE} \land \text{Risk}(q) = \text{FALSE}$: **CHỌN MẶC ĐỊNH AN TOÀN & GHI ASSUMPTION RECORD**.
-4. $\text{Timing}(q) = \text{FALSE}$: **HOÃN LẠI MILESTONE SAU (DEFER)**.
+3. $\text{Ownership}(q) = \text{FALSE}$: **TỰ RA QUYẾT ĐỊNH KỸ THUẬT & KHÓA VÀO SPEC NỘI BỘ** (Người dùng là Product Owner, không hỏi về pattern, thư viện nội bộ hay cú pháp; Agent tự quyết định giải pháp kỹ thuật tối ưu).
+4. $\text{Reversible}(q) = \text{TRUE} \land \text{Risk}(q) = \text{FALSE}$: **CHỌN MẶC ĐỊNH AN TOÀN & GHI ASSUMPTION RECORD** (Kèm phân hạng `risk_level`: BENIGN hoặc CRITICAL).
+5. $\text{Timing}(q) = \text{FALSE}$: **HOÃN LẠI MILESTONE SAU (DEFER)** (Chỉ kích hoạt khi bước vào milestone tương ứng).
 
 ### 3.2 Đặc Tả Chi Tiết 8 Bộ Lọc Tuần Tự
 
@@ -163,13 +164,32 @@ Mọi thỏa thuận, câu hỏi và mặc định kỹ thuật đều được 
   "assumption_id": "ASSUMPTION-01",
   "domain": "UX_UI_IMPROVEMENT",
   "category": "Touch Target Dimension",
+  "risk_level": "BENIGN",
   "default_value_chosen": "48x48dp tối thiểu cho mọi clickable view",
-  "rationale": "Chuẩn công thái học Android Accessibility Guidelines.",
+  "rationale": "Chuẩn công thái học Android Accessibility Guidelines & WCAG AA.",
   "reversibility": "HIGH",
   "verification_task": "Chạy verify_code.ps1 và kiểm tra layout XML ở Bước 10",
-  "status": "ACCEPTED_BY_DEFAULT"
+  "status": "ACTIVE",
+  "invalidated_at": null,
+  "revocation_reason": null,
+  "downstream_dependencies": [
+    "02_YEU_CAU_CUA_TOI/design.md",
+    "03_KET_QUA_KIEM_TRA/01_SCREEN_COMPOSITION.md"
+  ]
 }
 ```
+
+### 4.4 Quy Trình Vòng Đời & Quản Lý Giả Định (Assumption Lifecycle Protocol)
+1. **Phân Hạng Mức Độ Rủi Ro (Assumption Risk Tiers)**:
+   - **`risk_level: BENIGN` (Tier 1 - Vô hại)**: Các giả định về layout, khoảng cách, padding 16dp, touch target 48dp, debounce 300ms. Nếu thay đổi sau này chỉ tốn chi phí nhỏ về cấu hình CSS/Theme.
+   - **`risk_level: CRITICAL` (Tier 2 - Nghiêm trọng)**: Các giả định về thời hạn lưu dữ liệu (data retention), chu kỳ đồng bộ mạng, chính sách ứng xử Play Integrity API, phạm vi phân quyền. Các giả định này nếu sai có nguy cơ gây mất dữ liệu hoặc vi phạm an ninh; bắt buộc phải được làm nổi bật trong bản tổng hợp `dac-ta-yeu-cau-da-chot.md` trước khi người dùng phê duyệt Gate 03.
+2. **Trạng Thái Vòng Đời Giả Định (Assumption Status Transitions)**:
+   - `ACTIVE`: Giả định đang có hiệu lực và được các module thiết kế/kế hoạch tuân thủ.
+   - `INVALIDATED`: Giả định bị hủy bỏ do phát hiện mâu thuẫn từ dữ liệu mới, người dùng thay đổi yêu cầu giữa chừng, hoặc phát hiện bằng chứng mới trong mã nguồn APK. Khi chuyển sang `INVALIDATED`, bắt buộc ghi nhận timestamp vào `invalidated_at` và mô tả nguyên nhân vào `revocation_reason`.
+   - `SUPERSEDED`: Giả định được nâng cấp hoặc thay thế chính thức bằng một `DECISION RECORD` do người dùng trực tiếp phê duyệt.
+3. **Đồ Thị Phụ Thuộc & Lan Truyền Thu Hồi (Cascading Invalidation Blast Radius)**:
+   - Mỗi `Assumption Record` duy trì danh sách `downstream_dependencies: []` ghi nhận toàn bộ các tài liệu đặc tả, bảng schema, hoặc decision records phát sinh dựa trên giả định đó.
+   - Khi một giả định bị chuyển sang `INVALIDATED`, Agent kích hoạt quy trình quét đồ thị phụ thuộc, đánh dấu cảnh báo toàn bộ các artifact trong `downstream_dependencies`, và yêu cầu tái đánh giá trước khi tiếp tục triển khai.
 
 ---
 
@@ -339,24 +359,28 @@ Bộ kiểm thử 35 test cases được thiết kế để xác thực tính đ
 
 ### NHÓM 3: GIA CỐ BẢO MẬT (SECURITY HARDENING) (INT-11 ĐẾN INT-15)
 
-#### INT-11: Cấm Lưu Thông Mạng Rõ & Ép Buộc TLS (Cleartext HTTP Ban)
+#### INT-11: Cấm Lưu Thông Mạng Rõ & Ép Buộc TLS 1.3 (Cleartext HTTP Ban & TLS Enforcement)
 - **Tình Huống**: Bước 04 phát hiện app đang gọi API `http://api.example.com` dạng text rõ.
 - **Domain Kích Hoạt**: `SECURITY_HARDENING` (Pillar 4: Network Security)
 - **Hành Động Của Agent**:
   * Không hỏi người dùng có muốn dùng HTTP không (đây là rủi ro bảo mật nghiêm trọng).
-  * Tự động cấu hình `network_security_config.xml` chặn cleartext traffic, chuyển sang HTTPS.
-  * Ghi `DECISION-SEC-01`: Bắt buộc TLS 1.3, cấm cleartext.
-- **Đầu Ra Kỳ Vọng**: `AndroidManifest.xml` có `android:usesCleartextTraffic="false"`.
-- **Tiêu Chí Kiểm Thử**: Lệnh kiểm tra mạng chặn đứng mọi kết nối HTTP không an toàn.
+  * Tự động cấu hình `network_security_config.xml` với `cleartextTrafficPermitted="false"` để chặn đứng HTTP không mã hóa ở cấp hệ điều hành.
+  * ⚠️ **Chính xác hóa kỹ thuật**: Schema XML của `network_security_config.xml` **không hỗ trợ** thẻ hay thuộc tính quy định phiên bản TLS. Việc ép buộc TLS 1.3 được triển khai tường minh ở tầng HTTP Client (OkHttp `ConnectionSpec.MODERN_TLS` / `RESTRICTED_TLS` chỉ chấp nhận `TLS_1_3, TLS_1_2`). Lưu ý trên Android 15 (API 35), hệ điều hành đã chặn hoàn toàn TLS 1.0 và TLS 1.1 ở tầng socket.
+  * Ghi `DECISION-SEC-01`: Bắt buộc TLS 1.3 qua HTTP Client ConnectionSpec, cấm cleartext qua Network Security Config.
+- **Đầu Ra Kỳ Vọng**: `AndroidManifest.xml` có `android:usesCleartextTraffic="false"`, OkHttpClient được cấu hình `ConnectionSpec.MODERN_TLS`.
+- **Tiêu Chí Kiểm Thử**: Lệnh kiểm tra mạng chặn đứng mọi kết nối HTTP không an toàn; socket đàm phán thành công TLS 1.3.
 
-#### INT-12: Xử Lý Thiết Bị Đã Can Thiệp Hệ Thống (Root Policy Triage)
-- **Tình Huống**: Ứng dụng ví điện tử/tài chính chạy trên máy đã Root.
-- **Domain Kích Hoạt**: `SECURITY_HARDENING` (Pillar 5: Device Integrity)
+#### INT-12: Xử Lý Thiết Bị Đã Can Thiệp Hệ Thống (Play Integrity API & Device Tamper Triage)
+- **Tình Huống**: Ứng dụng ví điện tử/tài chính chạy trên môi trường có nguy cơ bị can thiệp (Root, Custom ROM, Hooking frameworks).
+- **Domain Kích Hoạt**: `SECURITY_HARDENING` (Pillar 5: Device Integrity & Resilience)
 - **Hành Động Của Agent**:
-  * Đặt câu hỏi chính sách: "Khi phát hiện thiết bị bị Root, ứng dụng nên: (A) Chặn mở hoàn toàn, (B) Cảnh báo và vô hiệu hóa thanh toán/sinh trắc học, hay (C) Cho phép người dùng tự chịu rủi ro?"
+  * Loại bỏ các kiểm tra heuristic cục bộ kiểu RootBeer / SafetyNet (SafetyNet đã đóng cửa hoàn toàn tháng 01/2025; các heuristic client-side dễ dàng bị vô hiệu hóa bởi Magisk Zygisk/Shamiko, KernelSU, APatch).
+  * Thiết lập kiến trúc **Google Play Integrity API** với quy trình gửi nonce từ máy chủ, lấy attestation token trên client và giải mã verdict tại backend theo chuẩn **OWASP MASVS-RESILIENCE v2.0**:
+    * Kiểm tra `MEETS_DEVICE_INTEGRITY` và `MEETS_APP_INTEGRITY`.
+  * Đặt câu hỏi chính sách: "Khi Google Play Integrity API trả về phán quyết thiết bị không đạt chuẩn (không đạt MEETS_DEVICE_INTEGRITY), ứng dụng nên: (A) Chặn mở hoàn toàn, (B) Cảnh báo rủi ro người dùng và vô hiệu hóa các tính năng thanh toán/sinh trắc học, hay (C) Ghi nhận cờ rủi ro lên backend và cho phép người dùng tiếp tục?"
   * Người dùng chọn: Phương án B.
-- **Đầu Ra Kỳ Vọng**: `DECISION-SEC-02`: Cảnh báo và khóa sinh trắc học trên máy root.
-- **Tiêu Chí Kiểm Thử**: Tích hợp module kiểm tra root và phân nhánh luồng UI tương ứng.
+- **Đầu Ra Kỳ Vọng**: `DECISION-SEC-02`: Tích hợp Google Play Integrity API kèm xác thực backend, cảnh báo rủi ro và khóa sinh trắc học/thanh toán khi verdict không đạt chuẩn.
+- **Tiêu Chí Kiểm Thử**: Client tích hợp Play Integrity SDK gửi token lên backend; mock backend phản hồi verdict failure kích hoạt luồng vô hiệu hóa sinh trắc học và hiển thị cảnh báo an toàn.
 
 #### INT-13: Chống Chụp Trộm Màn Hình Nhạy Cảm (Screen Protection via FLAG_SECURE)
 - **Tình Huống**: Màn hình hiển thị mã OTP và số dư tài khoản ngân hàng.
@@ -547,10 +571,16 @@ Bộ kiểm thử 35 test cases được thiết kế để xác thực tính đ
 - **Xác Định Chế Độ Thiết Kế**: `DESIGN_REUSE_EXACT`
 - **Hành Động Của Agent**:
   * **TUYỆT ĐỐI BỎ QUA VIỆC ĐỀ XUẤT 3 CONCEPTS CẤU TRÚC**.
-  * Trích xuất trực tiếp bảng màu, kích thước từ ảnh chụp app gốc.
-  * Soạn thảo ngay đặc tả khớp 1-1 cho Bước 07.
-- **Đầu Ra Kỳ Vọng**: Không làm phiền người dùng bằng các concept xa lạ; hoàn thành hồ sơ Art Direction trực diện.
-- **Tiêu Chí Kiểm Thử**: Số lượng concept đề xuất = 0 (trực tiếp sang thiết kế 1-1).
+  * Trích xuất trực tiếp bảng màu, kích thước từ ảnh chụp app gốc để lập ngay bản đặc tả khớp 1-1 cho Bước 07.
+  * **Thực thi Sanitary Ergonomic Lint**:
+    * Quét toàn bộ clickable elements trong giao diện gốc: Nếu phát hiện touch target < 48dp, tự động mở rộng padding đạt chuẩn tối thiểu 48x48dp (giữ nguyên kích thước visual của icon/button).
+    * Kiểm tra độ tương phản màu chữ: Nếu < 4.5:1 (vi phạm WCAG AA), tự động điều chỉnh sắc độ (shade) cùng tone màu để đạt chuẩn 4.5:1.
+    * Bổ sung đầy đủ 4 trạng thái giao diện (Loading, Empty, Success, Error) nếu app cũ còn thiếu, bảo toàn dữ liệu form theo `RULE-INIT-001`.
+  * **Thực thi Legal Asset Decoupling Protocol**:
+    * Bóc tách toàn bộ tài sản thương hiệu độc quyền (logo công ty, nhãn hiệu đã đăng ký, linh vật, font thương mại độc quyền).
+    * Thay thế logo độc quyền bằng placeholder trung tính (`ic_brand_placeholder.xml`) và sử dụng font mã nguồn mở tương đương (Roboto, Inter, Plus Jakarta Sans).
+- **Đầu Ra Kỳ Vọng**: Không làm phiền người dùng bằng các concept xa lạ; hoàn thành hồ sơ Art Direction trực diện, sạch rác công thái học và an toàn sở hữu trí tuệ.
+- **Tiêu Chí Kiểm Thử**: Số lượng concept đề xuất = 0 (trực tiếp sang thiết kế 1-1); 100% clickable views đạt touch target >= 48x48dp; không chứa logo/font thương quyền chưa cấp phép.
 
 #### INT-32: Chế Độ Áp Dụng Phong Cách Chỉ Định Cụ Thể (DESIGN_STYLE_SPECIFIED)
 - **Tình Huống**: Người dùng yêu cầu: *"Hãy thiết kế lại app theo phong cách Material You tông màu tối (Dark Mode) với màu chủ đạo là xanh lục bảo"*.
@@ -595,6 +625,70 @@ Bộ kiểm thử 35 test cases được thiết kế để xác thực tính đ
   * Trình bày bản tổng hợp `dac-ta-yeu-cau-da-chot.md` và chờ người dùng ra lệnh: `APPROVE UI SPEC`.
 - **Đầu Ra Kỳ Vọng**: Bộ đặc tả đóng băng toàn diện, sẵn sàng bàn giao cho `rea-plan` ở Bước 08.
 - **Tiêu Chí Kiểm Thử**: 100% tiêu chí của ma trận Gate 03 Readiness Matrix đạt chuẩn PASS.
+
+---
+
+### NHÓM 8: TÌNH HUỐNG BIÊN NÂNG CAO (ADVANCED EDGE CASES) (INT-36 ĐẾN INT-40)
+
+#### INT-36: Đổi Ý Giữa Chừng Về Chế Độ Thiết Kế & Phạm Vi (Mid-stream Design Mode & Constraint Reversal)
+- **Tình Huống**: Giữa Bước 06 và Bước 07, sau khi đã thống nhất chế độ `DESIGN_REUSE_EXACT`, người dùng bất ngờ đổi ý: *"Sau khi xem lại, tôi muốn đổi sang Dark Mode và chuyển các nút bấm lên đầu theo phong cách Material You"*.
+- **Domain Kích Hoạt**: `UX_UI_IMPROVEMENT` / `INTERVIEW_CONTROL`
+- **Hành Động Của Agent**:
+  * Kích hoạt Assumption & Decision Invalidation Protocol (Mục 4.4):
+    * Đánh dấu các bản ghi `DECISION` và `ASSUMPTION` liên quan trước đó sang trạng thái `INVALIDATED`, ghi nhận `invalidated_at` và `revocation_reason: "User requested switch to Material You Dark Mode"`.
+    * Quét danh sách `downstream_dependencies: []` để hủy bỏ bản nháp `01_SCREEN_COMPOSITION.md` và `design.md` cũ.
+  * Điều hướng lại Design Mode sang `DESIGN_STYLE_SPECIFIED` (Material You Dark Theme).
+  * Tái tạo hồ sơ đặc tả tương ứng và lập bảng đối chiếu (Diff Summary) để người dùng duyệt lại mà không gây xung đột rác trong repo.
+- **Đầu Ra Kỳ Vọng**: Sổ cái hồ sơ phản ánh chính xác lịch sử thu hồi quyết định; bộ đặc tả mới khớp 100% yêu cầu điều chỉnh.
+- **Tiêu Chí Kiểm Thử**: Không tồn tại tài liệu mâu thuẫn; các quyết định cũ có trạng thái `INVALIDATED` hoặc `SUPERSEDED`.
+
+#### INT-37: Xung Đột Bất Biến Nền Tảng & Yêu Cầu Bất Khả Thi (Platform Invariant & Policy Conflict Triage)
+- **Tình Huống**: Người dùng đưa ra hai yêu cầu xung đột nội tại hoặc bất khả thi về mặt nền tảng Android 14/15: *"Ứng dụng phải cực kỳ tiết kiệm pin, nhưng phải lấy tọa độ GPS chính xác 1 mét liên tục mỗi giây khi tắt màn hình"* (hoặc *"Bảo mật chống dịch ngược tuyệt đối nhưng cấm bật ProGuard/R8"*).
+- **Domain Kích Hoạt**: `APP_OPTIMIZATION` / `SECURITY_HARDENING`
+- **Hành Động Của Agent**:
+  * Nhận diện bất biến hệ điều hành (Platform Invariants): Android 14/15 cấm chạy ngầm polling GPS tần suất cao ở Doze Mode và hạn chế nghiêm ngặt Foreground Service Location.
+  * Tuyệt đối không chấp nhận mù quáng cam kết bất khả thi.
+  * Đặt câu hỏi đàm phán kỹ thuật (Technical Trade-off Negotiation): Nêu rõ giới hạn của OS và đề xuất giải pháp khả thi (ví dụ: dùng `FusedLocationProviderClient` với khoảng cách dịch chuyển tối thiểu 10m và Foreground Service có thông báo thường trực).
+  * Ghi `DECISION-OPT-CONF-01`: Thống nhất giải pháp cân bằng giữa độ chính xác vị trí và mức tiêu thụ pin.
+- **Đầu Ra Kỳ Vọng**: Thống nhất giải pháp khả thi tuân thủ 100% quy chuẩn quản lý pin của Android 14/15.
+- **Tiêu Chí Kiểm Thử**: Ứng dụng không bị hệ điều hành cảnh báo Bad Behavior hoặc văng crash do vi phạm Foreground Service limits.
+
+#### INT-38: Phân Vùng Miền Lai: Sao Chép 1-1 Kèm Màn Hình Tính Năng Mới (Hybrid Domain Partitioning: Clone 1-1 with New Feature Screen)
+- **Tình Huống**: Dự án yêu cầu tái lập ứng dụng cũ nhưng bổ sung màn hình mới hoàn toàn (ví dụ: Màn hình danh sách đơn hàng clone 1-1 từ APK cũ, nhưng màn hình "Ví Voucher Khuyến Mãi" là tính năng mới chưa từng có).
+- **Domain Kích Hoạt**: `HYBRID` (`UX_UI_IMPROVEMENT` + `FEATURE_ADDITION`)
+- **Hành Động Của Agent**:
+  * Thực hiện phân rã theo màn hình (Per-Screen Domain Partitioning):
+    * Đối với màn hình cũ: Áp dụng `DESIGN_REUSE_EXACT` kèm Sanitary Ergonomic Lint (48dp touch target) và Legal Asset Decoupling.
+    * Đối với màn hình mới: Kế thừa 100% hệ thống Design Tokens vừa trích xuất từ màn hình cũ để đảm bảo tính nhất quán thị giác (Design Consistency), đồng thời áp dụng phương pháp luận 3 tầng của `FEATURE_ADDITION` (Outcome ➔ Behavior ➔ Implementation Spec).
+  * Hợp nhất vào cùng một hợp đồng `dac-ta-yeu-cau-da-chot.md`.
+- **Đầu Ra Kỳ Vọng**: Bộ đặc tả thống nhất toàn vẹn, màn hình mới có cùng phong cách thẩm mỹ với màn hình tái lập nhưng có đầy đủ đặc tả nghiệp vụ mới.
+- **Tiêu Chí Kiểm Thử**: Màn hình mới sử dụng chung Theme Tokens của màn cũ; bao phủ đủ 4 UI states.
+
+#### INT-39: Đàm Phán Đánh Đổi Bảo Mật vs Hiệu Năng Khởi Động (Security vs Performance Trade-off Negotiation)
+- **Tình Huống**: Gia cố an ninh cấp cao (kích hoạt mã hóa SQLCipher, xác thực Google Play Integrity API, khởi tạo Keystore Cipher) làm tăng thời gian Cold Start từ 800ms lên 2.2s (vượt trần quy chuẩn < 1.2s của Android Vitals).
+- **Domain Kích Hoạt**: `SECURITY_HARDENING` + `APP_OPTIMIZATION`
+- **Hành Động Của Agent**:
+  * Nhận diện xung đột KPI: Yêu cầu bảo mật cao đối đầu trực diện với trải nghiệm mượt mà khi mở app.
+  * Tự động đề xuất kiến trúc dung hòa kỹ thuật:
+    * Khởi tạo SQLCipher bất đồng bộ ở background thread thông qua `Dispatchers.IO`.
+    * Pre-warm Keystore Cipher ở luồng nền song song với giai đoạn render Splash Screen.
+    * Thực hiện Play Integrity attestation theo cơ chế deferred check (xác thực song song sau khi First Frame đã vẽ xong; chỉ chặn lại khi người dùng truy cập giao dịch nhạy cảm đầu tiên).
+  * Ghi `DECISION-SEC-PERF-01`: Cấu trúc khởi tạo luồng song song để vừa bảo mật vừa đạt Cold Start < 1.2s.
+- **Đầu Ra Kỳ Vọng**: Giữ vững cam kết Cold Start < 1.2s trong khi toàn bộ dữ liệu vẫn được mã hóa SQLCipher và xác thực Play Integrity.
+- **Tiêu Chí Kiểm Thử**: Profiler xác nhận Cold Start < 1.2s; dữ liệu database được mã hóa hoàn toàn.
+
+#### INT-40: Tách Rời Tài Sản Thương Hiệu & Làm Sạch Bản Quyền Trong Chế Độ Sao Chép (Asset Decoupling & Brand Sanitization in Exact Clone Mode)
+- **Tình Huống**: Người dùng yêu cầu `DESIGN_REUSE_EXACT` trên APK trích xuất từ một ngân hàng hoặc thương hiệu lớn chứa logo, hình ảnh linh vật có bản quyền và font chữ thương mại độc quyền.
+- **Domain Kích Hoạt**: `UX_UI_IMPROVEMENT` / `CLEAN_ROOM_RE`
+- **Hành Động Của Agent**:
+  * Kích hoạt rào chắn Legal Asset Decoupling Protocol:
+    * Đưa ra cảnh báo pháp lý về quyền sở hữu trí tuệ và thương hiệu đã đăng ký.
+    * Tự động cô lập các tài sản thương hiệu; tuyệt đối không sao chép nguyên xi logo của bên thứ ba vào thư mục `res/drawable/`.
+    * Tự động thay thế logo độc quyền bằng placeholder trung tính (`ic_brand_placeholder.xml`) hoặc yêu cầu người dùng đưa asset được cấp quyền vào.
+    * Thay thế font chữ thương mại độc quyền bằng font mã nguồn mở tương đương có cùng metric thị giác (Roboto, Inter, Plus Jakarta Sans).
+    * Ghi nhận `ASSUMPTION-UI-LEGAL-01`: Bóc tách tài sản nhãn hiệu độc quyền sang placeholder trung tính.
+- **Đầu Ra Kỳ Vọng**: Bộ mã nguồn và đặc tả hoàn toàn sạch về mặt pháp lý (Clean-Room Compliant), không chứa nhãn hiệu vi phạm bản quyền.
+- **Tiêu Chí Kiểm Thử**: Quét thư mục `res/` và code không phát hiện logo hoặc font độc quyền thương mại của bên thứ ba.
 
 ---
 

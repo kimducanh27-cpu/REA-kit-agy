@@ -16,7 +16,7 @@ TUYỆT ĐỐI KHÔNG ép mọi dự án phải chạy một lèo 14 bước n�
 4. `docs/WORKFLOW_LIFECYCLE.md` & `docs/WORKFLOW_DEPENDENCIES.md` (Vòng đời và Đồ thị phụ thuộc).
 5. `docs/PROGRESS.md` (Tiến độ thực tế các bước).
 
-Kiểm tra mã băm SHA-256 các bằng chứng hiện có (Evidence SHA) để phát hiện dữ liệu có bị thay đổi không.
+Kiểm tra mã băm SHA-256 các bằng chứng hiện có (Evidence SHA) để phát hiện dữ liệu có bị thay đổi không (Lưu ý: Mã băm SHA-256 đối với file văn bản/markdown được chuẩn hóa dòng theo LF qua `.gitattributes` và `gate.ps1` để tránh ngộ nhận sai lệch hash do khác biệt CRLF/LF giữa Windows và Linux).
 
 ---
 
@@ -47,7 +47,7 @@ Chọn chính xác 1 trong 6 chế độ yêu cầu dưới đây dựa trên m�
 
 *Lưu ý quan trọng:*
 - Nếu thiếu thiết bị Android/AVD (WF02): Bước `02_BASELINE` chuyển sang **Static Fallback 3 lớp**, Cổng 01 ghi `PASS_WITH_LIMITATIONS`.
-- Nếu người dùng chủ động miễn trừ một bước: Chạy `gate.ps1 waive <gate> -Reason <lý_do>` (Waiver KHÔNG tự động biến thành PASS).
+- Nếu người dùng chủ động miễn trừ hoặc bỏ qua một bước: Chạy `gate.ps1 waive <gate> -Reason <lý_do>` hoặc `gate.ps1 skip <gate> -Reason <lý_do>` (Waiver KHÔNG tự động biến thành PASS). Quy trình hạ nguồn chấp nhận đầy đủ các trạng thái đã thông qua (`PASS`, `REUSED_VALIDATED`, `WAIVED`, `SKIPPED`, `NOT_APPLICABLE`). Khi Cổng 03 được miễn trừ, tự động tạo `03_KET_QUA_KIEM_TRA/WAIVER_SPEC_FALLBACK.md`.
 
 ---
 

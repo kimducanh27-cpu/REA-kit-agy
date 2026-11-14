@@ -118,11 +118,17 @@ Agent phân loại lỗi theo bản chất kỹ thuật:
 ### Mẫu Ghi Giả Định Sửa Lỗi (Assumption Record)
 ```markdown
 ### ASSUMPTION-BUG-[STT]
+- **Mã giả định**: `ASSUMPTION-BUG-[STT]`
 - **Mã Lỗi**: [Ví dụ: BUG-002: Sai định dạng ngày tháng]
+- **Mức Độ Rủi Ro (risk_level)**: `BENIGN` | `CRITICAL`
 - **Giả Định Áp Dụng**: Sử dụng Locale mặc định của thiết bị kèm định dạng ISO-8601 dự phòng.
 - **Lý Do Áp Dụng**: Người dùng không cung cấp định dạng ngày cụ thể; ISO-8601 là chuẩn quốc tế.
+- **Tính Thuận Nghịch**: `HIGH`
 - **Nhiệm Vụ Kiểm Chứng (Verification Task)**: Chạy test case với 5 Locale khác nhau (vi_VN, en_US, ja_JP...) ở Bước 10.
-- **Trạng Thái**: `ACCEPTED_BY_DEFAULT`
+- **Trạng Thái (status)**: `ACTIVE` | `INVALIDATED` | `SUPERSEDED`
+- **Thời Điểm Thu Hồi (invalidated_at)**: null
+- **Lý Do Thu Hồi (revocation_reason)**: null
+- **Các Phụ Thuộc Hạ Nguồn (downstream_dependencies)**: []
 ```
 
 ---

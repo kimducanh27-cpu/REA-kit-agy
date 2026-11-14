@@ -48,36 +48,51 @@ Hướng dẫn này kích hoạt khi mục tiêu dự án tập trung vào **kh�
 - **Vòng Đời Token (Token Lifecycle)**:
   * Cơ chế làm mới token tự động (Silent Refresh với Refresh Token ngắn hạn).
   * Hủy phiên lập tức (Server-side & Client-side logout) khi phát hiện dấu hiệu bất thường.
-- **Lưu Trữ Khóa Xác Thực**:
-  * Lưu trữ Token trong Android Keystore thông qua `EncryptedSharedPreferences` / `EncryptedFile`.
-  * Không bao giờ lưu token dạng text thuần trong `SharedPreferences` hoặc SQLite.
-- **Tích Hợp Sinh Trắc Học (Biometrics)**:
-  * Sử dụng `BiometricPrompt` chuẩn của AndroidX với cờ bảo mật phần cứng (`BIOMETRIC_STRONG` / CryptoObject).
+- **Lưu Trữ Khóa Xác Thực & Dữ Liệu Nhạy Cảm**:
+  * Sử dụng **Jetpack DataStore** (Preferences hoặc Proto DataStore) kết hợp **Google Tink (`Aead` primitive)** hoặc mã hóa trực tiếp payload bằng khóa đối xứng tạo từ **Android KeyStore** (`Cipher` AES-256-GCM) trước khi lưu trữ. Đối với cơ sở dữ liệu quan hệ lớn, sử dụng **SQLCipher for Android** với khóa 256-bit sinh từ Android KeyStore.
+  * ⚠️ **LƯU Ý BỎ DÙNG (DEPRECATION NOTICE)**: Tuyệt đối **KHÔNG SỬ DỤNG** thư viện đã bị Google deprecated và đóng băng hoàn toàn: `androidx.security.crypto.EncryptedSharedPreferences` / `EncryptedFile`. Thư viện này có các lỗi nghiêm trọng không thể khắc phục: gây deadlock/ANR trên Main Thread, hỏng khóa KeyStore (`KeyStore corrupted / key unrecoverable`) sau khi khởi động lại thiết bị trên nhiều dòng máy OEM (Samsung, Xiaomi...), dẫn đến việc ứng dụng crash liên tục và mất sạch dữ liệu người dùng.
+  * Không bao giờ lưu token hoặc secret dạng text thuần trong `SharedPreferences` thông thường hoặc SQLite unencrypted.
+- **Tích Hợp Sinh Trắc Học Đạt Chuẩn Phần Cứng (Biometrics & Auth-Per-Use)**:
+  * Sử dụng `BiometricPrompt` chuẩn của AndroidX bắt buộc bọc `BiometricPrompt.CryptoObject` (chứa `Cipher` hoặc `Signature` khởi tạo từ Keystore). Tuyệt đối không chỉ dùng callback boolean UI vì rất dễ bị bypass bằng hook Frida (`onAuthenticationSucceeded`).
+  * Khóa KeyStore phải được cấu hình bằng `KeyGenParameterSpec.Builder`:
+    ```kotlin
+    builder.setUserAuthenticationParameters(
+        0, // 0 giây = BẮT BUỘC AUTH-PER-OPERATION (Mỗi lần dùng phải quét sinh trắc học mới)
+        KeyProperties.AUTH_BIOMETRIC_STRONG
+    )
+    ```
+    Đặt tham số timeout = 0 đảm bảo chuẩn Auth-Per-Use nghiêm ngặt nhất, chống tấn công replay hoặc chiếm quyền phiên khi app mở ở background.
 
 ### 2.3 Data Protection (Bảo Vệ Dữ Liệu Tại Chỗ & Chống Rò Rỉ)
 - **Mã Hóa Dữ Liệu Lưu Cục Bộ (At-Rest Encryption)**:
-  * Cơ sở dữ liệu SQLite/Room tích hợp SQLCipher với khóa sinh ngẫu nhiên lưu trong Android Keystore.
+  * Cơ sở dữ liệu SQLite/Room tích hợp SQLCipher với khóa sinh ngẫu nhiên lưu trong Android KeyStore.
 - **Chống Rò Rỉ Màn Hình & Bộ Nhớ Tạm**:
   * Áp dụng `FLAG_SECURE` trên các Activity / Composable nhạy cảm (thông tin tài khoản, mật khẩu, OTP) để chặn chụp màn hình và hiển thị trong danh sách ứng dụng gần đây (Recent Apps Preview).
+  * **Hỗ trợ API mới của Android 15 (API 35)**: Bổ sung lắng nghe sự kiện ghi màn hình qua `WindowManager.addScreenRecordingCallback` để nhận diện ngay khi màn hình bị quay video hoặc truyền qua màn hình ngoài, chủ động che mờ các trường dữ liệu mật.
   * Xóa sạch bộ nhớ đệm clipboard sau khoảng thời gian ngắn (30s - 60s) nếu app có tính năng sao chép nhạy cảm.
   * Làm sạch mảng ký tự mật khẩu (`char[]` scrubbing) ngay sau khi sử dụng, tránh lưu `String` bất biến trong heap.
 
 ### 2.4 Network Security (An Ninh Giao Thức Mạng)
-- **Cấm Hoàn Toàn Giao Thức Kém An Toàn (Cleartext Ban)**:
+- **Cấm Hoàn Toàn Giao Thức Kém An Toàn (Cleartext Ban) & Ép Buộc TLS 1.3**:
   * Thiết lập `android:usesCleartextTraffic="false"` trong `AndroidManifest.xml`.
-  * Cấu hình tường minh `network_security_config.xml` chỉ chấp nhận HTTPS (TLS 1.2 / TLS 1.3).
+  * Cấu hình `network_security_config.xml` với `cleartextTrafficPermitted="false"` để cấm tuyệt đối kết nối HTTP không mã hóa ở cấp hệ điều hành.
+  * ⚠️ **LƯU Ý ĐẶC TẢ XML**: Schema XML `network_security_config.xml` của Android **KHÔNG HỖ TRỢ** thuộc tính hay thẻ quy định phiên bản TLS (không có thẻ `<min-tls-version>` hay `<tls-version>`). Việc ép buộc phiên bản TLS (TLS 1.2 / TLS 1.3) **bắt buộc phải được cấu hình ở tầng Socket / HTTP Client trong mã nguồn** (ví dụ OkHttp `ConnectionSpec.MODERN_TLS` hoặc `RESTRICTED_TLS` chỉ cho phép `TlsVersion.TLS_1_3, TlsVersion.TLS_1_2`). Lưu ý trên Android 15 (API 35), hệ điều hành đã chặn hoàn toàn TLS 1.0 và TLS 1.1 ở tầng socket.
 - **Ghim Chứng Chỉ (Certificate Pinning)**:
   * Đánh giá nhu cầu Certificate Pinning cho các API tối quan trọng để chống tấn công nghe lén (Man-In-The-Middle - MITM).
   * Chuẩn bị sẵn cơ chế chứng chỉ dự phòng (Backup Pin) để tránh brick ứng dụng khi máy chủ đổi chứng chỉ SSL.
 - **Xác Thực Đầu Vào & Chống Replay**: Kiểm tra định dạng payload API đầu vào, áp dụng Timestamp / Nonce nếu cần.
 
 ### 2.5 Device & Runtime Integrity (Tính Toàn Vẹn Thiết Bị & Thời Gian Chạy)
-- **Chính Sách Thiết Bị Đã Bị Can Thiệp (Root / Tamper Policy)**:
-  * Xác định chính sách ứng xử khi máy bị Root hoặc cài ROM tùy biến:
-    * Phương án A (Nghiêm ngặt): Khóa ứng dụng hoàn toàn.
-    * Phương án B (Cảnh báo & Giảm cấp): Cảnh báo người dùng và vô hiệu hóa các tính năng nhạy cảm (sinh trắc học, thanh toán).
-    * Phương án C (Chấp nhận): Cho phép hoạt động bình thường, người dùng tự chịu rủi ro.
-- **Chống Đính Kèm Debugger & Hooking**: Phát hiện debugger trong bản Release build, phát hiện công cụ hook phổ biến (Frida, Xposed) trong phạm vi an toàn.
+- **Chính Sách Toàn Vẹn Thiết Bị & Ứng Dụng (Play Integrity API & Root/Tamper Policy)**:
+  * **Thay thế hoàn toàn SafetyNet & Root Heuristics cục bộ**: SafetyNet Attestation API đã chính thức ngừng hoạt động hoàn toàn từ tháng 01/2025. Các thư viện kiểm tra Root chỉ chạy ở client-side (như RootBeer) sử dụng kiểm tra file tĩnh (`su`, `busybox`, `test-keys`) đã bị vô hiệu hóa 100% (blinded) bởi các kỹ thuật can thiệp kernel hiện đại (Magisk với Zygisk/Shamiko, KernelSU, APatch).
+  * **Chuẩn OWASP MASVS-RESILIENCE v2.0**: Bắt buộc tích hợp **Google Play Integrity API** với cơ chế xác thực chứng thực token (Attestation Token) tại máy chủ backend:
+    * `Device Integrity verdict`: Xác thực thiết bị chạy Android chuẩn Google, chưa bị can thiệp (MEETS_DEVICE_INTEGRITY / MEETS_STRONG_INTEGRITY).
+    * `App Integrity verdict`: Xác thực APK/AAB khớp với bản ký phát hành trên Google Play, chưa bị repackage hoặc tiêm mã độc.
+  * **Chính Sách Xử Lý Khi Phán Quyết Không Đạt (Verdict Failure Policy)**:
+    * Phương án A (Nghiêm ngặt - FinTech/Banking): Khóa ứng dụng hoàn toàn khi phát hiện thiết bị hoặc app bị tampered.
+    * Phương án B (Cảnh báo & Giảm cấp - Safe Default): Cảnh báo rủi ro người dùng, khóa các tính năng nhạy cảm (sinh trắc học, thanh toán, lưu phiên).
+    * Phương án C (Chấp nhận có giám sát): Cho phép hoạt động bình thường nhưng ghi nhận cờ rủi ro (risk flag) lên máy chủ backend.
+- **Chống Đính Kèm Debugger & Hooking**: Bổ sung rào chắn chống debug (`android:debuggable="false"` trong release build, ptrace checks) và phát hiện framework hook (Frida, Xposed) phối hợp cùng Play Integrity.
 - **Chính Sách Môi Trường Giả Lập (Emulator Detection)**: Có cho phép chạy trên máy ảo Android không (phục vụ người dùng dùng LDPlayer/Nox/AVD hay cấm).
 
 ### 2.6 Supply Chain & Permissions (Chuỗi Cung Ứng & Quyền Hạn Tối Thiểu)
@@ -109,8 +124,8 @@ Hướng dẫn này kích hoạt khi mục tiêu dự án tập trung vào **kh�
 - ❌ **CẤM HỎI**: "Nên dùng thuật toán AES-GCM hay CBC?" (Agent tự quyết định chuẩn an toàn cao nhất là AES-256-GCM).
 
 ### 3.2 Những Gì ĐƯỢC Hỏi (Quyết Định Cấp Sản Phẩm/Chính Sách)
-1. **Chính sách ứng xử với máy Root/Jailbreak**:
-   - *Ví dụ*: "Ứng dụng xử lý thế nào khi phát hiện thiết bị đã bị Root: (A) Chặn mở app hoàn toàn, (B) Cảnh báo rủi ro nhưng vẫn cho dùng, hay (C) Tắt tính năng bảo mật sinh trắc học và thanh toán?"
+1. **Chính sách ứng xử với phán quyết toàn vẹn thiết bị (Google Play Integrity Policy)**:
+   - *Ví dụ*: "Khi Google Play Integrity API trả về phán quyết thiết bị không đạt chuẩn (không đạt MEETS_DEVICE_INTEGRITY hoặc phát hiện rooted/tampered), ứng dụng nên: (A) Chặn mở app hoàn toàn, (B) Cảnh báo rủi ro người dùng và vô hiệu hóa các tính năng sinh trắc học và thanh toán, hay (C) Cho phép dùng nhưng ghi nhận cảnh báo lên hệ thống giám sát gian lận phía backend?"
 2. **Chính sách chụp ảnh màn hình (Screen Capture Policy)**:
    - *Ví dụ*: "Bạn có muốn áp dụng chế độ chống chụp màn hình (`FLAG_SECURE`) cho toàn bộ app hay chỉ các màn hình nhạy cảm (Cài đặt, Ví, Đăng nhập)?"
 3. **Tiêu chuẩn tuân thủ bắt buộc (Compliance Requirements)**:
@@ -123,11 +138,11 @@ Hướng dẫn này kích hoạt khi mục tiêu dự án tập trung vào **kh�
 | Hạng Mục | Giả Định Mặc Định An Toàn | Lý Do Kỹ Thuật | Tính Thuận Nghịch |
 | :--- | :--- | :--- | :--- |
 | **Cleartext Traffic** | CẤM HOÀN TOÀN (`false`) | Chống nghe lén mật khẩu và dữ liệu trên Wi-Fi công cộng | Trung bình |
-| **Sensitive Storage** | `EncryptedSharedPreferences` + Keystore | Chuẩn Android khuyến nghị, khóa phần cứng | Cao |
-| **Screen Protection** | Bật `FLAG_SECURE` trên màn hình chứa thông tin nhạy cảm | Chống malware chụp trộm và lộ trong Recent Apps | Cao |
-| **Root Policy** | Cảnh báo cảnh giác + tắt sinh trắc học | Cân bằng giữa an toàn và trải nghiệm người dùng | Cao |
+| **Sensitive Storage** | Jetpack DataStore + Google Tink (`Aead`) / KeyStore Cipher | Chuẩn Jetpack hiện đại (thay thế `EncryptedSharedPreferences` đã deprecated do lỗi deadlock/hỏng khóa trên OEM) | Cao |
+| **Screen Protection** | Bật `FLAG_SECURE` trên màn hình nhạy cảm + phát hiện Screen Recording trên Android 15 | Chống malware chụp trộm, lộ trong Recent Apps và quay lén màn hình | Cao |
+| **Root / Tamper Policy** | Play Integrity API (Device + App verdict) + Cảnh báo rủi ro + tắt sinh trắc học / thanh toán | Chuẩn OWASP MASVS-RESILIENCE v2.0 (thay thế SafetyNet/RootBeer đã lỗi thời), cân bằng an toàn và trải nghiệm | Cao |
 | **R8 / Obfuscation** | Bật trong Release build, giữ nguyên mapping file | Làm khó dịch ngược bằng JADX/Apktool | Cao |
-| **TLS Minimum** | Bắt buộc TLS 1.2+, ưu tiên TLS 1.3 | Vô hiệu hóa các mã hóa cũ bị phá vỡ (SSLv3, TLS 1.0) | Cao |
+| **TLS Minimum** | Bắt buộc TLS 1.2+, ưu tiên TLS 1.3 (cấu hình qua OkHttp `ConnectionSpec`, cấm cleartext qua `network_security_config.xml`) | Vô hiệu hóa các mã hóa cũ; Android 15 chặn sẵn TLS 1.0/1.1 ở socket | Cao |
 
 ---
 
@@ -139,18 +154,24 @@ Hướng dẫn này kích hoạt khi mục tiêu dự án tập trung vào **kh�
 - **Hạng Mục**: [Assets / Auth / Data Protection / Network / Device / Supply Chain / Threat]
 - **Điểm Rủi Ro (Risk Level)**: [CRITICAL / HIGH / MEDIUM]
 - **Quyết Định Được Chọn**: [Chính sách thống nhất]
-- **Biện Pháp Kỹ Thuật Triển Khai**: [Ví dụ: Thêm network_security_config.xml, kích hoạt FLAG_SECURE]
+- **Biện Pháp Kỹ Thuật Triển Khai**: [Ví dụ: Thêm network_security_config.xml, OkHttp ConnectionSpec TLS 1.3, Play Integrity API, kích hoạt FLAG_SECURE]
 - **Trạng Thái**: `CLOSED`
 ```
 
 ### Mẫu Ghi Giả Định Bảo Mật (Assumption Record)
 ```markdown
 ### ASSUMPTION-SEC-[STT]
-- **Hạng Mục**: [Ví dụ: Rooted Device Policy]
-- **Giả Định Áp Dụng**: Cảnh báo rủi ro người dùng và vô hiệu hóa lưu thông tin phiên trên bộ nhớ đệm.
-- **Rủi Ro Đánh Đổi**: Người dùng máy root phải đăng nhập lại mỗi phiên mở app.
-- **Nhiệm Vụ Kiểm Chứng (Verification Task)**: Kiểm thử trên máy ảo đã cấp quyền root ở Bước 10.
-- **Trạng Thái**: `ACCEPTED_BY_DEFAULT`
+- **Mã giả định**: `ASSUMPTION-SEC-[STT]`
+- **Hạng Mục**: [Ví dụ: Rooted Device Policy / Play Integrity Verdict]
+- **Mức Độ Rủi Ro (risk_level)**: `BENIGN` | `CRITICAL`
+- **Giả Định Áp Dụng**: Cảnh báo rủi ro người dùng và vô hiệu hóa lưu thông tin phiên trên bộ nhớ đệm khi verdict không đạt chuẩn.
+- **Rủi Ro Đánh Đổi**: Người dùng máy can thiệp phải đăng nhập lại mỗi phiên mở app.
+- **Tính Thuận Nghịch**: `HIGH`
+- **Nhiệm Vụ Kiểm Chứng (Verification Task)**: Kiểm thử với Play Integrity test token trên thiết bị thử nghiệm ở Bước 10.
+- **Trạng Thái (status)**: `ACTIVE` | `INVALIDATED` | `SUPERSEDED`
+- **Thời Điểm Thu Hồi (invalidated_at)**: null
+- **Lý Do Thu Hồi (revocation_reason)**: null
+- **Các Phụ Thuộc Hạ Nguồn (downstream_dependencies)**: []
 ```
 
 ---

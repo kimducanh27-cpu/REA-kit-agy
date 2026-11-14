@@ -117,11 +117,17 @@ Khi người dùng chỉ yêu cầu một tính năng ngắn gọn ("Hãy thêm 
 ### Mẫu Ghi Giả Định Tính Năng (Assumption Record)
 ```markdown
 ### ASSUMPTION-FEAT-[STT]
+- **Mã giả định**: `ASSUMPTION-FEAT-[STT]`
 - **Tên Tính Năng**: [Tên tính năng]
+- **Mức Độ Rủi Ro (risk_level)**: `BENIGN` | `CRITICAL`
 - **Giả Định Mặc Định Đã Áp Dụng**: [Ví dụ: Giới hạn tìm kiếm 20 kết quả gần nhất]
 - **Lý Do Áp Dụng**: Người dùng không cung cấp giới hạn số lượng; áp dụng chuẩn hiệu năng.
+- **Tính Thuận Nghịch**: `HIGH`
 - **Nhiệm Vụ Kiểm Chứng (Verification Task)**: Kiểm tra hiệu năng tìm kiếm với 1.000 bản ghi giả lập ở Bước 10.
-- **Trạng Thái**: `ACCEPTED_BY_DEFAULT`
+- **Trạng Thái (status)**: `ACTIVE` | `INVALIDATED` | `SUPERSEDED`
+- **Thời Điểm Thu Hồi (invalidated_at)**: null
+- **Lý Do Thu Hồi (revocation_reason)**: null
+- **Các Phụ Thuộc Hạ Nguồn (downstream_dependencies)**: []
 ```
 
 ---

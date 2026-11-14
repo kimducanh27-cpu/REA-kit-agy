@@ -33,7 +33,8 @@ The `.agents/context/` directory governs deterministic runtime context injection
 
 ## 2. Context Layer Mapping (L0 – L5)
 
-Context is stratified into six hierarchical layers to maximize reasoning precision and prefix KV-cache reuse:
+Context is stratified into six hierarchical layers to maximize reasoning precision and prefix KV-cache reuse.
+Prompt Cache Assembly Order (Stable-First Prefixing): **L0 -> L3 -> L2 -> L1 -> L4 -> L5**.
 
 | Layer | Designator | Primary Role | Typical Assets | Cache Policy |
 |---|---|---|---|---|

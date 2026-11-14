@@ -1,4 +1,5 @@
 @echo off
+setlocal EnableExtensions DisableDelayedExpansion
 chcp 65001 >nul
 cd /d "%~dp0"
 
@@ -9,8 +10,8 @@ echo ==========================================================
 echo   XAC NHAN HOAN TAC UNG DUNG (1-CLICK ATOMIC ROLLBACK)
 echo ==========================================================
 echo Ban co chac chan muon hoan tac ve ban snapshot gan nhat?
-set /p "CONFIRM=Nhan 'Y' de tiep tuc hoan tac, hoac phim bat ky de huy: "
-if /i not "%CONFIRM%"=="Y" (
+choice /C YN /N /M "Nhan 'Y' de tiep tuc hoan tac, hoac 'N' de huy: "
+if errorlevel 2 (
     echo [*] Da huy thao tac hoan tac.
     echo.
     pause

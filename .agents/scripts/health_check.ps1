@@ -111,9 +111,12 @@ try {
         }
     }
     if ($doctorRaw) {
-        $doctorJson = $doctorRaw | ConvertFrom-Json -ErrorAction SilentlyContinue
-        if ($doctorJson -and ($doctorJson.healthy -eq $true -or ($doctorJson.registrations | Where-Object { $_.client -eq "antigravity" -and $_.state -eq "aligned" }))) {
-            $mcpOk = $true
+        $rawStr = ($doctorRaw -join "`n")
+        if ($rawStr -match '(?s)\{.*\}') {
+            $doctorJson = $matches[0] | ConvertFrom-Json -ErrorAction SilentlyContinue
+            if ($doctorJson -and ($doctorJson.healthy -eq $true -or ($doctorJson.registrations | Where-Object { $_.client -eq "antigravity" -and $_.state -eq "aligned" }))) {
+                $mcpOk = $true
+            }
         }
     }
 } catch {
@@ -130,13 +133,69 @@ if ($mcpOk) {
     Write-Host "        npx -y rea-agents@6.9.0 setup --client antigravity --yes" -ForegroundColor Cyan
 }
 
-# 7. Kiểm tra Android CLI Tooling & Device Hub Readiness (V1 Target Class: Android APK)
+# 7. Kiểm tra Android CLI Tooling & Reverse Engineering Tools (JDK >= 17, JADX, Apktool, zipalign, adb)
+$javaCmd = Get-Command java -ErrorAction SilentlyContinue
+$javaOk = $false
+$javaVerStr = "Không xác định"
+if ($javaCmd) {
+    try {
+        $verOutput = & java -version 2>&1
+        $verStr = ($verOutput -join "`n")
+        if ($verStr -match 'version\s*"(\d+)(?:\.(\d+))?.*"') {
+            $major = [int]$matches[1]
+            if ($major -eq 1 -and $matches[2]) {
+                $major = [int]$matches[2]
+            }
+            $javaVerStr = "$major"
+            if ($major -ge 17) {
+                $javaOk = $true
+            }
+        }
+    } catch {}
+}
+
+if ($javaOk) {
+    Write-Host "[OK] Java JDK (>= 17): Khả dụng (Phiên bản $javaVerStr - Sẵn sàng cho JADX & Apktool)." -ForegroundColor Green
+} elseif ($javaCmd) {
+    Write-Host "[!] Java JDK: Phiên bản $javaVerStr (< 17 - Cần nâng cấp lên JDK 17+ để chạy JADX và Apktool)." -ForegroundColor Yellow
+} else {
+    Write-Host "[i] Java JDK (>= 17): Chưa phát hiện trong PATH (cần thiết cho JADX và Apktool)." -ForegroundColor Yellow
+}
+
+$jadxCmd = Get-Command jadx -ErrorAction SilentlyContinue
+if (-not $jadxCmd) { $jadxCmd = Get-Command jadx.bat -ErrorAction SilentlyContinue }
+if ($jadxCmd) {
+    Write-Host "[OK] JADX Decompiler: Khả dụng ($($jadxCmd.Source))." -ForegroundColor Green
+} else {
+    Write-Host "[i] JADX Decompiler: Chưa phát hiện trong PATH (REA MCP sẽ dùng binary đóng gói hoặc static fallback)." -ForegroundColor Yellow
+}
+
+$apktoolCmd = Get-Command apktool -ErrorAction SilentlyContinue
+if (-not $apktoolCmd) { $apktoolCmd = Get-Command apktool.bat -ErrorAction SilentlyContinue }
+if ($apktoolCmd) {
+    Write-Host "[OK] Apktool: Khả dụng ($($apktoolCmd.Source))." -ForegroundColor Green
+} else {
+    Write-Host "[i] Apktool: Chưa phát hiện trong PATH (cần cho decode_android_resources >= 2.10.0)." -ForegroundColor Yellow
+}
+
+$zipalignCmd = Get-Command zipalign -ErrorAction SilentlyContinue
+if ($zipalignCmd) {
+    Write-Host "[OK] zipalign: Khả dụng ($($zipalignCmd.Source) - Hỗ trợ -P 16 căn chỉnh 16 KB page size)." -ForegroundColor Green
+} else {
+    Write-Host "[i] zipalign: Chưa phát hiện trong PATH (cần cho Route C repack/patch APK 16 KB page-size)." -ForegroundColor Yellow
+}
+
 $androidCmd = Get-Command android -ErrorAction SilentlyContinue
 $adbCmd = Get-Command adb -ErrorAction SilentlyContinue
 if ($androidCmd) {
     Write-Host "[OK] Android CLI khả dụng: Hỗ trợ AVD, Device Hub, 'android layout --full', 'android screen capture -o <path>', 'android run'." -ForegroundColor Green
 } else {
     Write-Host "[i] Android CLI: Chưa phát hiện trong PATH (REA-kit-agy tự động kích hoạt Static Fallback qua JADX/Apktool/Artifact Inventory)." -ForegroundColor Yellow
+}
+if ($adbCmd) {
+    Write-Host "[OK] ADB Tool: Khả dụng ($($adbCmd.Source))." -ForegroundColor Green
+} else {
+    Write-Host "[i] ADB Tool: Chưa cấu hình trong PATH (yêu cầu cho tương tác thiết bị Android thật / AVD)." -ForegroundColor Yellow
 }
 
 Write-Host "==========================================================" -ForegroundColor Cyan
@@ -160,6 +219,10 @@ if (Test-Path $activeCasePath) {
             Write-Host " Target Class   : $($case.target_class)" -ForegroundColor White
             Write-Host " Bước hiện tại  : $($case.current_step)" -ForegroundColor White
             Write-Host " Trạng thái Gate: $($case.current_gate_status)" -ForegroundColor White
+            Write-Host " JDK 17+        : $(if ($javaOk) { "KHẢ DỤNG (v$javaVerStr)" } else { "CHƯA SẴN SÀNG" })" -ForegroundColor $(if ($javaOk) { 'Green' } else { 'Yellow' })
+            Write-Host " JADX           : $(if ($jadxCmd) { 'KHẢ DỤNG' } else { 'Chưa có trong PATH' })" -ForegroundColor $(if ($jadxCmd) { 'Green' } else { 'Gray' })
+            Write-Host " Apktool        : $(if ($apktoolCmd) { 'KHẢ DỤNG' } else { 'Chưa có trong PATH' })" -ForegroundColor $(if ($apktoolCmd) { 'Green' } else { 'Gray' })
+            Write-Host " zipalign       : $(if ($zipalignCmd) { 'KHẢ DỤNG (16 KB support)' } else { 'Chưa có trong PATH' })" -ForegroundColor $(if ($zipalignCmd) { 'Green' } else { 'Gray' })
             Write-Host " Android CLI    : $(if ($androidCmd) { 'SẴN SÀNG (AVD / Device Hub / layout / screen capture)' } else { 'STATIC FALLBACK (JADX + Apktool + Artifact Inventory)' })" -ForegroundColor $(if ($androidCmd) { 'Green' } else { 'Yellow' })
             Write-Host " ADB Tool       : $(if ($adbCmd) { 'KHẢ DỤNG' } else { 'Chưa cấu hình trong PATH' })" -ForegroundColor $(if ($adbCmd) { 'Green' } else { 'Gray' })
             Write-Host " Hướng dẫn tiếp : $($case.next_prompt_guide)" -ForegroundColor Cyan

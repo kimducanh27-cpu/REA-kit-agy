@@ -5,15 +5,13 @@
   "type": "object",
   "required": [
     "schema_version",
-    "packet_id",
-    "plan_id",
+    "layers",
     "task",
     "stage",
     "profile",
-    "created_at",
     "budget",
-    "layers",
-    "status"
+    "status",
+    "_metadata_tail"
   ],
   "properties": {
     "schema_version": {
@@ -76,7 +74,7 @@
         "reserved_safety": { "type": "integer", "minimum": 0 },
         "usable_budget": { "type": "integer", "minimum": 0 },
         "allocated_tokens": { "type": "integer", "minimum": 0 },
-        "utilization_pct": { "type": "number", "minimum": 0, "maximum": 100 }
+        "utilization_pct": { "type": "number", "minimum": 0, "maximum": 500 }
       }
     },
     "layers": {
@@ -104,7 +102,12 @@
                 },
                 "estimated_tokens": { "type": "integer", "minimum": 0 },
                 "content": { "type": ["string", "null"] },
-                "untrusted": { "type": "boolean" }
+                "untrusted": { "type": "boolean" },
+                "nonce": { "type": "string" },
+                "sections": {
+                  "type": "array",
+                  "items": { "type": "string" }
+                }
               }
             }
           }
@@ -122,6 +125,26 @@
     "status": {
       "type": "string",
       "enum": ["READY", "OVERBUDGET", "TRUNCATED"]
+    },
+    "_metadata_tail": {
+      "type": "object",
+      "required": ["packet_id", "plan_id", "created_at"],
+      "properties": {
+        "packet_id": {
+          "type": "string",
+          "pattern": "^PACK-[0-9]{8}-[0-9]{6}-[a-f0-9]+$"
+        },
+        "plan_id": {
+          "type": "string",
+          "pattern": "^PLAN-[0-9]{8}-[0-9]{6}-[a-f0-9]+$"
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "generator": { "type": "string" },
+        "layer_order": { "type": "string" }
+      }
     },
     "metadata": {
       "type": "object"

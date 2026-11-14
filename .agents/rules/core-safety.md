@@ -14,10 +14,10 @@ Tài liệu này định nghĩa các bất biến an toàn cốt lõi áp dụng
 
 Mọi thao tác tệp tin phải tuân thủ nghiêm ngặt ranh giới thẩm quyền 5 thư mục số hóa:
 
-1. **`01_THA_APP_VAO_DAY/` (Vùng tiếp nhận dữ liệu gốc)**:
-   - Là thư mục chỉ đọc (Read-Only) đối với các thao tác xử lý nghiệp vụ.
-   - **CẤM TUYỆT ĐỐI**: Không sửa đổi nội dung, không ghi đè, không xóa tệp gốc do người dùng cung cấp.
-   - Thư mục con `01_THA_APP_VAO_DAY/baseline/` chỉ được dùng để lưu ảnh chụp màn hình gốc và layout dump phục vụ đối chiếu 1-1.
+1. **`01_THA_APP_VAO_DAY/` (Vùng tiếp nhận dữ liệu gốc - 100% Read-Only)**:
+   - Là thư mục CHỈ ĐỌC (Read-Only) tuyệt đối đối với mọi thao tác xử lý và công cụ.
+   - **CẤM TUYỆT ĐỐI**: Không sửa đổi nội dung, không ghi đè, không tạo thư mục con, không xóa tệp gốc do người dùng cung cấp.
+   - Mọi tư liệu baseline (ảnh chụp màn hình, UI hierarchy dump, layout XML đối chiếu 1-1) **BẮT BUỘC** lưu vào thư mục `03_KET_QUA_KIEM_TRA/baseline/`, giữ `01_` nguyên vẹn 100% bit-by-bit.
 
 2. **`04_SAO_LUU_AN_TOAN/` (Kho lưu trữ bất khả xâm phạm - Cold Storage)**:
    - Ngay tại Bước 01 (Preflight), Agent bắt buộc tạo bản sao lưu nguyên vẹn (bit-by-bit copy) của tệp đích từ `01_` sang `04_`.
@@ -48,7 +48,7 @@ Mọi thao tác tệp tin phải tuân thủ nghiêm ngặt ranh giới thẩm q
 
 ---
 
-## 3. Khử Trùng & Che Mờ Bí Mật 100% (Secret Redaction Standard)
+## 3. Khử Trùng & Che Mờ Bí Mật Theo Phạm Vi (Scoped Secret Redaction Standard)
 
 1. **Quy tắc che mờ bắt buộc**:
    - Mọi API Key, Secret Token, Private Key, Mật khẩu, Connection String, Cookie hoặc Chứng chỉ được phát hiện trong quá trình bóc tách mã nguồn và quét tài nguyên **BẮT BUỘC PHẢI CHE MỜ THÀNH `[REDACTED]`**.
@@ -60,6 +60,10 @@ Mọi thao tác tệp tin phải tuân thủ nghiêm ngặt ranh giới thẩm q
 
 2. **Chống rò rỉ mã bí mật vào Git (Zero Secret Commit)**:
    - Không bao giờ commit thông tin nhạy cảm, tệp `.env` chứa credential thật, hoặc khóa ký vào kho lưu trữ mã nguồn.
+
+3. **Giới hạn nhận thức Scoped Static Redaction**:
+   - Thừa nhận giới hạn của các bộ quét tĩnh cơ học (Regex, Shannon Entropy, Base64 decoding): Các chuỗi mã hóa phức tạp, hàm tính toán khóa động trong binary hoặc obfuscation nâng cao có thể vượt qua bộ lọc tĩnh.
+   - Do đó, mọi báo cáo kiểm toán bảo mật phải ghi nhận rõ danh mục Scoped Static Redaction, kết hợp thẩm định Human-in-the-Loop trước khi công bố ra môi trường ngoài.
 
 ---
 

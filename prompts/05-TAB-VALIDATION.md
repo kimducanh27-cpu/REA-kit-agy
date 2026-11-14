@@ -14,7 +14,7 @@ Read and follow `AGENTS.md`, `REVIEW.md`, `.agents/state/MEMORY.md`, and `docs/W
 - Optional Host Plugins (Nếu máy có cài đặt): `android-cli`
 
 ## Điều kiện tiên quyết:
-Đọc `.agents/state/active_case.json` hoặc chạy `powershell -File .agents/scripts/gate.ps1 status`. Bắt buộc Cổng 04 đã đạt trạng thái `PASS` mới được tiếp tục.
+Đọc `.agents/state/active_case.json` hoặc chạy `powershell -File .agents/scripts/gate.ps1 status`. Bắt buộc Cổng 04 đã đạt trạng thái hợp lệ đã thông qua (`PASS`, `PASS_WITH_LIMITATIONS`, `REUSED_VALIDATED`, `WAIVED`, `SKIPPED`, `NOT_APPLICABLE`) mới được tiếp tục. (Ví dụ: trong chế độ `ANALYSIS_ONLY` hoặc `PLAN_ONLY`, Cổng 04 được đánh dấu `NOT_APPLICABLE` hoặc `SKIPPED`).
 
 You are executing **STAGE_05 · VALIDATION**:
 

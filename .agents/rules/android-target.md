@@ -10,7 +10,7 @@ Tài liệu này xác lập các quy chuẩn kỹ thuật bắt buộc khi xử 
 
 ---
 
-## 1. Cô Lập Môi Trường Tạm JADX Trên Windows (JADX Temp Isolation)
+## 1. Cô Lập Môi Trường Tạm & Quản Trị Bộ Nhớ JADX (JADX Isolation & Memory Governance)
 
 1. **Khắc phục lỗi treo/xung đột JADX (morluto/rea Issue #5237)**:
    - Trên hệ điều hành Windows x64, trình dịch ngược JADX có thể gặp xung đột đường dẫn hoặc khóa file khi sử dụng thư mục tạm mặc định của hệ thống.
@@ -19,12 +19,30 @@ Tài liệu này xác lập các quy chuẩn kỹ thuật bắt buộc khi xử 
      * Không bao giờ trỏ thư mục làm việc tạm của JADX vào các đường dẫn chứa khoảng trắng không được bao nháy hoặc thư mục chia sẻ mạng.
      * Tự động dọn dẹp các tệp tạm do JADX sinh ra sau khi kết thúc phiên quét để giải phóng dung lượng đĩa.
 
+2. **Cấu hình RAM & Giới hạn luồng (JADX RAM Allocation & Thread Control)**:
+   - `jadx.bat` trên Windows **không nhận trực tiếp cờ `-Xmx` từ dòng lệnh** (sẽ báo lỗi `Unknown option: -Xmx8g`).
+   - Để tránh lỗi sập `java.lang.OutOfMemoryError: Java heap space` khi phân tích APK lớn (> 50 MB, nhiều `classes.dex`), Agent **BẮT BUỘC** cấu hình heap qua biến môi trường trước khi gọi JADX CLI:
+     * Trong Windows CMD:
+       ```cmd
+       set JAVA_OPTS=-Xmx8g
+       set _JAVA_OPTIONS=-Xmx8g
+       ```
+     * Trong PowerShell:
+       ```powershell
+       $env:JAVA_OPTS = "-Xmx8g"
+       $env:REA_JADX_HEAP_MIB = "8192"
+       ```
+   - Khuyến nghị bổ sung cờ giới hạn luồng khi phân tích APK phức tạp để tránh bùng nổ AST:
+     ```bash
+     jadx -j 2 -d <out_dir> <app.apk>
+     ```
+
 ---
 
 ## 2. Tiêu Chuẩn Bóc Tách Tài Nguyên Bằng Apktool (Apktool Resource Standards)
 
 1. **Phiên bản & Tham số giải mã**:
-   - Sử dụng Apktool phiên bản `>= 2.9.2` hoặc công cụ tương thích trong hệ sinh thái REA.
+   - Sử dụng Apktool phiên bản `>= 2.10.0` (khuyến nghị `2.11.0+` hỗ trợ trọn vẹn Android 15 API 35 và cấu trúc `resources.arsc` mới).
    - Ưu tiên giải mã định dạng tài nguyên XML rõ ràng (`res/values/strings.xml`, `res/layout/*.xml`, `AndroidManifest.xml`).
 
 2. **Xử lý tài nguyên phức tạp & Bị Obfuscate**:
@@ -44,7 +62,7 @@ Tài liệu này xác lập các quy chuẩn kỹ thuật bắt buộc khi xử 
 2. **Quy chuẩn tham số bắt buộc cho REA ADB**:
    - Lệnh `capture_adb_screen` bắt buộc truyền đủ tham số:
      * `serial`: Mã định danh thiết bị/AVD đang hoạt động.
-     * `output_directory`: Thư mục lưu ảnh (trỏ về `01_THA_APP_VAO_DAY/baseline/` hoặc `03_KET_QUA_KIEM_TRA/`).
+     * `output_directory`: Thư mục lưu ảnh (trỏ về `03_KET_QUA_KIEM_TRA/baseline/`; bảo đảm nguyên tắc `01_` chỉ đọc tuyệt đối).
    - Lệnh `start_adb_app` bắt buộc truyền đủ tham số:
      * `serial`: Mã định danh thiết bị/AVD.
      * `package`: Package name chính thức của ứng dụng (lấy từ `AndroidManifest.xml`).
@@ -52,11 +70,11 @@ Tài liệu này xác lập các quy chuẩn kỹ thuật bắt buộc khi xử 
 3. **Tích hợp Android CLI Plugin**:
    - Tận dụng tối đa bộ lệnh chính thức của plugin Antigravity `Android CLI`:
      * `android layout`: Trích xuất cây phân cấp giao diện (UI Hierarchy) trực tiếp từ màn hình đang hiển thị để làm baseline đối chiếu 1-1.
-     * `android screen capture -o <file_path>`: Chụp ảnh màn hình định dạng chuẩn PNG.
+     * `android screen capture -o <file_path>`: Chụp ảnh màn hình định dạng chuẩn PNG lưu vào `03_KET_QUA_KIEM_TRA/baseline/`.
      * Quản lý vòng đời máy ảo qua danh sách AVD và Antigravity Device Hub.
 
-4. **Thẩm quyền thiết bị vật lý (Physical Device Protection)**:
-   - Tuyệt đối **KHÔNG TỰ Ý** cài đặt gói APK, chạy lệnh shell, hoặc trích xuất dữ liệu trên thiết bị Android vật lý cá nhân của người dùng nếu chưa có sự xác nhận chấp thuận rõ ràng bằng văn bản trong phiên chat.
+4. **Thẩm quyền Thiết Bị Thật & Giả Lập AVD (Physical Device & AVD Authorization)**:
+   - Tuyệt đối **KHÔNG TỰ Ý** cài đặt gói APK, chạy lệnh shell, hoặc trích xuất dữ liệu trên thiết bị Android vật lý cá nhân HOẶC máy ảo giả lập AVD của người dùng nếu chưa có sự xác nhận chấp thuận rõ ràng bằng văn bản trong phiên chat (đồng bộ chặt chẽ với `core-safety.md`).
 
 5. **Cơ chế Fallback Tĩnh 3 Lớp (3-Layer Static Fallback)**:
    - Khi môi trường máy trạm không có máy ảo AVD, không có kết nối thiết bị thật, hoặc ADB không khả dụng:
@@ -84,3 +102,24 @@ Khi đặc tả chốt lựa chọn Build Route B (Android Native Project):
    - Tuân thủ hướng dẫn Material Design 3.
    - Hỗ trợ xử lý viền màn hình (Edge-to-Edge WindowInsets) và cử chỉ vuốt lùi (Predictive Back).
    - Đảm bảo kích thước vùng bấm tối thiểu đạt `48x48 dp` cho khả năng tiếp cận (Accessibility).
+
+---
+
+## 5. Chuẩn Căn Chỉnh Bộ Nhớ 16 KB Trên Android 15 (Android 15 16 KB Page-Alignment Standard)
+
+Bắt đầu từ Android 15 (API 35), hệ điều hành hỗ trợ kiến trúc kích thước trang bộ nhớ **16 KB (16384 bytes)** bên cạnh chuẩn cũ 4 KB. Mọi thư viện native (`.so`) không căn chỉnh đạt chuẩn 16 KB sẽ gây crash `SIGSEGV` do lỗi linker hoặc bị từ chối cài đặt `INSTALL_FAILED_INVALID_APK`.
+
+1. **Căn chỉnh ELF Segment trong thư viện Native (`.so`)**:
+   - Thư viện native chia sẻ phải được biên dịch với cờ căn chỉnh `PT_LOAD` đạt `p_align = 0x4000` (yêu cầu Android NDK r27+ hoặc NDK r28).
+   - Kiểm tra xác thực độ căn chỉnh bằng lệnh:
+     ```bash
+     readelf -l <lib.so> | grep LOAD
+     # Xác nhận p_align phải bằng 0x4000 (16384 bytes)
+     ```
+
+2. **Căn chỉnh gói APK bằng `zipalign -P 16`**:
+   - Khi đóng gói lại (Repack), vá (Patch Route C) hoặc rebuild APK, bắt buộc căn chỉnh các thư viện `.so` chưa nén theo bội số 16 KiB:
+     ```bash
+     zipalign -P 16 -f -v 4 input.apk output_aligned.apk
+     zipalign -c -P 16 -v 4 output_aligned.apk
+     ```

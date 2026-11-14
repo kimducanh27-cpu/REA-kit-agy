@@ -33,6 +33,9 @@ Trước khi thực hiện bất kỳ thao tác viết mã nào, Agent **BẮT B
 
 ### Route C: Patch APK / Resources hoặc Hybrid
 - Áp dụng khi người dùng yêu cầu vá trực tiếp gói APK gốc hoặc đóng gói wrapper lai (PWA/Capacitor). Phải kiểm tra tính toàn vẹn chữ ký và tài nguyên trước khi xuất bản.
+- **Tiêu chuẩn bắt buộc Android 15 (16 KB Page-Alignment)**:
+  * Thư viện chia sẻ native (`.so`) phải được biên dịch với căn chỉnh ELF `PT_LOAD` đạt `p_align = 0x4000` (NDK r27+ / r28, kiểm tra bằng `readelf -l <lib.so> | grep LOAD`).
+  * Khi đóng gói APK, bắt buộc sử dụng `zipalign -P 16 -f -v 4 input.apk output_aligned.apk` để căn chỉnh các tệp `.so` không nén theo bội số 16 KiB, sau đó xác nhận lại bằng `zipalign -c -P 16 -v 4 output_aligned.apk`.
 
 ---
 
@@ -51,11 +54,13 @@ Script này thực thi 6 tầng kiểm tra cơ học, Agent không được bỏ
 2. **Kiểm tra cân bằng cú pháp (Syntax & Tag Balance)**:
    - Các file HTML phải có đầy đủ cặp thẻ mở/đóng (`<html>`, `<div>`, `<script>`, `<style>`).
    - Các file JavaScript/TypeScript phải cân bằng hoàn toàn số lượng ngoặc nhọn `{}` và ngoặc đơn `()`.
-   - Các file AndroidManifest.xml phải có thẻ đóng `</manifest>` và `</application>`.
-   - Các file Gradle/Groovy/Kotlin Script phải cân bằng ngoặc nhọn.
+   - Các file AndroidManifest.xml phải được phân tích cú pháp hợp lệ bằng bộ phân tích XML chuẩn (`[xml]`).
+   - Các file Gradle/Groovy/Kotlin Script phải cân bằng ngoặc nhọn (sử dụng regex single-pass loại trừ chuỗi đa dòng `"""..."""` và comment).
 
 3. **Quét rò rỉ dữ liệu nhạy cảm tự động (Automated Secret Scanner)**:
    - Quét qua toàn bộ file mã nguồn và tệp báo cáo.
+   - Bắt buộc dấu nháy cho giá trị gán bí mật (tránh bắt nhầm khai báo kiểu Kotlin `param: String`).
+   - Bổ sung quét giải mã Base64 (chuỗi dài >= 24 ký tự), kiểm tra Shannon Entropy (>= 4.5) và mảng byte Hex bí mật.
    - Phát hiện chuỗi API Key thô (AWS `AKIA...`, Private Keys, JWT token, Password thô chưa che mờ `[REDACTED]`) ➔ **ĐÁNH TRƯỢT NGAY LẬP TỨC (FAIL EXIT 1)**.
 
 ---
@@ -68,7 +73,7 @@ Hệ thống phân tầng rủi ro theo 3 cấp độ dựa trên mã nguồn th
 | :--- | :--- | :--- |
 | **LOW RISK** | Mã nguồn thuần giao diện tĩnh, chỉ xử lý DOM cơ bản, không có API mạng hay database. | Tự động thông qua sau khi kiểm tra cú pháp và secret scan thành công. |
 | **MEDIUM RISK** | Có sử dụng `localStorage`, `sessionStorage`, `IndexedDB`, `SharedPreferences`, `Room`, `SQLite`, hoặc xử lý form submit. | Yêu cầu đối chiếu checklist dữ liệu cục bộ; kiểm tra không lưu trữ mật khẩu chưa mã hóa. |
-| **HIGH RISK** | Gọi mạng ngoài (`fetch`, `XMLHttpRequest`, `WebSocket`, `OkHttpClient`, `Retrofit`), thực thi mã động (`eval`, `Function`, `DexClassLoader`), gọi lệnh shell hệ thống (`exec`, `ProcessBuilder`), hoặc gọi HTTP không mã hóa (Cleartext HTTP). | **CHẶN ĐỨNG CỔNG 04 (HARD BLOCK)**. Nếu tính năng này nằm trong đặc tả đã duyệt, Agent phải chạy với cờ `-AllowHighRisk` kèm biên bản giải trình rõ ràng cho người dùng. |
+| **HIGH RISK** | Gọi mạng ngoài (`fetch`, `XMLHttpRequest`, `WebSocket`, `OkHttpClient`, `Retrofit`), thực thi mã động phân biệt hoa thường (`eval`, `new Function`, `window.Function`, `DexClassLoader`), gọi lệnh shell hệ thống (`exec`, `ProcessBuilder`), hoặc gọi HTTP không mã hóa (Cleartext HTTP). | **CHẶN ĐỨNG CỔNG 04 (HARD BLOCK)**. Nếu tính năng này nằm trong đặc tả đã duyệt, Agent phải chạy với cờ `-AllowHighRisk` kèm biên bản giải trình rõ ràng cho người dùng. |
 
 ---
 

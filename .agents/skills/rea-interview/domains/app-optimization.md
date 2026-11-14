@@ -37,7 +37,7 @@ Ranh giới tuyệt đối:
 ### 2.1 Performance (Hiệu Năng Xử Lý & Hiển Thị)
 - **Frame Rate & Jank**: Mục tiêu duy trì ổn định 60fps hoặc 120fps (màn hình tần số quét cao). Tỷ lệ khung hình rơi rụng (Dropped frames / Janky frames) < 1%.
 - **Startup Time (Thời gian khởi động)**:
-  * Cold Start: Khởi động nguội từ 0 (Mục tiêu < 1.5s trên thiết bị trung bình).
+  * Cold Start: Khởi động nguội từ 0 (Mục tiêu < 1.2s trên thiết bị trung bình).
   * Warm Start: Khởi động ấm (Mục tiêu < 0.8s).
   * Hot Start: Mở lại từ nền (Mục tiêu < 0.3s).
 - **Render Pass Latency**: Thời gian layout và draw không vượt quá 16ms (chuẩn 60fps) hoặc 8ms (chuẩn 120fps). Loại bỏ hiện tượng overdraw (vẽ đè nhiều tầng màu).
@@ -127,7 +127,7 @@ Khi người dùng không nêu rõ hoặc không có câu trả lời kỹ thu�
 | Hạng Mục | Giả Định Mặc Định | Cơ Sở Kỹ Thuật | Tính Thuận Nghịch |
 | :--- | :--- | :--- | :--- |
 | **FPS Target** | 60 FPS cố định | Phù hợp mọi màn hình, cân bằng tiêu thụ pin | Cao (Dễ nâng lên 120Hz qua flags) |
-| **Cold Start** | < 1.5s trên Mid-tier | Tránh timeout của hệ điều hành | Cao |
+| **Cold Start** | < 1.2s trên Mid-tier | Tránh timeout hệ điều hành, tuân thủ Android Vitals | Cao |
 | **Memory Policy** | Giới hạn cache ảnh ở 20% heap | Tránh OOM trên máy yếu | Cao (Cấu hình bằng tham số) |
 | **Network Sync** | Gộp batch qua WorkManager khi sạc/Wi-Fi | Tiết kiệm tối đa pin và 4G/5G | Cao |
 | **Offline Cache** | Lưu trữ tạm thời 7 ngày gần nhất | Đảm bảo app vẫn xem được khi mất mạng | Cao |
@@ -151,12 +151,18 @@ Khi người dùng không nêu rõ hoặc không có câu trả lời kỹ thu�
 ### Mẫu Ghi Giả Định Mặc Định (Assumption Record)
 ```markdown
 ### ASSUMPTION-OPT-[STT]
+- **Mã giả định**: `ASSUMPTION-OPT-[STT]`
 - **Hạng Mục**: [Ví dụ: Memory Cache Size]
+- **Mức Độ Rủi Ro (risk_level)**: `BENIGN` | `CRITICAL`
 - **Giả Định Mặc Định Đã Áp Dụng**: [Ví dụ: Giới hạn 30MB Disk Cache, 15MB Memory Cache]
 - **Lý Do Áp Dụng**: Người dùng không có yêu cầu đặc thù; tuân thủ best-practice Android/Web.
 - **Rủi Ro Đánh Đổi**: Nếu thiết bị quá tải cache sẽ bị dọn dẹp sớm hơn.
+- **Tính Thuận Nghịch**: `HIGH`
 - **Nhiệm Vụ Kiểm Chứng (Verification Task)**: Chạy Macrobenchmark trên Profile build ở Bước 10.
-- **Trạng Thái**: `ACCEPTED_BY_DEFAULT`
+- **Trạng Thái (status)**: `ACTIVE` | `INVALIDATED` | `SUPERSEDED`
+- **Thời Điểm Thu Hồi (invalidated_at)**: null
+- **Lý Do Thu Hồi (revocation_reason)**: null
+- **Các Phụ Thuộc Hạ Nguồn (downstream_dependencies)**: []
 ```
 
 ---

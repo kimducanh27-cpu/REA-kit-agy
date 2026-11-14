@@ -35,7 +35,7 @@ Tài liệu này xác lập các nguyên tắc bắt buộc trong **STAGE 05 · 
      * Chụp ảnh màn hình mới bằng `android screen capture -o <file_path>` hoặc `capture_adb_screen`.
      * Sử dụng `android layout` để trích xuất cây cấu trúc component của app mới và so sánh trực tiếp với cây giao diện gốc thu thập từ Bước 02.
    - **Với Web**:
-     * So sánh bố cục, bảng màu và typography với các ảnh màn hình lưu tại `01_THA_APP_VAO_DAY/baseline/`.
+     * So sánh bố cục, bảng màu và typography với các ảnh màn hình lưu tại `03_KET_QUA_KIEM_TRA/baseline/`.
 
 2. **Bắt buộc xuất bản Bảng Đối Chiếu 3 Cột**:
    - Ghi nhận chi tiết vào tệp `03_KET_QUA_KIEM_TRA/BAO_CAO_NGHIEM_THU_HARD_VERIFY.md` với 3 cột phân định rõ ràng:

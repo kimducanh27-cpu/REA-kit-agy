@@ -16,6 +16,10 @@ Nhiệm vụ của bạn là bảo đảm việc bỏ qua (Skip) hoặc miễn t
    - Chỉ có thể dừng hẳn dự án chứ không được phép bỏ qua các bước an toàn này.
 3. **MỌI QUYẾT ĐỊNH BỎ QUA ĐỀU PHẢI CÓ LÝ DO TRÊN Ổ ĐĨA**:
    - Mọi lệnh `waive` hoặc `skip` phải ghi nhận rõ chuỗi lý do (`-Reason`) và lưu vết vào `.agents/state/events.jsonl`.
+4. **TUÂN THỦ THỨ TỰ ĐỒ THỊ DAG (PREDECESSOR ENFORCEMENT)**:
+   - Mọi lệnh `waive` hoặc `skip` bắt buộc phải kiểm tra tất cả các cổng tiền bối đã hoàn tất hợp lệ (`PASS`, `PASS_WITH_LIMITATIONS`, `REUSED_VALIDATED`, `WAIVED`, `SKIPPED`, `NOT_APPLICABLE`). Không được phép bỏ qua vượt cấp khi các cổng tiền bối chưa thông qua.
+5. **ĐẶC TẢ DỰ PHÒNG CHO HẠ NGUỒN (DOWNSTREAM SPEC FALLBACK)**:
+   - Khi Cổng 03 được `WAIVED` hoặc `SKIPPED`, bắt buộc sinh file stub đặc tả `03_KET_QUA_KIEM_TRA/WAIVER_SPEC_FALLBACK.md` để Stage 04 (Build) và Stage 05 (Validation) có căn cứ đối chiếu kiểm toán, không làm tê liệt quy trình hạ nguồn.
 
 ---
 

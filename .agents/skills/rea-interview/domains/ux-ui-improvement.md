@@ -57,6 +57,16 @@ chuẩn từ ảnh/source cũ.        đã chọn vào layout hiện có.   Edit
   * **Bỏ qua đề xuất 3 concept**.
   * Trích xuất trực tiếp bảng màu, kích thước, font chữ từ ảnh chụp Bước 02 hoặc file giao diện gốc.
   * Lập ngay bản đặc tả khớp 1-1 cho Bước 07.
+  * ⚠️ **HAI BỘ RÀO CHẮN BẮT BUỘC TRONG `DESIGN_REUSE_EXACT`**:
+    1. **Sanitary Ergonomic Lint (Khắc phục lỗi công thái học gốc)**:
+       * Không được nhân bản "rác đầu vào" (UI slop từ app cũ). Nếu app gốc có nút bấm nhỏ < 48dp, Agent giữ visual nguyên bản nhưng bắt buộc mở rộng vùng chạm cảm ứng (`TouchTarget` padding) lên **tối thiểu 48x48dp**.
+       * Nếu độ tương phản màu chữ của app gốc kém (< 4.5:1), tự động điều chỉnh sắc độ (shade) cùng tone màu để đạt chuẩn **WCAG AA (4.5:1)**.
+       * Chuyển đổi toàn bộ thông số hardcoded `px` sang `dp/sp`, đảm bảo co giãn mượt mà theo Window Size Classes và màn hình gập (Foldables).
+       * Bổ sung đầy đủ 4 trạng thái giao diện (Loading Skeleton, Empty CTA, Success Toast, Error Recovery) nếu app gốc còn thiếu sót, luôn bảo toàn dữ liệu form theo `RULE-INIT-001`.
+    2. **Legal Asset Decoupling Protocol (Tách rời tài sản độc quyền & an toàn pháp lý)**:
+       * **Cảnh báo rủi ro nhãn hiệu (Trademark & Copyright Warning)**: Tuyệt đối không trích xuất nguyên xi logo công ty, nhãn hiệu đã đăng ký, hoặc linh vật độc quyền của app gốc vào thư mục tài nguyên `res/drawable/` của ứng dụng tái lập.
+       * Tự động tách rời (decouple) và thay thế logo độc quyền bằng placeholder trung tính (`ic_brand_placeholder.xml`) hoặc yêu cầu người dùng đưa tài sản thương hiệu được cấp quyền vào.
+       * Thay thế font chữ thương mại độc quyền bằng font mã nguồn mở tương đương có cùng metric thị giác (ví dụ Roboto, Inter, Plus Jakarta Sans).
 
 ### 2.2 Chế Độ 2: `DESIGN_STYLE_SPECIFIED` (Phong Cách Chỉ Định Cụ Thể)
 - **Dấu hiệu nhận biết**: Người dùng đưa ra phong cách trực diện (ví dụ: "Thiết kế theo Material You tông màu tối", "Phong cách thẻ kính Glassmorphism", "Giao diện Bloomberg Terminal mật độ thông tin dày", "Phong cách tối giản Bắc Âu - Nordic Minimalist").
@@ -129,11 +139,17 @@ Dù ở bất kỳ chế độ nào, bản đặc tả thiết kế phải đáp
 ### Mẫu Ghi Giả Định Giao Diện (Assumption Record)
 ```markdown
 ### ASSUMPTION-UI-[STT]
-- **Hạng Mục**: [Ví dụ: Spacing Scale]
-- **Giả Định Áp Dụng**: Sử dụng lưới 4dp chuẩn Android (4dp, 8dp, 16dp, 24dp, 32dp).
-- **Lý Do Áp Dụng**: Chuẩn công nghiệp phổ quát cho hệ thống Design Tokens.
-- **Nhiệm Vụ Kiểm Chứng (Verification Task)**: Đối chiếu với `verify_code.ps1` và `android layout` ở Bước 12.
-- **Trạng Thái**: `ACCEPTED_BY_DEFAULT`
+- **Mã giả định**: `ASSUMPTION-UI-[STT]`
+- **Hạng Mục**: [Ví dụ: Spacing Scale / Touch Target Expansion]
+- **Mức Độ Rủi Ro (risk_level)**: `BENIGN` | `CRITICAL`
+- **Giả Định Áp Dụng**: Mở rộng touch target padding lên 48x48dp và sử dụng lưới 4dp chuẩn Android (4dp, 8dp, 16dp, 24dp, 32dp).
+- **Lý Do Áp Dụng**: Chuẩn công thái học Android Accessibility Guidelines & WCAG AA.
+- **Tính Thuận Nghịch**: `HIGH`
+- **Nhiệm Vụ Kiểm Chứng (Verification Task)**: Đối chiếu với `verify_code.ps1` và kiểm tra layout XML ở Bước 12.
+- **Trạng Thái (status)**: `ACTIVE` | `INVALIDATED` | `SUPERSEDED`
+- **Thời Điểm Thu Hồi (invalidated_at)**: null
+- **Lý Do Thu Hồi (revocation_reason)**: null
+- **Các Phụ Thuộc Hạ Nguồn (downstream_dependencies)**: []
 ```
 
 ---

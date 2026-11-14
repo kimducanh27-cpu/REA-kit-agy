@@ -1,5 +1,6 @@
 ﻿# Script Quản Trị Cổng Kiểm Soát & Máy Trạng Thái (Deterministic Gate & State Machine Engine v2.0 - RWO)
 # Tuân thủ nguyên tắc Single Authoritative Coordinator, Conditional DAG, Cascade Invalidation, và Optimistic Concurrency.
+
 param(
     [Parameter(Position=0)]
     [ValidateSet("status", "validate", "open", "waive", "skip", "reject", "event")]
@@ -15,6 +16,10 @@ param(
     [ValidateSet("PASS", "PASS_WITH_LIMITATIONS", "SKIPPED", "NOT_APPLICABLE")]
     [string]$Mode = "PASS"
 )
+
+class ConcurrencyConflictException : System.Exception {
+    ConcurrencyConflictException([string]$message) : base($message) {}
+}
 
 $ErrorActionPreference = "Stop"
 $OutputEncoding = [System.Text.Encoding]::UTF8
@@ -50,18 +55,89 @@ function Get-CaseState {
     return (Get-Content -LiteralPath $stateFile -Raw -Encoding UTF8 | ConvertFrom-Json)
 }
 
+function Get-NormalizedFileHash {
+    param([string]$FilePath)
+    $ext = [System.IO.Path]::GetExtension($FilePath).ToLower()
+    $textExts = @(".md", ".json", ".txt", ".xml", ".html", ".js", ".css", ".yaml", ".yml", ".csv")
+    if ($textExts -contains $ext) {
+        $raw = [System.IO.File]::ReadAllText($FilePath, [System.Text.Encoding]::UTF8)
+        $normalized = $raw -replace "\r\n", "`n"
+        $bytes = [System.Text.Encoding]::UTF8.GetBytes($normalized)
+        $hasher = [System.Security.Cryptography.SHA256]::Create()
+        try {
+            $hashBytes = $hasher.ComputeHash($bytes)
+            return [System.BitConverter]::ToString($hashBytes).Replace("-", "").ToUpper()
+        } finally {
+            $hasher.Dispose()
+        }
+    } else {
+        return (Get-FileHash -LiteralPath $FilePath -Algorithm SHA256).Hash
+    }
+}
+
 function Save-CaseStateAtomic {
-    param([object]$State)
+    param(
+        [object]$State,
+        [int]$ExpectedRevision = -1
+    )
+
+    if ($ExpectedRevision -le 0 -and $State.revision) {
+        $ExpectedRevision = [int]$State.revision
+    }
+
+    if ($ExpectedRevision -gt 0 -and (Test-Path -LiteralPath $stateFile)) {
+        $diskState = Get-CaseState
+        if ($diskState.revision -and [int]$diskState.revision -ne $ExpectedRevision) {
+            throw [ConcurrencyConflictException]::new("[ConcurrencyConflictException] active_case.json đã bị tiến trình khác cập nhật (Đĩa: Rev $($diskState.revision), Kỳ vọng: Rev $ExpectedRevision). Thao tác bị hủy để tránh mất dữ liệu!")
+        }
+    }
+
     $State.last_updated = (Get-Date).ToString("yyyy-MM-ddTHH:mm:sszzz")
     $currentRev = if ($State.revision) { [int]$State.revision } else { 1 }
     $State.revision = $currentRev + 1
 
     $json = $State | ConvertTo-Json -Depth 15
-    $tmpFile = "$stateFile.tmp.$([System.Guid]::NewGuid().ToString('N'))"
-    Set-Content -LiteralPath $tmpFile -Value $json -Encoding UTF8
+    $tmpFile = [System.IO.Path]::GetFullPath("$stateFile.tmp.$([System.Guid]::NewGuid().ToString('N'))")
+    $bakFile = [System.IO.Path]::GetFullPath("$stateFile.bak.$([System.Guid]::NewGuid().ToString('N'))")
+    $destFull = [System.IO.Path]::GetFullPath($stateFile)
 
-    # Atomic swap
-    Move-Item -LiteralPath $tmpFile -Destination $stateFile -Force
+    # Ghi file tạm bằng UTF8 không BOM
+    $utf8NoBom = [System.Text.UTF8Encoding]::new($false)
+    [System.IO.File]::WriteAllText($tmpFile, $json, $utf8NoBom)
+
+    $maxRetries = 5
+    $baseDelayMs = 100
+    $saved = $false
+
+    for ($attempt = 1; $attempt -le $maxRetries; $attempt++) {
+        try {
+            if (Test-Path -LiteralPath $destFull) {
+                [System.IO.File]::Replace($tmpFile, $destFull, $bakFile, $true)
+                if (Test-Path -LiteralPath $bakFile) {
+                    Remove-Item -LiteralPath $bakFile -Force -ErrorAction SilentlyContinue
+                }
+            } else {
+                [System.IO.File]::Move($tmpFile, $destFull)
+            }
+            $saved = $true
+            break
+        } catch [System.IO.IOException], [System.UnauthorizedAccessException] {
+            if ($attempt -eq $maxRetries) { throw }
+            $delay = [int]($baseDelayMs * [Math]::Pow(2, ($attempt - 1)) + (Get-Random -Minimum 10 -Maximum 50))
+            Start-Sleep -Milliseconds $delay
+        } finally {
+            if (Test-Path -LiteralPath $bakFile) {
+                Remove-Item -LiteralPath $bakFile -Force -ErrorAction SilentlyContinue
+            }
+        }
+    }
+
+    if (Test-Path -LiteralPath $tmpFile) {
+        Remove-Item -LiteralPath $tmpFile -Force -ErrorAction SilentlyContinue
+    }
+    if (-not $saved) {
+        throw "Không thể lưu trạng thái active_case.json sau $maxRetries lần thử do xung đột khóa tệp!"
+    }
 
     # Snapshot lineage lưu trữ
     $caseId = if ($State.case_id) { $State.case_id } else { "CASE-UNKNOWN" }
@@ -70,7 +146,7 @@ function Save-CaseStateAtomic {
         New-Item -ItemType Directory -Path $caseFolder -Force | Out-Null
     }
     $caseManifest = Join-Path $caseFolder "manifest.json"
-    Set-Content -LiteralPath $caseManifest -Value $json -Encoding UTF8
+    [System.IO.File]::WriteAllText($caseManifest, $json, $utf8NoBom)
 
     $runsFolder = Join-Path $caseFolder "runs"
     if (-not (Test-Path -LiteralPath $runsFolder)) {
@@ -78,7 +154,7 @@ function Save-CaseStateAtomic {
     }
     $runId = if ($State.workflow -and $State.workflow.run_id) { $State.workflow.run_id } else { "RUN-$($State.revision)" }
     $runSnapshot = Join-Path $runsFolder "$runId.json"
-    Set-Content -LiteralPath $runSnapshot -Value $json -Encoding UTF8
+    [System.IO.File]::WriteAllText($runSnapshot, $json, $utf8NoBom)
 }
 
 function Append-Event {
@@ -88,17 +164,22 @@ function Append-Event {
         [string]$Phase,
         [string]$Step,
         [string]$EventDetails,
-        [string]$EvidenceSha
+        [string]$EvidenceSha,
+        [object]$State = $null
     )
     $timestamp = (Get-Date).ToString("yyyy-MM-ddTHH:mm:sszzz")
     $eventId = "EVT-" + (Get-Date).ToString("yyyyMMdd-HHmmss-fff")
-    $state = Get-CaseState
-    $caseId = if ($state.case_id) { $state.case_id } else { "CASE-UNKNOWN" }
-    
+    if (-not $State -and (Test-Path -LiteralPath $stateFile)) {
+        $State = Get-CaseState
+    }
+    $caseId = if ($State -and $State.case_id) { $State.case_id } else { "CASE-UNKNOWN" }
+    $rev = if ($State -and $State.revision) { [int]$State.revision } else { $null }
+
     $eventObj = [ordered]@{
         event_id = $eventId
         timestamp = $timestamp
         case_id = $caseId
+        revision = $rev
         actor = if ($Actor) { $Actor } else { "coordinator" }
         action = $ActionName
         phase = $Phase
@@ -107,7 +188,40 @@ function Append-Event {
         evidence_sha256 = $EvidenceSha
     }
     $line = ($eventObj | ConvertTo-Json -Compress)
-    Add-Content -LiteralPath $eventsFile -Value $line -Encoding UTF8
+
+    # Ghi log sự kiện an toàn với FileShare.ReadWrite và retry backoff
+    $eventsFolder = Split-Path -Parent $eventsFile
+    if (-not (Test-Path -LiteralPath $eventsFolder)) {
+        New-Item -ItemType Directory -Path $eventsFolder -Force | Out-Null
+    }
+
+    $maxRetries = 5
+    $baseDelayMs = 100
+    for ($attempt = 1; $attempt -le $maxRetries; $attempt++) {
+        try {
+            $stream = [System.IO.FileStream]::new(
+                $eventsFile,
+                [System.IO.FileMode]::Append,
+                [System.IO.FileAccess]::Write,
+                [System.IO.FileShare]::ReadWrite
+            )
+            try {
+                $writer = [System.IO.StreamWriter]::new($stream, [System.Text.UTF8Encoding]::new($false))
+                try {
+                    $writer.WriteLine($line)
+                } finally {
+                    $writer.Dispose()
+                }
+            } finally {
+                $stream.Dispose()
+            }
+            break
+        } catch [System.IO.IOException], [System.UnauthorizedAccessException] {
+            if ($attempt -eq $maxRetries) { throw }
+            $delay = [int]($baseDelayMs * [Math]::Pow(2, ($attempt - 1)) + (Get-Random -Minimum 10 -Maximum 50))
+            Start-Sleep -Milliseconds $delay
+        }
+    }
 }
 
 function Resolve-GateName {
@@ -156,12 +270,12 @@ $clearedStates = @("PASS", "PASS_WITH_LIMITATIONS", "SKIPPED", "NOT_APPLICABLE",
 $cascadeMap = @{
     "gate_01_baseline_verified" = @{
         "revoke_gates" = @("gate_01_baseline_verified", "gate_02_audit_passed", "gate_03_spec_frozen", "gate_04_build_qa_passed", "gate_05_hard_verify_passed", "gate_06_handoff_signed")
-        "revert_phase" = "STAGE_01_INGESTION_AND_DISCOVERY"
+        "revert_phase" = "STAGE_01_DISCOVERY"
         "revert_step"  = "01_APP_INTAKE"
     }
     "gate_02_audit_passed" = @{
         "revoke_gates" = @("gate_02_audit_passed", "gate_03_spec_frozen", "gate_04_build_qa_passed", "gate_05_hard_verify_passed", "gate_06_handoff_signed")
-        "revert_phase" = "STAGE_02_ANALYSIS_AND_AUDIT"
+        "revert_phase" = "STAGE_02_REVERSE_ENGINEERING"
         "revert_step"  = "03_REA_SCAN"
     }
     "gate_03_spec_frozen" = @{
@@ -175,7 +289,7 @@ $cascadeMap = @{
         "revert_step"  = "09_REA_BUILD"
     }
     "gate_05_hard_verify_passed" = @{
-        "revoke_gates" = @("gate_05_hard_verify_passed", "gate_06_handoff_signed")
+        "revoke_gates" = @("gate_04_build_qa_passed", "gate_05_hard_verify_passed", "gate_06_handoff_signed")
         "revert_phase" = "STAGE_04_IMPLEMENTATION"
         "revert_step"  = "09_REA_BUILD"
     }
@@ -294,7 +408,25 @@ switch ($Action) {
                     Write-Host " [FAIL] Cổng $g đạt $gState nhưng thiếu evidence_sha256!" -ForegroundColor Red
                     $hasError = $true
                 } else {
-                    Write-Host " [PASS] Cổng ${g}: Trạng thái $gState và SHA-256 hợp lệ." -ForegroundColor Green
+                    # Kiểm tra và tính toán lại SHA-256 từ tệp trên đĩa
+                    $primaryEv = if ($gateObj.evidence -and $gateObj.evidence.Count -gt 0) { $gateObj.evidence[0] } else { $null }
+                    if ($primaryEv) {
+                        $primaryEvPath = if ([System.IO.Path]::IsPathRooted($primaryEv)) { $primaryEv } else { Join-Path $repoRoot $primaryEv }
+                        if (Test-Path -LiteralPath $primaryEvPath) {
+                            $actualHash = Get-NormalizedFileHash -FilePath $primaryEvPath
+                            if ($actualHash -ne $gateObj.evidence_sha256) {
+                                Write-Host " [FAIL] Cổng $g bị sai lệch mã băm SHA-256! Kỳ vọng: $($gateObj.evidence_sha256), Thực tế trên đĩa: $actualHash" -ForegroundColor Red
+                                $hasError = $true
+                            } else {
+                                Write-Host " [PASS] Cổng ${g}: Trạng thái $gState và SHA-256 khớp 100% với đĩa." -ForegroundColor Green
+                            }
+                        } else {
+                            Write-Host " [FAIL] Cổng $g không thể kiểm tra SHA-256 vì tệp không tồn tại: $primaryEv" -ForegroundColor Red
+                            $hasError = $true
+                        }
+                    } else {
+                        Write-Host " [PASS] Cổng ${g}: Trạng thái $gState và SHA-256 hợp lệ." -ForegroundColor Green
+                    }
                 }
             } elseif ($gState -eq "WAIVED") {
                 if (-not $gateObj.waived_reason) {
@@ -304,7 +436,17 @@ switch ($Action) {
                     Write-Host " [WARN] Cổng ${g}: Miễn trừ (WAIVED) - Lý do: $($gateObj.waived_reason)" -ForegroundColor DarkYellow
                 }
             } elseif ($gState -eq "SKIPPED" -or $gState -eq "NOT_APPLICABLE") {
-                Write-Host " [INFO] Cổng ${g}: Bỏ qua ($gState) - Lý do: $($gateObj.skip_reason)" -ForegroundColor Gray
+                if ($gState -eq "SKIPPED" -and [string]::IsNullOrWhiteSpace($gateObj.skip_reason)) {
+                    Write-Host " [FAIL] Cổng $g là SKIPPED nhưng thiếu lý do skip_reason!" -ForegroundColor Red
+                    $hasError = $true
+                } else {
+                    Write-Host " [INFO] Cổng ${g}: Bỏ qua ($gState) - Lý do: $($gateObj.skip_reason)" -ForegroundColor Gray
+                }
+            } elseif ($gState -eq "FAILED" -or $gState -eq "BLOCKED") {
+                Write-Host " [FAIL] Cổng $g đang ở trạng thái lỗi: $gState!" -ForegroundColor Red
+                $hasError = $true
+            } elseif ($gState -eq "INVALIDATED") {
+                Write-Host " [WARN] Cổng ${g}: Trạng thái INVALIDATED (Cần thực thi lại)." -ForegroundColor Yellow
             } else {
                 Write-Host " [INFO] Cổng ${g}: Trạng thái $gState." -ForegroundColor Gray
             }
@@ -328,19 +470,20 @@ switch ($Action) {
         }
 
         $state = Get-CaseState
+        $expectedRev = if ($state.revision) { [int]$state.revision } else { -1 }
         $gateIdx = $gateOrder.IndexOf($resolvedGate)
         if ($gateIdx -lt 0) {
             Write-Host "[FAIL] Tên cổng không hợp lệ: $resolvedGate" -ForegroundColor Red
             exit 1
         }
 
-        # 1. Kiểm tra DAG phụ thuộc cổng liền trước
-        if ($gateIdx -gt 0) {
-            $prevGate = $gateOrder[$gateIdx - 1]
-            $prevObj = $state.gates.$prevGate
-            $prevState = if ($prevObj.state) { $prevObj.state } elseif ($prevObj -eq $true) { "PASS" } else { "NOT_STARTED" }
-            if ($clearedStates -notcontains $prevState) {
-                Write-Host "[FAIL] Không thể mở $resolvedGate vì cổng phụ thuộc liền trước ($prevGate) chưa hoàn tất hợp lệ (hiện tại: $prevState)!" -ForegroundColor Red
+        # 1. Kiểm tra DAG phụ thuộc toàn bộ chuỗi tiền bối
+        for ($i = 0; $i -lt $gateIdx; $i++) {
+            $ancestorGate = $gateOrder[$i]
+            $ancestorObj = $state.gates.$ancestorGate
+            $ancestorState = if ($ancestorObj.state) { $ancestorObj.state } elseif ($ancestorObj -eq $true) { "PASS" } else { "NOT_STARTED" }
+            if ($clearedStates -notcontains $ancestorState) {
+                Write-Host "[FAIL] Không thể mở $resolvedGate vì cổng tiền bối $ancestorGate chưa hoàn tất hợp lệ (hiện tại: $ancestorState)!" -ForegroundColor Red
                 exit 1
             }
         }
@@ -356,7 +499,7 @@ switch ($Action) {
             exit 1
         }
 
-        $sha = (Get-FileHash -LiteralPath $evPath -Algorithm SHA256).Hash
+        $sha = Get-NormalizedFileHash -FilePath $evPath
         $relPath = if ($evPath.StartsWith($repoRoot)) { $evPath.Substring($repoRoot.Length).TrimStart('\', '/') } else { $Evidence }
         $evList = @($relPath)
 
@@ -377,9 +520,9 @@ switch ($Action) {
         }
         $state.current_gate_status = "${resolvedGate}_${finalState}".ToUpper()
 
-        Save-CaseStateAtomic -State $state
+        Save-CaseStateAtomic -State $state -ExpectedRevision $expectedRev
 
-        Append-Event -ActionName "GATE_OPEN" -Actor $approver -Phase $state.current_phase -Step $state.current_step -EventDetails "Mở thành công $resolvedGate (Trạng thái: $finalState)" -EvidenceSha $sha
+        Append-Event -ActionName "GATE_OPEN" -Actor $approver -Phase $state.current_phase -Step $state.current_step -EventDetails "Mở thành công $resolvedGate (Trạng thái: $finalState)" -EvidenceSha $sha -State $state
 
         Write-Host "================================================================================" -ForegroundColor Cyan
         Write-Host "[OK] ĐÃ MỞ CỔNG THÀNH CÔNG: $resolvedGate ($finalState)" -ForegroundColor Green
@@ -403,6 +546,24 @@ switch ($Action) {
         }
 
         $state = Get-CaseState
+        $expectedRev = if ($state.revision) { [int]$state.revision } else { -1 }
+        $gateIdx = $gateOrder.IndexOf($resolvedGate)
+        if ($gateIdx -lt 0) {
+            Write-Host "[FAIL] Tên cổng không hợp lệ: $resolvedGate" -ForegroundColor Red
+            exit 1
+        }
+
+        # Kiểm tra toàn bộ chuỗi tiền bối
+        for ($i = 0; $i -lt $gateIdx; $i++) {
+            $ancestorGate = $gateOrder[$i]
+            $ancestorObj = $state.gates.$ancestorGate
+            $ancestorState = if ($ancestorObj.state) { $ancestorObj.state } elseif ($ancestorObj -eq $true) { "PASS" } else { "NOT_STARTED" }
+            if ($clearedStates -notcontains $ancestorState) {
+                Write-Host "[FAIL] Không thể miễn trừ $resolvedGate vì cổng tiền bối $ancestorGate chưa hoàn tất hợp lệ (hiện tại: $ancestorState)!" -ForegroundColor Red
+                exit 1
+            }
+        }
+
         $approver = if ($ApprovedBy) { $ApprovedBy } else { "human_owner" }
         $now = (Get-Date).ToString("yyyy-MM-ddTHH:mm:sszzz")
 
@@ -418,9 +579,9 @@ switch ($Action) {
         }
         $state.current_gate_status = "${resolvedGate}_WAIVED".ToUpper()
 
-        Save-CaseStateAtomic -State $state
+        Save-CaseStateAtomic -State $state -ExpectedRevision $expectedRev
 
-        Append-Event -ActionName "GATE_WAIVED" -Actor $approver -Phase $state.current_phase -Step $state.current_step -EventDetails "Miễn trừ $resolvedGate. Lý do: $Reason" -EvidenceSha $null
+        Append-Event -ActionName "GATE_WAIVED" -Actor $approver -Phase $state.current_phase -Step $state.current_step -EventDetails "Miễn trừ $resolvedGate. Lý do: $Reason" -EvidenceSha $null -State $state
 
         Write-Host "================================================================================" -ForegroundColor Yellow
         Write-Host "[WARN] ĐÃ MIỄN TRỪ CỔNG (GATE WAIVED): $resolvedGate" -ForegroundColor Yellow
@@ -443,6 +604,24 @@ switch ($Action) {
         }
 
         $state = Get-CaseState
+        $expectedRev = if ($state.revision) { [int]$state.revision } else { -1 }
+        $gateIdx = $gateOrder.IndexOf($resolvedGate)
+        if ($gateIdx -lt 0) {
+            Write-Host "[FAIL] Tên cổng không hợp lệ: $resolvedGate" -ForegroundColor Red
+            exit 1
+        }
+
+        # Kiểm tra toàn bộ chuỗi tiền bối
+        for ($i = 0; $i -lt $gateIdx; $i++) {
+            $ancestorGate = $gateOrder[$i]
+            $ancestorObj = $state.gates.$ancestorGate
+            $ancestorState = if ($ancestorObj.state) { $ancestorObj.state } elseif ($ancestorObj -eq $true) { "PASS" } else { "NOT_STARTED" }
+            if ($clearedStates -notcontains $ancestorState) {
+                Write-Host "[FAIL] Không thể bỏ qua $resolvedGate vì cổng tiền bối $ancestorGate chưa hoàn tất hợp lệ (hiện tại: $ancestorState)!" -ForegroundColor Red
+                exit 1
+            }
+        }
+
         $approver = if ($ApprovedBy) { $ApprovedBy } else { "coordinator" }
         $now = (Get-Date).ToString("yyyy-MM-ddTHH:mm:sszzz")
         $targetState = if ($Mode -eq "NOT_APPLICABLE") { "NOT_APPLICABLE" } else { "SKIPPED" }
@@ -459,9 +638,9 @@ switch ($Action) {
         }
         $state.current_gate_status = "${resolvedGate}_${targetState}".ToUpper()
 
-        Save-CaseStateAtomic -State $state
+        Save-CaseStateAtomic -State $state -ExpectedRevision $expectedRev
 
-        Append-Event -ActionName "GATE_SKIPPED" -Actor $approver -Phase $state.current_phase -Step $state.current_step -EventDetails "Bỏ qua $resolvedGate ($targetState). Lý do: $Reason" -EvidenceSha $null
+        Append-Event -ActionName "GATE_SKIPPED" -Actor $approver -Phase $state.current_phase -Step $state.current_step -EventDetails "Bỏ qua $resolvedGate ($targetState). Lý do: $Reason" -EvidenceSha $null -State $state
 
         Write-Host "================================================================================" -ForegroundColor DarkGray
         Write-Host "[INFO] ĐÃ BỎ QUA CỔNG: $resolvedGate ($targetState)" -ForegroundColor DarkGray
@@ -479,8 +658,32 @@ switch ($Action) {
         }
 
         $state = Get-CaseState
+        $expectedRev = if ($state.revision) { [int]$state.revision } else { -1 }
         $rejectReason = if ($Reason) { $Reason } else { "Người dùng hoặc kiểm toán độc lập yêu cầu chỉnh sửa lại (Reject Loop)." }
         $approver = if ($ApprovedBy) { $ApprovedBy } else { "coordinator" }
+
+        # Kiểm soát vòng lặp hội tụ (Review Convergence Limit: max 2 rounds)
+        if (-not $state.metrics) {
+            $state.metrics = [ordered]@{}
+        }
+        $currentRounds = if ($state.metrics.review_convergence_rounds) { [int]$state.metrics.review_convergence_rounds } else { 0 }
+        $maxRounds = if ($state.metrics.max_convergence_rounds) { [int]$state.metrics.max_convergence_rounds } else { 2 }
+        $currentRounds++
+        $state.metrics.review_convergence_rounds = $currentRounds
+
+        if ($currentRounds -gt $maxRounds) {
+            Write-Host "================================================================================" -ForegroundColor Red
+            Write-Host "[BLOCKED] Số vòng reject ($currentRounds) đã vượt quá giới hạn tối đa ($maxRounds vòng)!" -ForegroundColor Red
+            Write-Host "          Quy trình chuyển sang trạng thái BLOCKED để xin ý kiến Human Owner." -ForegroundColor Red
+            Write-Host "================================================================================" -ForegroundColor Red
+            $state.gates.$resolvedGate.state = "BLOCKED"
+            $state.gates.$resolvedGate.revoked_reason = "Đã vượt quá số vòng reject tối đa ($maxRounds vòng): $rejectReason"
+            $state.current_gate_status = "${resolvedGate}_BLOCKED".ToUpper()
+
+            Save-CaseStateAtomic -State $state -ExpectedRevision $expectedRev
+            Append-Event -ActionName "GATE_BLOCKED" -Actor $approver -Phase $state.current_phase -Step $state.current_step -EventDetails "Cổng $resolvedGate bị BLOCKED do vượt quá $maxRounds vòng reject. Lý do: $rejectReason" -EvidenceSha $null -State $state
+            exit 1
+        }
 
         # Thu hồi thác đổ dựa trên cascadeMap
         if (-not $cascadeMap.ContainsKey($resolvedGate)) {
@@ -512,12 +715,12 @@ switch ($Action) {
         $state.current_step = $revertStep
         $state.current_gate_status = "${resolvedGate}_INVALIDATED".ToUpper()
 
-        Save-CaseStateAtomic -State $state
+        Save-CaseStateAtomic -State $state -ExpectedRevision $expectedRev
 
-        Append-Event -ActionName "GATE_CASCADE_REJECT" -Actor $approver -Phase $revertPhase -Step $revertStep -EventDetails "Reject $resolvedGate. Thu hồi toàn bộ hạ nguồn: $($gatesToRevoke -join ', '). Lý do: $rejectReason" -EvidenceSha $null
+        Append-Event -ActionName "GATE_CASCADE_REJECT" -Actor $approver -Phase $revertPhase -Step $revertStep -EventDetails "Reject $resolvedGate (Vòng $currentRounds/$maxRounds). Thu hồi toàn bộ hạ nguồn: $($gatesToRevoke -join ', '). Lý do: $rejectReason" -EvidenceSha $null -State $state
 
         Write-Host "================================================================================" -ForegroundColor DarkRed
-        Write-Host "[!] THU HỒI THÁC ĐỔ THÀNH CÔNG (CASCADE INVALIDATION): $resolvedGate" -ForegroundColor Red
+        Write-Host "[!] THU HỒI THÁC ĐỔ THÀNH CÔNG (CASCADE INVALIDATION): $resolvedGate (Vòng $currentRounds/$maxRounds)" -ForegroundColor Red
         Write-Host "    Các cổng bị vô hiệu hóa : $($gatesToRevoke -join ', ')" -ForegroundColor Yellow
         Write-Host "    Trở về điểm an toàn     : Phase=$revertPhase | Step=$revertStep" -ForegroundColor White
         Write-Host "    Lý do thu hồi           : $rejectReason" -ForegroundColor Gray
@@ -532,7 +735,7 @@ switch ($Action) {
         }
         $state = Get-CaseState
         $actor = if ($ApprovedBy) { $ApprovedBy } else { "coordinator" }
-        Append-Event -ActionName "CUSTOM_LOG" -Actor $actor -Phase $state.current_phase -Step $state.current_step -EventDetails $Details -EvidenceSha $null
+        Append-Event -ActionName "CUSTOM_LOG" -Actor $actor -Phase $state.current_phase -Step $state.current_step -EventDetails $Details -EvidenceSha $null -State $state
         Write-Host "[OK] Đã ghi sự kiện vào .agents/state/events.jsonl" -ForegroundColor Green
         exit 0
     }

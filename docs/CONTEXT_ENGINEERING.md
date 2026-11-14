@@ -243,7 +243,7 @@ The PowerShell automation engine `.agents/scripts/context.ps1` provides determin
 Before opening any quality gate or finalizing a session handoff, verify:
 - [ ] Context usage is strictly below 75% of usable model capacity.
 - [ ] No raw APK decompilation files or massive log dumps are stored in conversation prompts.
-- [ ] Prompt ordering adheres to Stable-First prefixing (L0 $\rightarrow$ L1 $\rightarrow$ L2 $\rightarrow$ L3 $\rightarrow$ L4 $\rightarrow$ L5).
+- [ ] Prompt ordering adheres to Stable-First prefixing (L0 $\rightarrow$ L3 $\rightarrow$ L2 $\rightarrow$ L1 $\rightarrow$ L4 $\rightarrow$ L5).
 - [ ] All external decompiled code and strings are wrapped in `<untrusted_binary_evidence>` tags.
 - [ ] `.agents/state/active_case.json` is perfectly synchronized with workspace state.
 - [ ] `.agents/scripts/context.ps1 verify` succeeds with status `PASS`.

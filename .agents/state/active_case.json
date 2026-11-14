@@ -1,4 +1,4 @@
-﻿{
+{
   "schema_version": 2,
   "case_id": "CASE-INITIAL",
   "target_name": null,
@@ -130,7 +130,7 @@
   },
   "gate_invalidation_map": {
     "REJECT_GATE_01": {
-      "revert_to_phase": "STAGE_01_INGESTION_AND_DISCOVERY",
+      "revert_to_phase": "STAGE_01_DISCOVERY",
       "revert_to_step": "01_APP_INTAKE",
       "revoke_gates": [
         "gate_01_baseline_verified",
@@ -142,7 +142,7 @@
       ]
     },
     "REJECT_GATE_02": {
-      "revert_to_phase": "STAGE_02_ANALYSIS_AND_AUDIT",
+      "revert_to_phase": "STAGE_02_REVERSE_ENGINEERING",
       "revert_to_step": "03_REA_SCAN",
       "revoke_gates": [
         "gate_02_audit_passed",
@@ -188,6 +188,5 @@
       ]
     }
   },
-  "last_updated": "2026-11-14T09:45:00+07:00",
   "notes": "Hệ thống máy trạng thái RWO v2 (Conditional DAG, 6 Giai đoạn, 14 Bước, 11 Trạng thái Gate, Dynamic Lineage)"
 }

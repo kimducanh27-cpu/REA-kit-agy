@@ -81,7 +81,7 @@ Khi một Artifact đầu vào hoặc quyết định bị thay đổi, Coordina
 | **`WF05`** | Người dùng CHỈ muốn lập kế hoạch phát triển (Plan-only). | Chạy đến Step 08, đóng băng bản đặc tả và kế hoạch 6 Milestones. | Gate 01, 02, 03: `PASS`. Gate 04-06: `NOT_APPLICABLE`. |
 | **`WF06`** | Người dùng đổi yêu cầu sau khi đã đóng băng Spec. | Khởi tạo Change Request qua `prompts/07`. Re-entry tại Stage 03. | Gate 01 & 02: Giữ `PASS`. Gate 03-06: `INVALIDATED`. |
 | **`WF07`** | Người dùng đổi giao diện sau khi đã Build xong. | Change Request loại `UI_ONLY`. Re-entry tại Bước 07 (`07_UI_SPEC`). | Gate 01 & 02: Giữ `PASS`. Gate 03: Mở lại sau duyệt. Gate 04-06: `INVALIDATED`. |
-| **`WF08`** | Phát hiện lỗi trong quá trình Smoke Test. | Lập `FIX_PLAN_v2.md`. Chạy `gate.ps1 reject 5`. Quay lại Bước 09 sửa mã. | Gate 01-03: Giữ `PASS`. Gate 04 & 05: `INVALIDATED`. |
+| **`WF08`** | Phát hiện lỗi trong quá trình Smoke Test. | Lập `FIX_PLAN_v2.md`. Chạy `gate.ps1 reject 5`. Quay lại Bước 09 sửa mã. | Gate 01-03: Giữ `PASS`. Gate 04, 05, 06: `INVALIDATED`. |
 | **`WF09`** | Người dùng bổ sung tính năng mới sau khi bàn giao. | Tạo Change Request mới. Đánh giá tác động phạm vi trước khi viết code. | Lưu bản bàn giao cũ vào `cases/`. Tạo Run mới độc lập. |
 | **`WF10`** | File APK gốc được thay thế bằng phiên bản mới. | Phát hiện sai lệch Fingerprint SHA-256. Thu hồi toàn bộ bằng chứng cũ. | Gate 01-06: `INVALIDATED`. Chạy lại từ Bước 01. |
 | **`WF11`** | Tái sử dụng kết quả của Workflow A cho Workflow B. | Kiểm tra tính còn hiệu lực (Provenance, Hash, Approval) trước khi gán. | Cổng tái sử dụng ghi: `REUSED_VALIDATED`. |

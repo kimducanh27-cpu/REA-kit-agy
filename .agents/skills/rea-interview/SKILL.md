@@ -59,17 +59,16 @@ Tại đầu Bước 06, Agent đọc tài liệu đầu vào và phân loại m
 
 ## 3. ĐỘNG CƠ SÀNG LỌC CÂU HỎI (QUESTION NECESSITY ENGINE)
 
-Mọi câu hỏi tiềm năng đều phải vượt qua chuỗi **8 bộ lọc tuần tự**. Nếu vi phạm bất kỳ bộ lọc tiêu cực nào hoặc không đáp ứng tiêu chí bắt buộc, câu hỏi **BỊ HỦY BỎ** hoặc **CHUYỂN THÀNH GIẢ ĐỊNH MẶC ĐỊNH**:
+Mọi câu hỏi tiềm năng đều phải vượt qua chuỗi **8 bộ lọc tuần tự** tương ứng với công thức logic $Ask(q)$. Nếu vi phạm bất kỳ bộ lọc tiêu cực nào hoặc không đáp ứng tiêu chí bắt buộc, câu hỏi **BỊ HỦY BỎ**, **TỰ ĐƯỢC AGENT QUYẾT ĐỊNH KỸ THUẬT**, hoặc **CHUYỂN THÀNH GIẢ ĐỊNH MẶC ĐỊNH**:
 
 ```
 [Ý định hỏi] ──► [Filter 1: Known?] ────────► ĐÃ BIẾT? ────────► HUỶ BỎ
               ──► [Filter 2: Inspectable?] ──► TỰ ĐỌC ĐƯỢC? ───► TỰ ĐỌC & HUỶ BỎ
               ──► [Filter 3: Evidence?] ─────► ĐÃ CÓ BẰNG CHỨNG?► TRÍCH DẪN & HUỶ BỎ
               ──► [Filter 4: Impact?] ───────► KHÔNG ẢNH HƯỞNG?► HUỶ BỎ (TRIVIA)
-              ──► [Filter 5: Risk?] ─────────► RỦI RO THẤP? ───► ÁP DỤNG GIẢ ĐỊNH AN TOÀN
-              ──► [Filter 6: Reversibility?] ─► DỄ ĐẢO NGƯỢC? ──► ÁP DỤNG GIẢ ĐỊNH AN TOÀN
-              ──► [Filter 7: Ownership?] ────► NGOÀI THẨM QUYỀN?► TỰ RA QUYẾT ĐỊNH KỸ THUẬT
-              ──► [Filter 8: Timing?] ───────► CHƯA CẦN BÂY GIỜ?► HOÃN ĐẾN STAGE SAU
+              ──► [Filter 5 & 6: Risk/Rev?] ──► RỦI RO THẤP & DỄ ĐẢO NGƯỢC? ──► ÁP DỤNG GIẢ ĐỊNH AN TOÀN
+              ──► [Filter 7: Ownership?] ────► NGOÀI THẨM QUYỀN PO? ──────────► TỰ RA QUYẾT ĐỊNH KỸ THUẬT
+              ──► [Filter 8: Timing?] ───────► CHƯA CẦN BÂY GIỜ?─────────────► HOÃN ĐẾN STAGE SAU (DEFER)
                                               │
                       ┌───────────────────────┘
                       ▼
@@ -81,9 +80,9 @@ Mọi câu hỏi tiềm năng đều phải vượt qua chuỗi **8 bộ lọc t
 2. **Filter 2 - Inspectable (Tự kiểm tra được)**: Thông tin có thể xác định rõ ràng qua phân tích tĩnh, đọc `AndroidManifest.xml`, `build.gradle`, assets, layout XML, hay mã nguồn gốc? Nếu CÓ ➔ **TỰ ĐỌC VÀ KHÔNG HỎI**.
 3. **Filter 3 - Evidence (Bằng chứng thực tế)**: Đã có ảnh chụp màn hình thực tế (từ Bước 02), logcat hiện trạng, hoặc báo cáo Bước 04 chứng minh hành vi? Nếu CÓ ➔ **TRÍCH DẪN BẰNG CHỨNG, KHÔNG HỎI MƠ HỒ**.
 4. **Filter 4 - Decision Impact (Ảnh hưởng quyết định)**: Câu trả lời có làm thay đổi trực tiếp kiến trúc, phạm vi, hoặc code ở Stage 04 không? Nếu KHÔNG (câu hỏi râu ria, hình thức) ➔ **LOẠI BỎ NGAY**.
-5. **Filter 5 - Risk (Mức độ rủi ro)**: Có liên quan đến thất thoát dữ liệu, vi phạm pháp lý/bảo mật, hoặc hành động phá hủy không? Nếu RỦI RO CAO ➔ **BẮT BUỘC HỎI**. Nếu RỦI RO THẤP ➔ Tự áp dụng mặc định an toàn.
-6. **Filter 6 - Reversibility (Tính thuận nghịch)**: Quyết định là cửa hai chiều (Two-Way Door - dễ sửa đổi sau bằng 1 dòng config) hay cửa một chiều (One-Way Door - thay đổi cấu trúc database nền tảng)? Nếu THUẬN NGHỊCH ➔ **CHỌN MẶC ĐỊNH AN TOÀN, GHI VÀO ASSUMPTION RECORD**.
-7. **Filter 7 - Ownership (Thẩm quyền quyết định)**: Người dùng là chủ sản phẩm (Product Owner) định hướng giá trị nghiệp vụ, không phải kỹ sư triển khai. Không hỏi người dùng về thư viện nội bộ, pattern, hoặc cú pháp. Kỹ thuật thuộc thẩm quyền của Agent.
+5. **Filter 5 - Risk (Mức độ rủi ro)**: Có liên quan đến thất thoát dữ liệu, vi phạm pháp lý/bảo mật, hoặc hành động phá hủy không? Nếu RỦI RO CAO ➔ **BẮT BUỘC HỎI**.
+6. **Filter 6 - Reversibility (Tính thuận nghịch)**: Quyết định là cửa hai chiều (Two-Way Door - dễ sửa đổi sau bằng 1 dòng config) hay cửa một chiều (One-Way Door - thay đổi cấu trúc nền tảng không thể hoàn tác)? Nếu THUẬN NGHỊCH VÀ RỦI RO THẤP ➔ **CHỌN MẶC ĐỊNH AN TOÀN, GHI VÀO ASSUMPTION RECORD**. Nếu là Cửa Một Chiều ($\neg Reversible$) ➔ Bắt buộc hỏi hoặc xin phê duyệt.
+7. **Filter 7 - Ownership (Thẩm quyền quyết định)**: Người dùng là chủ sản phẩm (Product Owner) định hướng giá trị nghiệp vụ, không phải kỹ sư triển khai. Không hỏi người dùng về thư viện nội bộ, pattern, hoặc cú pháp. Khi $Ownership = \text{FALSE}$ ➔ **AGENT TỰ RA QUYẾT ĐỊNH KỸ THUẬT & KHÓA VÀO SPEC NỘI BỘ**.
 8. **Filter 8 - Timing (Đúng thời điểm)**: Thông tin này có cần thiết ngay trong Stage 03 để đóng băng đặc tả không, hay đến Stage 04/05 mới dùng? Nếu chưa cần ➔ **HOÃN LẠI (DEFER)**.
 
 ---
@@ -113,14 +112,18 @@ Theo dõi các câu hỏi đã vượt qua 8 bộ lọc:
 ```
 
 ### 4.3 Assumption Record (Hồ Sơ Giả Định Mặc Định)
-Ghi nhận các quyết định hai chiều mà Agent tự chọn mặc định an toàn:
+Ghi nhận các quyết định hai chiều mà Agent tự chọn mặc định an toàn, tuân thủ chặt chẽ vòng đời kiểm soát giả định:
 ```markdown
 - **Mã giả định**: `ASSUMPTION-[DOMAIN]-[STT]`
 - **Hạng mục & Giá trị mặc định**: [Ví dụ: Giới hạn Cache 50MB, Debounce 300ms]
 - **Cơ sở kỹ thuật**: [Best-practice của nền tảng]
+- **Mức độ rủi ro (risk_level)**: `BENIGN` (Vô hại: Style, Padding) | `CRITICAL` (Nghiêm trọng: Data retention, Sync, Root policy)
 - **Mức độ thuận nghịch**: `HIGH` (Dễ đảo ngược)
 - **Nhiệm vụ kiểm chứng**: [Kịch bản kiểm thử ở Bước 10 / 12]
-- **Trạng thái**: `ACCEPTED_BY_DEFAULT`
+- **Trạng thái (status)**: `ACTIVE` | `INVALIDATED` | `SUPERSEDED`
+- **Thời điểm thu hồi (invalidated_at)**: null
+- **Lý do thu hồi (revocation_reason)**: null
+- **Các phụ thuộc hạ nguồn (downstream_dependencies)**: []
 ```
 
 ---
@@ -140,6 +143,9 @@ Agent xác định chế độ phù hợp:
 1. **`DESIGN_REUSE_EXACT`**:
    - Khi người dùng muốn làm bản sao 1-1 chính xác hoặc tái lập giao diện cũ.
    - **HÀNH ĐỘNG**: Tuyệt đối **KHÔNG ĐƯỢC ÉP BUỘC ĐỀ XUẤT 3 CONCEPT**. Trích xuất ngay bảng màu, kích thước từ UI cũ, chuyển thẳng sang lập đặc tả Bước 07.
+   - **RÀO CHẮN BẮT BUỘC**:
+     * **Sanitary Ergonomic Lint**: Tự động mở rộng touch target lên tối thiểu 48x48dp, nâng tương phản chữ đạt chuẩn WCAG AA (4.5:1), chuyển hardcode `px` sang `dp/sp`, và bổ sung 4 UI states nếu app cũ thiếu sót (luôn bảo toàn dữ liệu form theo `RULE-INIT-001`).
+     * **Legal Asset Decoupling Protocol**: Tuyệt đối không trích xuất logo thương hiệu đã đăng ký, hình ảnh độc quyền hoặc font chữ thương mại chưa cấp phép. Tự động bóc tách và thay thế bằng placeholder trung tính (`ic_brand_placeholder.xml`) hoặc font mã nguồn mở tương đương.
 2. **`DESIGN_STYLE_SPECIFIED`**:
    - Khi người dùng đã nêu rõ tên phong cách cụ thể (ví dụ: "Material You Dark", "Nordic Minimalist", "Cupertino iOS").
    - **HÀNH ĐỘNG**: Tuyệt đối **KHÔNG ĐƯỢC ÉP BUỘC ĐỀ XUẤT 3 CONCEPT**. Tuân thủ trực tiếp phong cách người dùng đã chọn để lập hồ sơ Art Direction và đặc tả.

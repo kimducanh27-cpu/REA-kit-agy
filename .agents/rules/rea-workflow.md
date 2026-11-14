@@ -49,16 +49,17 @@ Hệ thống quy chuẩn của `REA-kit-agy` được module hóa thành các t�
 ### Chi tiết phạm vi từng Scoped Rule:
 
 1. **`core-safety.md` (Luôn nạp - Core Safety Invariants)**:
-   - Ranh giới chỉ đọc bất khả xâm phạm cho `01_THA_APP_VAO_DAY/` và `04_SAO_LUU_AN_TOAN/`.
+   - Ranh giới chỉ đọc bất khả xâm phạm 100% cho `01_THA_APP_VAO_DAY/` (baseline chuyển về `03_KET_QUA_KIEM_TRA/baseline/`) và `04_SAO_LUU_AN_TOAN/`.
    - Bắt buộc snapshot vào `05_MA_NGUON_PHAT_TRIEN/.backup/` trước khi chỉnh sửa mã nguồn.
    - Xử lý dữ liệu đầu vào không đáng tin cậy, chống Prompt Injection gián tiếp.
-   - Che mờ 100% bí mật thành `[REDACTED]`. Tuyên bố Scoped Static Audit, không cam kết phóng đại.
+   - Che mờ bí mật thành `[REDACTED]`. Tuyên bố Scoped Secret Redaction & Scoped Static Audit, không cam kết phóng đại.
 
 2. **`android-target.md` (Chuyên biệt Android APK)**:
-   - Cô lập thư mục tạm `%LOCALAPPDATA%\Temp` cho JADX trên Windows x64 (tránh lỗi treo morluto/rea Issue #5237).
-   - Chuẩn giải mã tài nguyên Apktool `>= 2.9.2`.
+   - Cô lập thư mục tạm `%LOCALAPPDATA%\Temp` và cấu hình bộ nhớ RAM qua `JAVA_OPTS=-Xmx8g`, `-j 2` cho JADX trên Windows x64.
+   - Chuẩn giải mã tài nguyên Apktool `>= 2.10.0` (khuyến nghị `2.11.0+` hỗ trợ Android 15 API 35).
+   - Chuẩn căn chỉnh 16 KB page-size cho thư viện native `.so` (`p_align = 0x4000`, `zipalign -P 16`).
    - Phân định Phân tích tĩnh (`inspect_android_package`) vs Thao tác ADB (`capture_adb_screen`, `start_adb_app`).
-   - Tích hợp Android CLI (`android layout`, `android screen capture -o <file_path>`). Fallback tĩnh 3 lớp khi thiếu AVD.
+   - Tích hợp Android CLI (`android layout`, `android screen capture -o <file_path>`). Fallback tĩnh 3 lớp khi thiếu AVD. Thẩm quyền bắt buộc người dùng duyệt cho cả thiết bị thật và AVD.
 
 3. **`design-governance.md` (Stage 03 - Quản trị thiết kế Anti-Slop)**:
    - **Ranh giới bất biến**: Tuyệt đối **CẤM SINH MÃ** tại Stage 03 trước khi Gate 03 chuyển sang `PASS`.

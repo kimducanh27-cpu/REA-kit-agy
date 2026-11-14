@@ -107,11 +107,17 @@ Phải thiết lập bảng cam kết chỉ số trước khi bắt tay vào s�
 ### Mẫu Ghi Giả Định Tối Ưu (Assumption Record)
 ```markdown
 ### ASSUMPTION-FEAT-OPT-[STT]
+- **Mã giả định**: `ASSUMPTION-FEAT-OPT-[STT]`
 - **Tính Năng**: [Tên tính năng]
+- **Mức Độ Rủi Ro (risk_level)**: `BENIGN` | `CRITICAL`
 - **Giả Định Áp Dụng**: Giữ thời gian đệm debounce ở 300ms cho ô tìm kiếm.
 - **Lý Do Áp Dụng**: Cân bằng tối ưu giữa cảm giác gõ mượt và số lượng truy vấn CPU.
+- **Tính Thuận Nghịch**: `HIGH`
 - **Nhiệm Vụ Kiểm Chứng (Verification Task)**: Thử nghiệm nhập văn bản nhanh trên máy ảo ở Bước 10.
-- **Trạng Thái**: `ACCEPTED_BY_DEFAULT`
+- **Trạng Thái (status)**: `ACTIVE` | `INVALIDATED` | `SUPERSEDED`
+- **Thời Điểm Thu Hồi (invalidated_at)**: null
+- **Lý Do Thu Hồi (revocation_reason)**: null
+- **Các Phụ Thuộc Hạ Nguồn (downstream_dependencies)**: []
 ```
 
 ---
