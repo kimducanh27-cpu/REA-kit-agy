@@ -1,15 +1,15 @@
 {
     "schema_version":  1,
-    "case_id":  "TEST-CASE-001",
+    "case_id":  "CASE-INITIAL",
     "session":  {
-                    "session_id":  "INT-SESSION-20261114-113223",
+                    "session_id":  "INT-SESSION-20261114-120852",
                     "status":  "IN_PROGRESS",
                     "current_goal":  null,
                     "current_stage":  "STAGE_03_PRODUCT_DEFINITION",
                     "active_domain":  null,
                     "design_mode":  null,
-                    "created_at":  "2026-11-14T11:32:23+07:00",
-                    "updated_at":  "2026-11-14T11:32:27+07:00"
+                    "created_at":  "2026-11-14T12:08:52+07:00",
+                    "updated_at":  "2026-11-14T12:08:52+07:00"
                 },
     "goals":  [
 
@@ -36,10 +36,13 @@
 
                       ],
     "sufficiency_evaluation":  {
-                                   "verdict":  "NEEDS_INPUT",
-                                   "evaluated_at":  "2026-11-14T11:32:27+07:00",
+                                   "verdict":  "PENDING",
+                                   "evaluated_at":  null,
+                                   "goal_evaluations":  [
+
+                                                        ],
                                    "blocking_reasons":  [
-                                                            "No active goals recorded in interview state."
+
                                                         ],
                                    "deferred_decisions":  [
 
@@ -50,7 +53,7 @@
                                                                "critical":  0,
                                                                "pending_approval":  0
                                                            },
-                                   "summary":  "Interview requires additional input or decision resolution before Gate 03."
+                                   "summary":  "Interview session initialized. Ready for context ingestion."
                                },
-    "last_updated":  "2026-11-14T11:32:27+07:00"
+    "last_updated":  "2026-11-14T12:08:52+07:00"
 }

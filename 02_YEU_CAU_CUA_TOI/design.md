@@ -31,6 +31,12 @@
   --color-accent: #10b981;          /* Xanh lá: Thành công */
   --color-danger: #ef4444;          /* Đỏ: Xóa, Lỗi */
   --color-warning: #f59e0b;         /* Vàng: Cảnh báo */
+  --color-info: #0284c7;            /* Xanh dương nhạt: Chỉ dẫn */
+
+  /* Đổ bóng & Nâng bề mặt (Elevation) */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-card: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
 }
 ```
 
@@ -99,10 +105,10 @@ val Shapes = Shapes(
 ---
 
 ## TẦNG 2: THÀNH PHẦN GIAO DIỆN DÙNG CHUNG (COMPONENTS)
-- **Nút bấm chính (Button)**: Bo góc 6px, nền xanh `--color-primary`, chữ trắng đậm, hiệu ứng bóng nhẹ khi bấm.
-- **Thẻ hiển thị (Card)**: Bo góc 10px, nền trắng, viền mảnh `--color-border`, padding thoải mái 20px.
-- **Ô nhập liệu (Input)**: Viền xám nhạt, đổi màu viền xanh khi nhấp chuột vào để gõ, bo góc 6px.
-- **Thanh menu đầu trang (Header)**: Nền trắng, cố định trên cùng, chứa tên ứng dụng và các nút điều hướng nhanh.
+- **Nút bấm chính (Button)**: Bo góc 6px (`--radius-sm`), nền xanh `--color-primary`, chữ trắng đậm, hiệu ứng bóng nhẹ khi bấm (`--shadow-sm`), vùng cảm ứng tối thiểu đạt chuẩn Accessibility `min-height: 48px` / `min-width: 48px` (Compose: `Modifier.defaultMinSize(minHeight = 48.dp)`).
+- **Thẻ hiển thị (Card)**: Bo góc 10px (`--radius-md`), nền trắng `--color-surface`, viền mảnh `--color-border`, đổ bóng `--shadow-card`, padding thoải mái 20px.
+- **Ô nhập liệu (Input)**: Viền xám nhạt `--color-border`, đổi màu viền xanh `--color-primary` khi focus kèm ring phát sáng, bo góc 6px, chiều cao tối thiểu 48px cho vùng chạm.
+- **Thanh menu đầu trang (Header)**: Nền trắng, cố định trên cùng, chiều cao 64px, viền dưới 1px solid `--color-border`, chứa tên ứng dụng và các nút điều hướng nhanh.
 
 ---
 

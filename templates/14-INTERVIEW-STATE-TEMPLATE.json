@@ -61,7 +61,10 @@
           "description": { "type": "string" },
           "category": { "type": "string" },
           "priority": { "type": "string", "enum": ["P0_CRITICAL", "P1_HIGH", "P2_MEDIUM", "P3_LOW"] },
-          "status": { "type": "string", "enum": ["PROPOSED", "ACTIVE", "ACHIEVED", "ABANDONED"] },
+          "status": {
+            "type": "string",
+            "enum": ["PROPOSED", "ACTIVE", "RESOLVED", "APPROVED", "DEFERRED", "ASSUMED_WITH_APPROVAL", "BLOCKED", "ACHIEVED", "ABANDONED"]
+          },
           "related_requirements": { "type": "array", "items": { "type": "string" } }
         }
       }
@@ -107,10 +110,11 @@
               "CONFLICTING",
               "OUT_OF_SCOPE",
               "NEW_REQUIREMENT",
-              "SCOPE_CHANGE"
+              "SCOPE_CHANGE",
+              "SPONTANEOUS_INFO"
             ]
           },
-          "answer_source": { "type": "string", "enum": ["USER_EXPLICIT", "REPO_EVIDENCE", "DERIVED"] },
+          "answer_source": { "type": "string", "enum": ["USER_EXPLICIT", "REPO_EVIDENCE", "DERIVED", "USER_SPONTANEOUS"] },
           "confidence": { "type": "string", "enum": ["HIGH", "MEDIUM", "LOW"] },
           "recorded_at": { "type": "string" }
         }
@@ -181,7 +185,8 @@
           "unknown_id": { "type": "string" },
           "description": { "type": "string" },
           "impact": { "type": "string" },
-          "priority": { "type": "string", "enum": ["HIGH", "MEDIUM", "LOW"] },
+          "priority": { "type": "string", "enum": ["CRITICAL", "HIGH", "MEDIUM", "LOW", "BENIGN"] },
+          "status": { "type": "string", "enum": ["OPEN", "RESOLVED", "DEFERRED"], "default": "OPEN" },
           "resolution_strategy": { "type": "string" }
         }
       }
@@ -210,6 +215,10 @@
           "enum": ["PENDING", "SUFFICIENT", "BLOCKED", "NEEDS_INPUT"]
         },
         "evaluated_at": { "type": ["string", "null"] },
+        "goal_evaluations": {
+          "type": "array",
+          "items": { "type": "object" }
+        },
         "blocking_reasons": { "type": "array", "items": { "type": "string" } },
         "deferred_decisions": { "type": "array", "items": { "type": "string" } },
         "assumptions_summary": { "type": "object" },

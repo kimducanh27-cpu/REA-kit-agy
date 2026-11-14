@@ -120,18 +120,27 @@ KHÔNG ĐẠT    ──► LOẠI BỎ / TỰ PHÂN TÍCH / ÁP DỤNG GIẢ Đ�
 
 ---
 
-## 4. Bảng Giả Định Mặc Định An Toàn (Safe Default Assumptions)
+## 4. Phân Loại Chỉ Số Kỹ Thuật & Giả Định Tối Ưu (Technical Taxonomy & Classification)
 
-Khi người dùng không nêu rõ hoặc không có câu trả lời kỹ thuật, Agent tự động áp dụng các giả định an toàn sau và ghi vào `Assumption Record`:
+Mọi thông số kỹ thuật tối ưu hóa trong REA-kit-agy v1.1 **CẤM bị áp đặt dưới dạng giả định mặc định không qua kiểm chứng**. Toàn bộ các chỉ số phải được phân loại chặt chẽ vào một trong 5 nhóm cấu trúc:
 
-| Hạng Mục | Giả Định Mặc Định | Cơ Sở Kỹ Thuật | Tính Thuận Nghịch |
+1. `REFERENCE_BENCHMARK`: Điểm chuẩn tham chiếu từ tiêu chuẩn ngành hoặc tài liệu chính thức (Android Vitals, W3C, Google Play Policy).
+2. `CANDIDATE_RECOMMENDATION`: Đề xuất giải pháp kiến trúc tối ưu do Agent đưa ra dựa trên bối cảnh hiện trạng, cần sự đồng thuận hoặc kiểm chứng.
+3. `USER_REQUIREMENT`: Yêu cầu định lượng cụ thể do người dùng trực tiếp chỉ định trong phỏng vấn.
+4. `VERIFIED_CONSTRAINT`: Rào cản kỹ thuật bắt buộc đã được chứng minh qua bằng chứng (minSdk, kiến trúc CPU 64-bit, căn chỉnh trang bộ nhớ 16 KB).
+5. `UNAPPROVED_ASSUMPTION`: Giả định kỹ thuật tạm thời áp dụng khi người dùng ủy quyền, bắt buộc có rào chắn kiểm chứng tại Bước 10 QA.
+
+### Bảng Phân Loại Chỉ Số Kỹ Thuật Điển Hình:
+
+| Hạng Mục | Giá Trị / Đề Xuất | Phân Loại Cấu Trúc | Cơ Sở & Điều Kiện Nâng Cấp |
 | :--- | :--- | :--- | :--- |
-| **FPS Target** | 60 FPS cố định | Phù hợp mọi màn hình, cân bằng tiêu thụ pin | Cao (Dễ nâng lên 120Hz qua flags) |
-| **Cold Start** | < 1.2s trên Mid-tier | Tránh timeout hệ điều hành, tuân thủ Android Vitals | Cao |
-| **Memory Policy** | Giới hạn cache ảnh ở 20% heap | Tránh OOM trên máy yếu | Cao (Cấu hình bằng tham số) |
-| **Network Sync** | Gộp batch qua WorkManager khi sạc/Wi-Fi | Tiết kiệm tối đa pin và 4G/5G | Cao |
-| **Offline Cache** | Lưu trữ tạm thời 7 ngày gần nhất | Đảm bảo app vẫn xem được khi mất mạng | Cao |
-| **Low-End Mode** | Tự động hạ thấp visual shadow/blur | Giữ scroll 60fps trên GPU yếu | Cao |
+| **FPS Target** | 60 FPS cố định (16.6ms frame budget) | `REFERENCE_BENCHMARK` | Chuẩn Android Vitals; nâng thành `USER_REQUIREMENT` khi người dùng phê duyệt DECISION-OPT. |
+| **Cold Start** | < 1.2s trên Mid-tier | `REFERENCE_BENCHMARK` | Ngưỡng cảnh báo xấu (Bad Behavior) của Play Console; cần đo Baseline thực tế. |
+| **Memory Policy**| Giới hạn cache ảnh ở 20% heap | `CANDIDATE_RECOMMENDATION` | Giải pháp an toàn tránh OOM; chuyển thành `UNAPPROVED_ASSUMPTION` (Risk: BENIGN) nếu người dùng ủy quyền. |
+| **Network Sync** | Gộp batch qua WorkManager khi sạc/Wi-Fi | `CANDIDATE_RECOMMENDATION` | Khuyến nghị kiến trúc tiết kiệm pin; cần xác nhận từ người dùng nếu ảnh hưởng độ trễ dữ liệu. |
+| **16 KB Alignment** | Biên dịch NDK với max-page-size=16384 | `VERIFIED_CONSTRAINT` | Yêu cầu bắt buộc của Android 15 Play Store; trích xuất từ APK targetSdk 35. |
+| **Offline Cache** | Lưu trữ tạm thời 7 ngày gần nhất | `UNAPPROVED_ASSUMPTION` | Giả định có thể đảo ngược (`Reversibility: HIGH`); kiểm chứng dung lượng đĩa tại Bước 10. |
+| **Low-End Mode** | Tự động hạ thấp visual shadow/blur | `CANDIDATE_RECOMMENDATION` | Chính sách Graceful Degradation; áp dụng khi phát hiện thiết bị Low-RAM. |
 
 ---
 

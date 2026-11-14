@@ -14,11 +14,20 @@
 [CmdletBinding()]
 param(
     [Parameter(Position = 0, Mandatory = $true)]
-    [ValidateSet("init", "status", "record-goal", "record-question", "record-answer", "record-decision", "record-assumption", "record-conflict", "resolve-conflict", "record-scope-change", "evaluate-sufficiency", "validate")]
+    [ValidateSet("init", "status", "record-goal", "record-question", "record-answer", "record-decision", "record-assumption", "record-unknown", "record-conflict", "resolve-conflict", "record-scope-change", "evaluate-sufficiency", "validate")]
     [string]$Action,
 
     [Parameter(Mandatory = $false)]
     [string]$CaseId,
+
+    [Parameter(Mandatory = $false)]
+    [switch]$Force,
+
+    [Parameter(Mandatory = $false)]
+    [switch]$AllowRepeat,
+
+    [Parameter(Mandatory = $false)]
+    [switch]$Spontaneous,
 
     [Parameter(Mandatory = $false)]
     [string]$GoalId,
@@ -34,6 +43,9 @@ param(
 
     [Parameter(Mandatory = $false)]
     [string]$AssumptionId,
+
+    [Parameter(Mandatory = $false)]
+    [string]$UnknownId,
 
     [Parameter(Mandatory = $false)]
     [string]$ConflictId,
@@ -81,7 +93,7 @@ param(
     [string]$Owner = "USER_PO",
 
     [Parameter(Mandatory = $false)]
-    [string]$ApprovalStatus = "PROPOSED",
+    [string]$ApprovalStatus,
 
     [Parameter(Mandatory = $false)]
     [string]$Rationale,
@@ -131,7 +143,10 @@ param(
     [string[]]$DownstreamDeps,
 
     [Parameter(Mandatory = $false)]
-    [string]$Priority = "MEDIUM"
+    [string]$Priority = "MEDIUM",
+
+    [Parameter(Mandatory = $false)]
+    [string]$Status = "OPEN"
 )
 
 $ErrorActionPreference = "Stop"
@@ -150,7 +165,7 @@ $activeCaseFile = Join-Path $repoRoot ".agents/state/active_case.json"
 $schemaTemplateFile = Join-Path $repoRoot "templates/14-INTERVIEW-STATE-TEMPLATE.json"
 
 function Convert-ToCleanArray($inputVal) {
-    if ($null -eq $inputVal) { return @() }
+    if ($null -eq $inputVal) { return ,@() }
     $result = @()
     foreach ($item in @($inputVal)) {
         if ($null -ne $item) {
@@ -167,7 +182,7 @@ function Convert-ToCleanArray($inputVal) {
             }
         }
     }
-    return $result
+    return ,$result
 }
 
 function Write-Utf8NoBom {
@@ -236,7 +251,7 @@ function Save-InterviewState {
             $caseObj.interview.state_file = ".agents/state/interview_state.json"
             $caseObj.interview.status = $State.session.status
             $caseObj.interview.session_id = $State.session.session_id
-            $caseObj.interview.active_goals_count = @($State.goals | Where-Object { $_.status -eq "ACTIVE" }).Count
+            $caseObj.interview.active_goals_count = @($State.goals | Where-Object { $_.status -eq "ACTIVE" -or $_.status -eq "PROPOSED" -or $_.status -eq "NEEDS_INPUT" }).Count
             $caseObj.interview.decisions_count = @($State.decisions).Count
             $caseObj.interview.unresolved_conflicts_count = @($State.conflicts | Where-Object { $_.resolution_status -ne "RESOLVED" }).Count
             $caseObj.interview.critical_assumptions_count = @($State.assumptions | Where-Object { $_.risk_level -eq "CRITICAL" -and $_.status -eq "ACTIVE" }).Count
@@ -252,7 +267,43 @@ function Save-InterviewState {
 
 switch ($Action) {
     "init" {
-        $cId = if ($CaseId) { $CaseId } else { "CASE-INITIAL" }
+        $authoritativeCaseId = "CASE-INITIAL"
+        if (Test-Path -LiteralPath $activeCaseFile) {
+            try {
+                $rawCase = Get-Content -LiteralPath $activeCaseFile -Raw -Encoding UTF8 | ConvertFrom-Json
+                if ($rawCase.case_id) { $authoritativeCaseId = $rawCase.case_id }
+            } catch { }
+        }
+
+        $cId = if ($CaseId) { $CaseId } else { $authoritativeCaseId }
+        if ($CaseId -and $CaseId -ne $authoritativeCaseId -and -not $Force) {
+            throw "[CASE_MISMATCH] Requested CaseId '$CaseId' does not match active_case.json authoritative CaseId '$authoritativeCaseId'. Pass -Force to override."
+        }
+
+        # Check existing interview state for destructive overwrite prevention (DIFF-02)
+        if (Test-Path -LiteralPath $interviewStateFile) {
+            $existing = $null
+            try {
+                $existing = Get-Content -LiteralPath $interviewStateFile -Raw -Encoding UTF8 | ConvertFrom-Json
+            } catch { }
+
+            if ($existing -and $existing.session) {
+                $hasContent = (@($existing.goals).Count -gt 0 -or @($existing.questions).Count -gt 0 -or @($existing.decisions).Count -gt 0)
+                if ($hasContent -and -not $Force) {
+                    throw "[DESTRUCTIVE_INIT_REFUSED] Active interview session exists with ID '$($existing.session.session_id)' and existing goals/questions/decisions. Refusing destructive overwrite without -Force."
+                }
+                # Create backup
+                $backupDir = Join-Path $repoRoot ".agents/state/cases"
+                if (-not (Test-Path -LiteralPath $backupDir)) {
+                    New-Item -ItemType Directory -Path $backupDir -Force | Out-Null
+                }
+                $ts = (Get-Date).ToString("yyyyMMdd_HHmmss")
+                $backupFile = Join-Path $backupDir "interview_backup_$ts.json"
+                Copy-Item -LiteralPath $interviewStateFile -Destination $backupFile -Force
+                Write-Host "[BACKUP] Prior interview state backed up to: $backupFile" -ForegroundColor DarkGray
+            }
+        }
+
         $now = (Get-Date).ToString("yyyy-MM-ddTHH:mm:sszzz")
         $initState = [PSCustomObject]@{
             schema_version = 1
@@ -278,6 +329,7 @@ switch ($Action) {
             sufficiency_evaluation = [PSCustomObject]@{
                 verdict = "PENDING"
                 evaluated_at = $null
+                goal_evaluations = @()
                 blocking_reasons = @()
                 deferred_decisions = @()
                 assumptions_summary = [PSCustomObject]@{
@@ -299,16 +351,18 @@ switch ($Action) {
         Write-Host "============================================================" -ForegroundColor Cyan
         Write-Host "  REA ADAPTIVE INTERVIEW STATE: $($st.session.session_id)" -ForegroundColor Cyan
         Write-Host "============================================================" -ForegroundColor Cyan
+        Write-Host "Case ID:              $($st.case_id)"
         Write-Host "Status:               $($st.session.status)"
         Write-Host "Active Domain:        $(if ($st.session.active_domain) { $st.session.active_domain } else { 'NONE' })"
         Write-Host "Design Mode:          $(if ($st.session.design_mode) { $st.session.design_mode } else { 'UNSET' })"
         Write-Host "Sufficiency Verdict:  $($st.sufficiency_evaluation.verdict)"
         Write-Host "------------------------------------------------------------"
-        Write-Host "Goals Total:          $(@($st.goals).Count) (Active: $(@($st.goals | Where-Object { $_.status -eq 'ACTIVE' }).Count))"
+        Write-Host "Goals Total:          $(@($st.goals).Count)"
         Write-Host "Questions Total:      $(@($st.questions).Count) (Asked: $(@($st.questions | Where-Object { $_.status -eq 'ASKED' }).Count), Answered: $(@($st.questions | Where-Object { $_.status -eq 'ANSWERED' }).Count))"
         Write-Host "Decisions Total:      $(@($st.decisions).Count) (Approved: $(@($st.decisions | Where-Object { $_.approval_status -eq 'APPROVED' }).Count))"
         Write-Host "Assumptions Total:    $(@($st.assumptions).Count) (Critical: $(@($st.assumptions | Where-Object { $_.risk_level -eq 'CRITICAL' -and $_.status -eq 'ACTIVE' }).Count))"
         Write-Host "Conflicts Total:      $(@($st.conflicts).Count) (Unresolved: $(@($st.conflicts | Where-Object { $_.resolution_status -ne 'RESOLVED' }).Count))"
+        Write-Host "Unknowns Total:       $(@($st.unknowns).Count) (Open: $(@($st.unknowns | Where-Object { $_.status -eq 'OPEN' -or -not $_.status }).Count))"
         Write-Host "Scope Changes:        $(@($st.scope_changes).Count)"
         Write-Host "------------------------------------------------------------"
         if ($st.sufficiency_evaluation.blocking_reasons.Count -gt 0) {
@@ -330,6 +384,7 @@ switch ($Action) {
         if ($existing.Count -gt 0) {
             $existing[0].description = $Description
             if ($Priority) { $existing[0].priority = $Priority }
+            if ($RelatedRequirements) { $existing[0].related_requirements = Convert-ToCleanArray $RelatedRequirements }
         } else {
             $newG = [PSCustomObject]@{
                 goal_id = $GoalId
@@ -353,11 +408,22 @@ switch ($Action) {
         }
         $st = Get-InterviewState
 
-        # Repetition check (R7)
-        $sameText = @($st.questions | Where-Object { $_.question_text.Trim().ToLower() -eq $Text.Trim().ToLower() })
-        if ($sameText.Count -gt 0 -and $sameText[0].status -eq "ANSWERED") {
-            Write-Warning "[REPETITION_ALERT] Question identical to $($sameText[0].question_id) was already answered. Ensure this repetition meets R7 criteria (recorded in Reason)."
-            Write-Host "[REPETITION_ALERT] Question identical to $($sameText[0].question_id) was already answered." -ForegroundColor Yellow
+        # Real repetition check (DIFF-03)
+        $cleanText = $Text.Trim().ToLower() -replace '\s+', ' '
+        $matchingQ = @($st.questions | Where-Object {
+            $existingText = $_.question_text.Trim().ToLower() -replace '\s+', ' '
+            $existingText -eq $cleanText
+        })
+
+        if ($matchingQ.Count -gt 0) {
+            $priorQ = $matchingQ[0]
+            if (-not $AllowRepeat) {
+                throw "[REPETITION_REJECTED] Question identical to '$($priorQ.question_id)' was already recorded (Status: $($priorQ.status)). Repeating questions requires explicit justification under R7. Pass -AllowRepeat -Reason '<detailed reason>'."
+            }
+            if ([string]::IsNullOrWhiteSpace($Reason)) {
+                throw "[REPETITION_REJECTED] -AllowRepeat requires a valid non-empty -Reason explaining why repetition is necessary under R7."
+            }
+            Write-Warning "[REPETITION_ALLOWED] Question '$QuestionId' re-asking '$($priorQ.question_id)' with justification: $Reason"
         }
 
         $newQ = [PSCustomObject]@{
@@ -371,6 +437,13 @@ switch ($Action) {
             priority = if ($Priority) { $Priority } else { "MEDIUM" }
             status = "ASKED"
             asked_at = (Get-Date).ToString("yyyy-MM-ddTHH:mm:sszzz")
+            repetition = if ($matchingQ.Count -gt 0) {
+                [PSCustomObject]@{
+                    is_repeated = $true
+                    prior_question_id = $matchingQ[0].question_id
+                    justification = $Reason
+                }
+            } else { $null }
         }
         $st.questions = @($st.questions | Where-Object { $_.question_id -ne $QuestionId }) + $newQ
         Save-InterviewState -State $st
@@ -378,37 +451,71 @@ switch ($Action) {
     }
 
     "record-answer" {
-        if (-not $AnswerId -or -not $QuestionId -or -not $Answer) {
-            throw "AnswerId, QuestionId, and Answer are mandatory."
+        if (-not $AnswerId -or -not $Answer) {
+            throw "AnswerId and Answer are mandatory."
         }
         $st = Get-InterviewState
 
-        # Update question status
-        $q = @($st.questions | Where-Object { $_.question_id -eq $QuestionId })
-        if ($q.Count -gt 0) {
-            $q[0].status = "ANSWERED"
+        $q = @()
+        if ($QuestionId) {
+            $q = @($st.questions | Where-Object { $_.question_id -eq $QuestionId })
         }
 
-        $ansType = if ($Type) { $Type } else { "CLEAR" }
+        # Orphan Answer Prevention (DIFF-04)
+        if ($q.Count -eq 0) {
+            if (-not $Spontaneous -and $Type -ne "SPONTANEOUS_INFO") {
+                throw "[ORPHAN_ANSWER_REJECTED] QuestionId '$QuestionId' does not exist in interview state. To record unsolicited user information, pass -Spontaneous."
+            }
+            $ansType = "SPONTANEOUS_INFO"
+            $ansSource = "USER_SPONTANEOUS"
+            $effQId = if ($QuestionId) { $QuestionId } else { "SPONTANEOUS-$AnswerId" }
+
+            # Create synthetic question to prevent referential breakage
+            $synthQ = [PSCustomObject]@{
+                question_id = $effQId
+                question_text = "[Spontaneous user contribution] $Answer"
+                question_reason = "Unsolicited user input captured spontaneously"
+                domain = if ($Domain) { $Domain } else { "GENERAL" }
+                related_goal_ids = Convert-ToCleanArray $GoalIds
+                related_decision_ids = Convert-ToCleanArray $DecisionIds
+                expected_information = "Unsolicited info"
+                priority = "MEDIUM"
+                status = "ANSWERED"
+                asked_at = (Get-Date).ToString("yyyy-MM-ddTHH:mm:sszzz")
+            }
+            $st.questions = @($st.questions | Where-Object { $_.question_id -ne $effQId }) + $synthQ
+        } else {
+            $q[0].status = "ANSWERED"
+            $ansType = if ($Type) { $Type } else { "CLEAR" }
+            $ansSource = if ($Source) { $Source } else { "USER_EXPLICIT" }
+            $effQId = $QuestionId
+        }
+
         $newA = [PSCustomObject]@{
             answer_id = $AnswerId
-            question_id = $QuestionId
+            question_id = $effQId
             original_answer = $Answer
             interpreted_answer = if ($Interpreted) { $Interpreted } else { $Answer }
             answer_type = $ansType
-            answer_source = if ($Source) { $Source } else { "USER_EXPLICIT" }
+            answer_source = $ansSource
             confidence = if ($Confidence) { $Confidence } else { "HIGH" }
             recorded_at = (Get-Date).ToString("yyyy-MM-ddTHH:mm:sszzz")
         }
         $st.answers = @($st.answers | Where-Object { $_.answer_id -ne $AnswerId }) + $newA
         Save-InterviewState -State $st
-        Write-Host "[OK] Recorded Answer: $AnswerId (Type: $ansType)" -ForegroundColor Green
+        Write-Host "[OK] Recorded Answer: $AnswerId (Type: $ansType, Source: $ansSource)" -ForegroundColor Green
     }
 
     "record-decision" {
         if (-not $DecisionId -or -not $Description -or -not $SelectedOption) {
             throw "DecisionId, Description, and SelectedOption are mandatory."
         }
+        $validStatuses = @("PROPOSED", "APPROVED", "REJECTED", "DEFERRED")
+        $appStatus = if ($ApprovalStatus) { $ApprovalStatus.ToUpper() } else { "PROPOSED" }
+        if ($validStatuses -notcontains $appStatus) {
+            throw "Invalid decision ApprovalStatus '$ApprovalStatus'. Valid: $($validStatuses -join ', ')"
+        }
+
         $st = Get-InterviewState
         $newD = [PSCustomObject]@{
             decision_id = $DecisionId
@@ -416,19 +523,28 @@ switch ($Action) {
             available_options = if ($Options) { Convert-ToCleanArray $Options } else { @($SelectedOption) }
             selected_option = $SelectedOption
             decision_owner = if ($Owner) { $Owner } else { "USER_PO" }
-            approval_status = if ($ApprovalStatus) { $ApprovalStatus } else { "PROPOSED" }
+            approval_status = $appStatus
             evidence_refs = Convert-ToCleanArray $EvidenceRefs
             related_requirements = Convert-ToCleanArray $RelatedRequirements
         }
         $st.decisions = @($st.decisions | Where-Object { $_.decision_id -ne $DecisionId }) + $newD
         Save-InterviewState -State $st
-        Write-Host "[OK] Recorded Decision: $DecisionId (Status: $($newD.approval_status))" -ForegroundColor Green
+        Write-Host "[OK] Recorded Decision: $DecisionId (Status: $appStatus)" -ForegroundColor Green
     }
 
     "record-assumption" {
         if (-not $AssumptionId -or -not $Description -or -not $Rationale) {
             throw "AssumptionId, Description, and Rationale are mandatory."
         }
+        $validStatuses = @("PENDING_APPROVAL", "APPROVED", "REJECTED")
+        $appStatus = if ($ApprovalStatus) { $ApprovalStatus.ToUpper() } else { "PENDING_APPROVAL" }
+        if ($appStatus -eq "PROPOSED") {
+            $appStatus = "PENDING_APPROVAL"
+        }
+        if ($validStatuses -notcontains $appStatus) {
+            throw "Invalid assumption ApprovalStatus '$ApprovalStatus'. Valid: $($validStatuses -join ', ')"
+        }
+
         $st = Get-InterviewState
         $newAs = [PSCustomObject]@{
             assumption_id = $AssumptionId
@@ -436,7 +552,7 @@ switch ($Action) {
             rationale = $Rationale
             impact = if ($Impact) { $Impact } else { "Low" }
             risk_level = if ($RiskLevel) { $RiskLevel } else { "BENIGN" }
-            approval_status = if ($ApprovalStatus) { $ApprovalStatus } else { "APPROVED" }
+            approval_status = $appStatus
             verification_task = if ($VerificationTask) { $VerificationTask } else { "Verify during Step 10 QA" }
             status = "ACTIVE"
             invalidated_at = $null
@@ -445,7 +561,36 @@ switch ($Action) {
         }
         $st.assumptions = @($st.assumptions | Where-Object { $_.assumption_id -ne $AssumptionId }) + $newAs
         Save-InterviewState -State $st
-        Write-Host "[OK] Recorded Assumption: $AssumptionId (Risk: $($newAs.risk_level))" -ForegroundColor Green
+        Write-Host "[OK] Recorded Assumption: $AssumptionId (Status: $appStatus, Risk: $($newAs.risk_level))" -ForegroundColor Green
+    }
+
+    "record-unknown" {
+        if (-not $UnknownId -or -not $Description) {
+            throw "UnknownId and Description are mandatory."
+        }
+        $validPriorities = @("CRITICAL", "HIGH", "MEDIUM", "LOW", "BENIGN")
+        $prio = if ($Priority) { $Priority.ToUpper() } else { "MEDIUM" }
+        if ($validPriorities -notcontains $prio) {
+            throw "Invalid unknown Priority '$Priority'. Valid: $($validPriorities -join ', ')"
+        }
+        $validStatuses = @("OPEN", "RESOLVED", "DEFERRED")
+        $unkStatus = if ($Status) { $Status.ToUpper() } else { "OPEN" }
+        if ($validStatuses -notcontains $unkStatus) {
+            throw "Invalid unknown Status '$Status'. Valid: $($validStatuses -join ', ')"
+        }
+
+        $st = Get-InterviewState
+        $newUnk = [PSCustomObject]@{
+            unknown_id = $UnknownId
+            description = $Description
+            impact = if ($Impact) { $Impact } else { "Unassessed" }
+            priority = $prio
+            status = $unkStatus
+            resolution_strategy = if ($ResolutionStrategy) { $ResolutionStrategy } else { "TBD" }
+        }
+        $st.unknowns = @($st.unknowns | Where-Object { $_.unknown_id -ne $UnknownId }) + $newUnk
+        Save-InterviewState -State $st
+        Write-Host "[OK] Recorded Unknown: $UnknownId (Priority: $prio, Status: $unkStatus)" -ForegroundColor Green
     }
 
     "record-conflict" {
@@ -506,9 +651,10 @@ switch ($Action) {
         $st = Get-InterviewState
         $blocking = @()
         $deferred = @()
+        $goalEvals = @()
 
-        # 1. Check Unresolved Conflicts
-        $unresolvedConflicts = @($st.conflicts | Where-Object { $_.resolution_status -eq "UNRESOLVED" -and ($_.severity -eq "CRITICAL" -or $_.severity -eq "MAJOR") })
+        # 1. Check Unresolved Conflicts (DIFF-01 Test 05)
+        $unresolvedConflicts = @($st.conflicts | Where-Object { $_.resolution_status -ne "RESOLVED" -and ($_.severity -eq "CRITICAL" -or $_.severity -eq "MAJOR") })
         if ($unresolvedConflicts.Count -gt 0) {
             foreach ($c in $unresolvedConflicts) {
                 $blocking += "Unresolved $($c.severity) Conflict: $($c.conflict_id) - $($c.explanation)"
@@ -523,50 +669,123 @@ switch ($Action) {
             }
         }
 
-        # 3. Check Goals Resolution
-        $activeGoals = @($st.goals | Where-Object { $_.status -eq "ACTIVE" })
+        # 3. Check Critical/High Unknowns Unresolved (DIFF-01 Test 03)
+        $blockingUnknowns = @($st.unknowns | Where-Object { ($_.status -eq "OPEN" -or -not $_.status) -and ($_.priority -eq "CRITICAL" -or $_.priority -eq "HIGH") })
+        if ($blockingUnknowns.Count -gt 0) {
+            foreach ($u in $blockingUnknowns) {
+                $blocking += "Important unresolved unknown ($($u.priority)): $($u.unknown_id) - $($u.description)"
+            }
+        }
+
+        # 4. Check Goals Resolution (DIFF-01 Tests 01, 02, 04, 06)
+        $activeGoals = @($st.goals | Where-Object { $_.status -ne "ACHIEVED" -and $_.status -ne "ABANDONED" })
         if ($activeGoals.Count -eq 0) {
             $blocking += "No active goals recorded in interview state."
         } else {
             foreach ($g in $activeGoals) {
+                $gId = $g.goal_id
+                $gBlockers = @()
+
+                # Check Goal clarity
+                if ([string]::IsNullOrWhiteSpace($g.description)) {
+                    $gBlockers += "Goal $gId has empty description."
+                }
+
                 # Find matching decisions
                 $matchingDecisions = @($st.decisions | Where-Object {
-                    $_.related_requirements -contains $g.goal_id -or $_.description -match [regex]::Escape($g.goal_id)
+                    $_.related_requirements -contains $gId -or
+                    $_.description -match [regex]::Escape($gId) -or
+                    $g.related_requirements -contains $_.decision_id
                 })
-                if ($matchingDecisions.Count -eq 0) {
-                    # Check if questions are pending
-                    $pendingQ = @($st.questions | Where-Object { $_.related_goal_ids -contains $g.goal_id -and $_.status -ne "ANSWERED" })
-                    if ($pendingQ.Count -gt 0) {
-                        $blocking += "Goal $($g.goal_id) has unanswered question: $($pendingQ[0].question_id)"
+
+                # Find pending questions
+                $pendingQ = @($st.questions | Where-Object {
+                    $_.related_goal_ids -contains $gId -and $_.status -ne "ANSWERED"
+                })
+
+                if ($pendingQ.Count -gt 0) {
+                    foreach ($pq in $pendingQ) {
+                        $gBlockers += "Goal $gId has unanswered question: $($pq.question_id) ('$($pq.question_text)')"
                     }
+                }
+
+                # Status evaluation for this goal
+                $gStatus = "NEEDS_INPUT"
+                $approvedDecs = @($matchingDecisions | Where-Object { $_.approval_status -eq "APPROVED" })
+                $deferredDecs = @($matchingDecisions | Where-Object { $_.approval_status -eq "DEFERRED" })
+                $proposedDecs = @($matchingDecisions | Where-Object { $_.approval_status -eq "PROPOSED" })
+                $rejectedDecs = @($matchingDecisions | Where-Object { $_.approval_status -eq "REJECTED" })
+
+                if ($matchingDecisions.Count -eq 0) {
+                    # Test 01: Goal without decision and without questions must NOT pass
+                    $gBlockers += "Goal $gId has no resolving decision recorded."
+                    $gStatus = "NEEDS_INPUT"
+                } elseif ($rejectedDecs.Count -gt 0) {
+                    $gBlockers += "Goal $gId is linked to REJECTED decision $($rejectedDecs[0].decision_id)."
+                    $gStatus = "BLOCKED"
+                } elseif ($proposedDecs.Count -gt 0 -and $approvedDecs.Count -eq 0 -and $deferredDecs.Count -eq 0) {
+                    # Test 02: PROPOSED Decision must not count as approved
+                    $gBlockers += "Goal $gId decision $($proposedDecs[0].decision_id) remains PROPOSED (requires user approval)."
+                    $gStatus = "NEEDS_INPUT"
+                } elseif ($deferredDecs.Count -gt 0 -and $approvedDecs.Count -eq 0) {
+                    # Test 04: Properly deferred non-critical decision
+                    $gStatus = "DEFERRED"
+                } elseif ($approvedDecs.Count -gt 0) {
+                    $gStatus = "RESOLVED"
+                }
+
+                # Check if resolved by approved assumption
+                $matchingAssumptions = @($st.assumptions | Where-Object {
+                    $_.downstream_dependencies -contains $gId -or $_.description -match [regex]::Escape($gId)
+                })
+                $approvedAssumptions = @($matchingAssumptions | Where-Object { $_.approval_status -eq "APPROVED" })
+                if ($approvedAssumptions.Count -gt 0 -and $gStatus -ne "RESOLVED") {
+                    $gStatus = "ASSUMED_WITH_APPROVAL"
+                }
+
+                if ($gBlockers.Count -gt 0) {
+                    $blocking += $gBlockers
+                    if ($gStatus -eq "RESOLVED") { $gStatus = "BLOCKED" }
+                }
+
+                # Update goal status in state
+                $g.status = $gStatus
+
+                $goalEvals += [PSCustomObject]@{
+                    goal_id = $gId
+                    status = $gStatus
+                    decision_ids = @($matchingDecisions | ForEach-Object { $_.decision_id })
+                    pending_questions = @($pendingQ | ForEach-Object { $_.question_id })
+                    blocking_reasons = $gBlockers
                 }
             }
         }
 
-        # 4. Check Decisions Approval Status
+        # 5. Check Decisions Approval Status
         $unapprovedDecisions = @($st.decisions | Where-Object { $_.approval_status -eq "REJECTED" })
         if ($unapprovedDecisions.Count -gt 0) {
             foreach ($d in $unapprovedDecisions) {
                 $blocking += "Rejected decision requires resolution: $($d.decision_id)"
             }
         }
+
+        # 6. Collect Deferred Decisions
         $deferredDecisions = @($st.decisions | Where-Object { $_.approval_status -eq "DEFERRED" })
         foreach ($dd in $deferredDecisions) {
             $deferred += "$($dd.decision_id): $($dd.description)"
         }
 
-        # Calculate Verdict
+        # Calculate Final Verdict
         $verdict = "SUFFICIENT"
         $summary = "All active goals, decisions, and assumptions meet the Exit Gate criteria. Ready for Spec Freeze."
 
         if ($blocking.Count -gt 0) {
-            # Check if blocked by conflicts or unapproved critical items
-            if ($unresolvedConflicts.Count -gt 0 -or $criticalAssumptions.Count -gt 0) {
+            if ($unresolvedConflicts.Count -gt 0 -or $criticalAssumptions.Count -gt 0 -or $blockingUnknowns.Count -gt 0 -or (@($goalEvals | Where-Object { $_.status -eq "BLOCKED" }).Count -gt 0)) {
                 $verdict = "BLOCKED"
-                $summary = "Interview is BLOCKED by unresolved conflicts or unapproved critical assumptions."
+                $summary = "Interview is BLOCKED by unresolved conflicts, critical unknowns, or unapproved critical assumptions."
             } else {
                 $verdict = "NEEDS_INPUT"
-                $summary = "Interview requires additional input or decision resolution before Gate 03."
+                $summary = "Interview requires additional input, question responses, or decision approval before Gate 03."
             }
         }
 
@@ -578,6 +797,7 @@ switch ($Action) {
         $st.sufficiency_evaluation = [PSCustomObject]@{
             verdict = $verdict
             evaluated_at = $now
+            goal_evaluations = $goalEvals
             blocking_reasons = $blocking
             deferred_decisions = $deferred
             assumptions_summary = [PSCustomObject]@{
@@ -633,7 +853,59 @@ switch ($Action) {
         if (-not $st.session -or -not $st.session.session_id) {
             throw "Invalid interview state: missing session"
         }
-        Write-Host "[PASS] Interview state is structurally valid." -ForegroundColor Green
+
+        $errors = @()
+        $gIds = @($st.goals | ForEach-Object { $_.goal_id })
+        $qIds = @($st.questions | ForEach-Object { $_.question_id })
+        $dIds = @($st.decisions | ForEach-Object { $_.decision_id })
+
+        # Questions referential integrity
+        foreach ($q in $st.questions) {
+            if ($q.related_goal_ids) {
+                foreach ($gid in @($q.related_goal_ids)) {
+                    if (-not [string]::IsNullOrWhiteSpace($gid) -and $gIds -notcontains $gid) {
+                        $errors += "Question '$($q.question_id)' references non-existent goal '$gid'."
+                    }
+                }
+            }
+            if ($q.related_decision_ids) {
+                foreach ($did in @($q.related_decision_ids)) {
+                    if (-not [string]::IsNullOrWhiteSpace($did) -and $dIds -notcontains $did) {
+                        $errors += "Question '$($q.question_id)' references non-existent decision '$did'."
+                    }
+                }
+            }
+        }
+
+        # Answers referential integrity
+        foreach ($a in $st.answers) {
+            if ($a.question_id -and -not [string]::IsNullOrWhiteSpace($a.question_id) -and $qIds -notcontains $a.question_id -and $a.answer_type -ne "SPONTANEOUS_INFO") {
+                $errors += "Answer '$($a.answer_id)' references non-existent question '$($a.question_id)'."
+            }
+        }
+
+        # Decisions referential integrity
+        foreach ($d in $st.decisions) {
+            if ($d.related_requirements) {
+                foreach ($req in @($d.related_requirements)) {
+                    if (-not [string]::IsNullOrWhiteSpace($req) -and $gIds -notcontains $req -and -not ($req -match '^(REQ-|NF-|G-)')) {
+                        # Non-fatal notice for external req tags
+                    }
+                }
+            }
+        }
+
+        if ($errors.Count -gt 0) {
+            Write-Host "============================================================" -ForegroundColor Red
+            Write-Host "  INTERVIEW STATE REFERENTIAL INTEGRITY ERRORS ($($errors.Count))" -ForegroundColor Red
+            Write-Host "============================================================" -ForegroundColor Red
+            foreach ($err in $errors) {
+                Write-Host "  [X] $err" -ForegroundColor Red
+            }
+            exit 1
+        }
+
+        Write-Host "[PASS] Interview state is structurally valid and referentially intact." -ForegroundColor Green
         exit 0
     }
 }

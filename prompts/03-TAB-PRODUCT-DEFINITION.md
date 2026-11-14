@@ -24,18 +24,23 @@ Cổng 02 (`gate_02_audit_passed`) phải ở một trong các trạng thái h�
 - `REUSED_VALIDATED` (Tái sử dụng bằng chứng hợp lệ từ case trước).
 - `SKIPPED` (Bỏ qua hợp lệ có lý do, ví dụ: chế độ Source Repository `WF03`).
 - `NOT_APPLICABLE` (Không áp dụng cho chế độ ca làm việc hiện tại).
+- `WAIVED` (Được phê duyệt miễn trừ có lý do giải trình).
 Nếu Cổng 02 ở trạng thái `FAILED`, `BLOCKED`, `NOT_STARTED` hoặc `INVALIDATED`, dừng lại và xử lý Cổng 02 trước.
 
 You are executing **STAGE_03 · PRODUCT DEFINITION**:
 
 ### BƯỚC 06: REA ADAPTIVE INTERVIEW & ART DIRECTION (Skill `rea-interview`)
 1. **Context Ingestion & Evidence Analysis**:
+   - Tối ưu hóa tải ngữ cảnh thông qua Context Engine:
+     `powershell -NoProfile -ExecutionPolicy Bypass -File .agents/scripts/context.ps1 plan -Task "<Mô tả mục tiêu phỏng vấn>"`
+     `powershell -NoProfile -ExecutionPolicy Bypass -File .agents/scripts/context.ps1 pack -PlanId "<PlanId>"`
    - Đọc đồng thời các tài liệu đầu vào:
      * `02_YEU_CAU_CUA_TOI/ho-so-va-muc-tieu.md`
      * `03_KET_QUA_KIEM_TRA/bao-cao-hien-trang.md` (nếu có)
      * `03_KET_QUA_KIEM_TRA/UNKNOWNS_AND_COVERAGE.md` (nếu có)
      * `.agents/state/interview_state.json`
    - Phân loại dữ liệu theo 6 nhãn tin cậy: `VERIFIED_FACT`, `USER_STATED`, `AI_INFERENCE`, `ASSUMPTION`, `UNKNOWN`, `CONFLICT`.
+   - Phân loại các thông số kỹ thuật theo 5 tầng: `REFERENCE_BENCHMARK`, `CANDIDATE_RECOMMENDATION`, `USER_REQUIREMENT`, `VERIFIED_CONSTRAINT`, `UNAPPROVED_ASSUMPTION`.
    - Cấm hỏi người dùng những thông tin đã được kiểm chứng từ mã nguồn, manifest, hoặc báo cáo hiện trạng.
 
 2. **Khởi tạo / Đồng bộ Interview State**:

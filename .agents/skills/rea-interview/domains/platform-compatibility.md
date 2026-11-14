@@ -125,17 +125,23 @@ Agent phải điều tra và lập kế hoạch tương thích cho các dải t�
 
 ## 4. Ma Trận Đóng Băng & Tiêu Chí Nghiệm Thu Màn Hình Di Động
 
-Bản đặc tả tại Bước 07 bắt buộc phải có **Mobile Display Compatibility Matrix**:
+Bản đặc tả tại Bước 07 bắt buộc phải có **Mobile Display Compatibility Matrix** tuân thủ mô hình trạng thái dựa trên bằng chứng (Evidence-Based Status Model):
+- `NOT_ASSESSED`: Chưa đánh giá.
+- `IN_SCOPE`: Mục tiêu hỗ trợ, chờ phát triển và kiểm thử.
+- `NOT_VERIFIED`: Đã code nhưng chưa pass bài test thị giác.
+- `SUPPORTED`: Đã xác minh có bằng chứng kiểm thử đạt yêu cầu.
+- `UNSUPPORTED`: Xác nhận không hỗ trợ.
+- `OUT_OF_SCOPE`: Loại khỏi phạm vi dự án.
 
 | Device class | Aspect ratio | Viewport (dp) | Orientation | Support status | Verification |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| **Small Phone** | 16:9 | 320 × 568 to 360 × 640 | Portrait / Landscape | SUPPORTED (Baseline) | Automated Screenshot & Smoke Test |
-| **Standard Smartphone** | 18:9 / 18.5:9 | 360 × 720 to 393 × 800 | Portrait / Landscape | SUPPORTED (Primary) | Device Runner / AVD & Visual Review |
-| **Tall Smartphone** | 19.5:9 / 20:9 | 360 × 780 to 412 × 915 | Portrait / Landscape | SUPPORTED (Primary) | Device Runner / AVD & Cutout Check |
-| **Ultra-Tall Smartphone** | 21:9 | 360 × 840 to 412 × 960 | Portrait / Landscape | SUPPORTED | Inset Padding & Scroll Flow Test |
-| **Foldable (Outer / Folded)** | 21:9 to 23:9 | 320 × 800 to 360 × 880 | Portrait | SUPPORTED | Aspect Ratio & Text Wrap Test |
-| **Foldable (Inner / Unfolded)** | 8:7.1 / 4:3 | 674 × 841 to 768 × 1024 | Portrait / Landscape | SUPPORTED (Adaptive) | Two-Pane / Dual-Column Layout Test |
-| **Tablet** | 16:10 / 3:2 | 800 × 1280 to 1200 × 1920 | Landscape / Portrait | SUPPORTED (Expanded) | Window Size Class Expanded Test |
+| **Small Phone** | 16:9 | 320 × 568 to 360 × 640 | Portrait / Landscape | IN_SCOPE (Baseline Target) | Automated Screenshot & Smoke Test (320dp) |
+| **Standard Smartphone** | 18:9 / 18.5:9 | 360 × 720 to 393 × 800 | Portrait / Landscape | IN_SCOPE (Primary Target) | Device Runner / AVD & Visual Review |
+| **Tall Smartphone** | 19.5:9 / 20:9 | 360 × 780 to 412 × 915 | Portrait / Landscape | IN_SCOPE (Primary Target) | Device Runner / AVD & Cutout Check |
+| **Ultra-Tall Smartphone** | 21:9 | 360 × 840 to 412 × 960 | Portrait / Landscape | IN_SCOPE (Pending Verification) | Inset Padding & Scroll Flow Test |
+| **Foldable (Outer / Folded)** | 21:9 to 23:9 | 320 × 800 to 360 × 880 | Portrait | IN_SCOPE (Pending Verification) | Aspect Ratio & Text Wrap Test |
+| **Foldable (Inner / Unfolded)** | 8:7.1 / 4:3 | 674 × 841 to 768 × 1024 | Portrait / Landscape | NOT_ASSESSED (Optional / Adaptive) | Two-Pane / Dual-Column Layout Test |
+| **Tablet** | 16:10 / 3:2 | 800 × 1280 to 1200 × 1920 | Landscape / Portrait | OUT_OF_SCOPE (Default Non-Goal) | Window Size Class Expanded Test |
 
 ### Tiêu Chí Nghiệm Thu Bắt Buộc (Verifiable Acceptance Criteria):
 1. **Khả Năng Tiếp Cận & Vị Trí Thành Phần Cốt Lõi**:

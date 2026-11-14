@@ -168,12 +168,14 @@ function Resolve-ProfileName {
     }
 
     $t = if ($TaskText) { $TaskText.ToLower() } else { "" }
-    if ($t -match "\b(secur|audit|vulnerab|cve|secret|hardcod|permiss)\b") { return "security" }
-    if ($t -match "\b(optim|perf|speed|memory|battery|leak|profil)\b") { return "optimization" }
-    if ($t -match "\b(design|ui|ux|token|layout|copy|anti-slop)\b") { return "design" }
-    if ($t -match "\b(validat|smoke|hard-verify|matrix|handoff|release)\b") { return "validation" }
-    if ($t -match "\b(feature|rebuild|implement|build|code|add|screen)\b") { return "feature-addition" }
-    if ($t -match "\b(discover|intake|scan|explore|baseline|investigat)\b") { return "discovery" }
+
+    # Vietnamese & English intent classification
+    if ($t -match "\b(secur|audit|vulnerab|cve|secret|hardcod|permiss)\b" -or $t -match "(bảo mật|lỗ hổng|mã hóa|quyền truy cập|an toàn)") { return "security" }
+    if ($t -match "\b(optim|perf|speed|memory|battery|leak|profil)\b" -or $t -match "(tối ưu|hiệu năng|tiêu thụ ram|ngốn ram|hao pin|tiết kiệm pin|tốc độ|mượt|lag|giật)") { return "optimization" }
+    if ($t -match "\b(design|ui|ux|token|layout|copy|anti-slop)\b" -or $t -match "(giao diện|thiết kế|thẩm mỹ|đổi màu|bố cục|responsive|tỷ lệ màn hình|trực quan)") { return "design" }
+    if ($t -match "\b(validat|smoke|hard-verify|matrix|handoff|release)\b" -or $t -match "(nghiệm thu|kiểm thử|xác minh|kiểm định|bàn giao|phát hành)") { return "validation" }
+    if ($t -match "\b(feature|rebuild|implement|build|code|add|screen)\b" -or $t -match "(thêm tính năng|chức năng mới|viết lại|phát triển|xây dựng|màn hình mới)") { return "feature-addition" }
+    if ($t -match "\b(discover|intake|scan|explore|baseline|investigat)\b" -or $t -match "(khám phá|quét|chẩn đoán|điều tra|bóc tách|tìm hiểu|sửa lỗi|fix bug|crash|bị lỗi|văng ứng dụng|treo máy)") { return "discovery" }
 
     switch ($StageName) {
         "STAGE_00_BOOTSTRAP" { return "discovery" }

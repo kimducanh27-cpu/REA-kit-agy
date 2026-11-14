@@ -149,12 +149,12 @@
     "interview":  {
                       "state_file":  ".agents/state/interview_state.json",
                       "status":  "IN_PROGRESS",
-                      "session_id":  "INT-SESSION-20261114-113223",
+                      "session_id":  "INT-SESSION-20261114-120852",
                       "active_goals_count":  0,
                       "decisions_count":  0,
                       "unresolved_conflicts_count":  0,
                       "critical_assumptions_count":  0,
-                      "sufficiency_verdict":  "NEEDS_INPUT"
+                      "sufficiency_verdict":  "PENDING"
                   },
     "metrics":  {
                     "coverage_score":  null,

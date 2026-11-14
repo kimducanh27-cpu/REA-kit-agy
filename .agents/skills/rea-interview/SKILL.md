@@ -63,6 +63,14 @@ Trước khi gửi bất kỳ câu hỏi nào cho người dùng, Agent **BẮT 
 5. `UNKNOWN`: Điểm mù thông tin chưa có lời giải và chưa có giả định. Cần xác định xem có ảnh hưởng trực tiếp đến Stage 04 hay không.
 6. `CONFLICT`: Hai luồng dữ liệu hoặc yêu cầu mâu thuẫn trực tiếp với nhau. **BẮT BUỘC LÀM RÕ**.
 
+### Phân Loại Chỉ Số Kỹ Thuật (5-Tier Technical Classification):
+Mọi thông số kỹ thuật (FPS, Cold start, Cache, Insets) bắt buộc phải phân loại theo 5 tầng:
+- `REFERENCE_BENCHMARK`: Tiêu chuẩn ngành / tài liệu nền tảng (Android Vitals 60fps, Cold start < 1.2s).
+- `CANDIDATE_RECOMMENDATION`: Đề xuất kỹ thuật tối ưu từ Agent dựa trên hiện trạng.
+- `USER_REQUIREMENT`: Chỉ tiêu cụ thể do người dùng chốt qua phỏng vấn hoặc tài liệu yêu cầu.
+- `VERIFIED_CONSTRAINT`: Giới hạn phần cứng/hệ điều hành đã xác minh từ mã nguồn/APK (minSdk 26, 16 KB Page-Size).
+- `UNAPPROVED_ASSUMPTION`: Giả định kỹ thuật tạm thời chờ phê duyệt hoặc kiểm chứng thực nghiệm.
+
 ---
 
 ## 3. MƯỜI TÊN MIỀN KIẾN THỨC PHỎNG VẤN (10 ADAPTIVE DOMAINS)
@@ -117,6 +125,7 @@ Khi ứng dụng đích hỗ trợ thiết bị di động (Android / Web Mobile
    - Toàn bộ quy chuẩn và kích thước tính toán bằng `dp` (Logical Viewport) và `sp` (Scalable Text), không dùng `px`.
 5. **Cấm giả định tương thích tự động (Never Assume Compatibility)**:
    - Chạy tốt trên 16:9 không đồng nghĩa hiển thị đẹp trên 20:9 hay màn hình gập.
+   - Bắt buộc áp dụng mô hình trạng thái dựa trên bằng chứng: `NOT_ASSESSED`, `IN_SCOPE`, `NOT_VERIFIED`, `SUPPORTED`, `UNSUPPORTED`, `OUT_OF_SCOPE`. Cấm tuyệt đối gán cứng `SUPPORTED` khi chưa có bằng chứng kiểm thử đạt yêu cầu.
    - Bắt buộc hoàn tất **Mobile Display Compatibility Matrix** trong `03_KET_QUA_KIEM_TRA/dac-ta-yeu-cau-da-chot.md` trước khi thông qua Cổng 03.
 
 ---

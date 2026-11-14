@@ -227,6 +227,24 @@ flowchart TD
 
 ## 3. Bảng Ma Trận 6 Cổng Kiểm Soát (Quality Gates Matrix)
 
+### Hệ Thống 11 Trạng Thái Cổng Kiểm Soát (Gate State Taxonomy):
+Toàn bộ cổng Gate được quản lý định danh qua script `gate.ps1` theo 11 trạng thái:
+- **`NOT_STARTED`**: Chưa kích hoạt hoặc chưa bắt đầu giai đoạn.
+- **`IN_PROGRESS`**: Đang tiến hành thực thi và thu thập bằng chứng.
+- **`PASS`**: Đạt 100% điều kiện tiên quyết và có chữ ký xác thực.
+- **`PASS_WITH_LIMITATIONS`**: Đạt điều kiện với giới hạn được chấp nhận (ví dụ: chỉ phân tích tĩnh).
+- **`REUSED_VALIDATED`**: Tái sử dụng hợp lệ bằng chứng đã kiểm chứng từ ca làm việc trước.
+- **`SKIPPED`**: Bỏ qua hợp lệ có lý do (ví dụ: dự án Source Repo bỏ qua Bước 03-05).
+- **`NOT_APPLICABLE`**: Không áp dụng cho cấu hình hoặc phân hệ bài toán hiện tại.
+- **`WAIVED`**: Được người dùng hoặc Coordinator phê duyệt miễn trừ có giải trình.
+- **`BLOCKED`**: Bị chặn bởi mâu thuẫn, điểm mù nghiêm trọng hoặc vi phạm quy tắc.
+- **`FAILED`**: Kiểm định thất bại, kích hoạt vòng lặp khắc phục (Reject Loop).
+- **`INVALIDATED`**: Bị thu hồi thác đổ do thay đổi ở cổng phía trước (Cascade Invalidation).
+
+> **Nhóm Trạng Thái Giải Phóng Điều Kiện Tiên Quyết (Cleared States)**:
+> Một cổng được xem là đã giải phóng để cho phép chuyển sang giai đoạn kế tiếp khi thuộc một trong các trạng thái:
+> `PASS`, `PASS_WITH_LIMITATIONS`, `REUSED_VALIDATED`, `SKIPPED`, `NOT_APPLICABLE`, `WAIVED`.
+
 | Cổng Kiểm Soát | Vị Trí Vòng Đời | Điều Kiện Vượt Qua (Passing Criteria) | Hành Động Khi Bị Từ Chối (Reject Loop) |
 | :--- | :--- | :--- | :--- |
 | **GATE 01** (`gate_01_baseline_verified`) | Sau Bước 02 | Có ảnh chụp app gốc (từ AVD/Device Hub qua `android screen capture -o <file_path>`/`capture_adb_screen` [yêu cầu `serial`, `output_directory`] hoặc browser) hoặc đã bóc tách tài nguyên tĩnh dự phòng (`inspect_android_package` qua JADX tĩnh). | Bổ sung file vào `01_` hoặc chạy lại chế độ Static Fallback. |
