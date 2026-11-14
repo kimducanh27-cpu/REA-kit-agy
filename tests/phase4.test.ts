@@ -181,7 +181,8 @@ describe("Phase 4: Workspace Init, MCP Tools & Governance Tests", () => {
       expect(config.mcpServers.rea).toBeDefined();
       expect(config.mcpServers["rea-kit"]).toBeDefined();
       expect(config.mcpServers["rea-kit"].command).toBe("node");
-      expect(config.mcpServers["rea-kit"].args).toEqual(["dist/mcp.js", "--workspace", "${workspaceFolder}"]);
+      expect(config.mcpServers["rea-kit"].args).toEqual(["${workspaceFolder}/dist/mcp.js", "--workspace", "${workspaceFolder}"]);
+      expect(config.mcpServers["rea-kit"].cwd).toBe("${workspaceFolder}");
     });
 
     it("should verify wrapper scripts contain node dist/cli.js priority", async () => {

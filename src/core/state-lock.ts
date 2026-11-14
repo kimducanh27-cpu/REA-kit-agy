@@ -15,13 +15,14 @@ export async function withFileLock<T>(
 ): Promise<T> {
   const lockPath = `${filePath}.lock`;
   const pid = process.pid.toString();
+  const lockToken = crypto.randomUUID();
   let acquired = false;
 
   for (let attempt = 0; attempt <= MAX_LOCK_RETRIES; attempt++) {
     try {
       // 'wx' flag ensures atomic creation; fails if file already exists
       const handle = await fs.open(lockPath, "wx");
-      await handle.writeFile(`${pid}\n${Date.now()}\n`, "utf8");
+      await handle.writeFile(`${lockToken}\n${pid}\n${Date.now()}\n`, "utf8");
       await handle.close();
       acquired = true;
       break;
@@ -36,11 +37,38 @@ export async function withFileLock<T>(
       try {
         const stat = await fs.stat(lockPath);
         const age = Date.now() - stat.mtimeMs;
-        if (age > STALE_LOCK_TIMEOUT_MS) {
-          try {
-            await fs.unlink(lockPath);
-          } catch {
-            // Unlink may race with another process; ignore error
+
+        let isPidAlive = true;
+        let lockPid: number | null = null;
+        try {
+          const content = await fs.readFile(lockPath, "utf8");
+          const lines = content.trim().split("\n");
+          // Support lockToken\npid\ntimestamp or pid\ntimestamp
+          const pidStr = lines.length >= 3 ? lines[1] : lines[0];
+          const parsedPid = parseInt(pidStr?.trim(), 10);
+          if (!isNaN(parsedPid) && parsedPid > 0) {
+            lockPid = parsedPid;
+            try {
+              process.kill(parsedPid, 0);
+            } catch (kErr: any) {
+              if (kErr.code === "ESRCH") {
+                isPidAlive = false;
+              }
+            }
+          }
+        } catch {
+          // If reading fails, ignore
+        }
+
+        // Check PID liveness before clearing stale lock
+        const isStale = !isPidAlive || age > STALE_LOCK_TIMEOUT_MS;
+        if (isStale) {
+          if (!isPidAlive || lockPid === null) {
+            try {
+              await fs.unlink(lockPath);
+            } catch {
+              // Unlink may race with another process; ignore error
+            }
           }
         }
       } catch {
@@ -67,7 +95,13 @@ export async function withFileLock<T>(
     return await fn();
   } finally {
     try {
-      await fs.unlink(lockPath);
+      // Compare-and-delete: only unlink if token matches lockToken
+      const content = await fs.readFile(lockPath, "utf8");
+      const lines = content.trim().split("\n");
+      const currentToken = lines[0]?.trim();
+      if (currentToken === lockToken) {
+        await fs.unlink(lockPath);
+      }
     } catch {
       // Best-effort cleanup
     }

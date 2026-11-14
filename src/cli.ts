@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import path from "node:path";
 import { Command } from "commander";
 import { initWorkspace } from "./core/init.js";
 import { runHealthCheck } from "./core/health-check.js";
@@ -27,13 +28,15 @@ import {
   packContext,
   verifyPacket,
 } from "./core/context.js";
+import { runAdrAction } from "./core/adr.js";
+import { startMcpServer } from "./mcp.js";
 
 const program = new Command();
 
 program
   .name("rea-kit")
-  .description("REA-kit-agy v2.0.0 CLI - Reverse Engineering & App Reconstruction Toolkit")
-  .version("2.0.0");
+  .description("REA-kit-agy v2.0.1 CLI - Reverse Engineering & App Reconstruction Toolkit")
+  .version("2.0.1");
 
 program
   .command("init")
@@ -43,7 +46,7 @@ program
   .action(async (options) => {
     try {
       console.log("==========================================================");
-      console.log("   INITIALIZING REA-KIT WORKSPACE v2.0.0");
+      console.log("   INITIALIZING REA-KIT WORKSPACE v2.0.1");
       console.log("==========================================================");
 
       const res = await initWorkspace({
@@ -75,7 +78,7 @@ program
   .action(async (options) => {
     try {
       console.log("==========================================================");
-      console.log("   REA-KIT HEALTH CHECK v2.0.0");
+      console.log("   REA-KIT HEALTH CHECK v2.0.1");
       console.log("==========================================================");
 
       const result = await runHealthCheck({
@@ -150,7 +153,7 @@ program
   .action(async (options) => {
     try {
       console.log("==========================================================");
-      console.log("   DETERMINISTIC VERIFICATION & RISK CLASSIFIER v2.0.0");
+      console.log("   DETERMINISTIC VERIFICATION & RISK CLASSIFIER v2.0.1");
       console.log("==========================================================");
 
       const result = await verifyCode({
@@ -535,6 +538,46 @@ program
       }
     } catch (err: any) {
       console.error(`[ERROR] Interview action '${action}' failed: ${err.message}`);
+      process.exit(1);
+    }
+  });
+
+program
+  .command("serve")
+  .description("Start REA-kit-agy MCP Server (Stdio transport)")
+  .option("-w, --workspace <path>", "Set target workspace directory")
+  .action(async (options) => {
+    try {
+      if (options.workspace) {
+        process.chdir(path.resolve(options.workspace));
+      }
+      await startMcpServer();
+    } catch (err: any) {
+      console.error(`[ERROR] MCP Server failed: ${err.message}`);
+      process.exit(1);
+    }
+  });
+
+program
+  .command("adr")
+  .description("Manage Architecture Decision Records (ADR) under MADR standard")
+  .argument("[action]", "Action: list, show, validate, status, new, help", "list")
+  .argument("[id]", "ADR ID or Title")
+  .argument("[title]", "ADR Title (for 'new' action)")
+  .option("-w, --workspace <path>", "Workspace directory containing docs/adrs")
+  .action(async (action, id, title, options) => {
+    try {
+      const repoRoot = options.workspace ? path.resolve(options.workspace) : undefined;
+      const res = await runAdrAction(action || "list", { id, title, repoRoot });
+      if (res && res.text) {
+        console.log(res.text);
+      }
+      if (action === "validate" && res && !res.valid) {
+        process.exit(1);
+      }
+      process.exit(0);
+    } catch (err: any) {
+      console.error(`[ERROR] ADR action '${action}' failed: ${err.message}`);
       process.exit(1);
     }
   });

@@ -641,7 +641,7 @@ export async function packContext(options: PackOptions): Promise<Record<string, 
     packet_id: packId,
     plan_id: plan.plan_id,
     created_at: new Date().toISOString(),
-    generator: "context.ts pack v2.0.0",
+    generator: "context.ts pack v2.0.1",
     layer_order: "L0->L3->L2->L1->L4->L5",
   };
 

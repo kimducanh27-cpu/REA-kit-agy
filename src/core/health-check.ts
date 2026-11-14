@@ -60,6 +60,46 @@ async function checkCommand(cmd: string): Promise<{ ok: boolean; output: string 
   }
 }
 
+/**
+ * Evaluates whether a Node.js version string complies with the REA-kit-agy engines range:
+ * "^22.23.4 || ^24.22.1 || >=26.12.1"
+ */
+export function isNodeVersionCompliant(versionStr: string): boolean {
+  if (!versionStr) return false;
+  const clean = versionStr.trim().replace(/^v/, "");
+  const match = clean.match(/^(\d+)\.(\d+)\.(\d+)/);
+  if (!match) return false;
+  const major = parseInt(match[1], 10);
+  const minor = parseInt(match[2], 10);
+  const patch = parseInt(match[3], 10);
+
+  // Range 1: ^22.23.4 (major == 22, minor >= 23, if minor == 23 then patch >= 4)
+  if (major === 22) {
+    if (minor > 23) return true;
+    if (minor === 23) return patch >= 4;
+    return false;
+  }
+
+  // Range 2: ^24.22.1 (major == 24, minor >= 22, if minor == 22 then patch >= 1)
+  if (major === 24) {
+    if (minor > 22) return true;
+    if (minor === 22) return patch >= 1;
+    return false;
+  }
+
+  // Range 3: >=26.12.1 (major > 26, or major == 26 with minor > 12 or minor == 12 && patch >= 1)
+  if (major > 26) {
+    return true;
+  }
+  if (major === 26) {
+    if (minor > 12) return true;
+    if (minor === 12) return patch >= 1;
+    return false;
+  }
+
+  return false;
+}
+
 export async function runHealthCheck(
   options: HealthCheckOptions = {}
 ): Promise<HealthCheckResult> {
@@ -328,10 +368,14 @@ export async function runHealthCheck(
     });
 
     // Inspect Node.js
+    const nodeCompliant = isNodeVersionCompliant(process.version);
     tools.push({
       name: "Node.js Runtime",
       available: true,
       version: process.version,
+      note: nodeCompliant
+        ? "Compliant with engines range (^22.23.4 || ^24.22.1 || >=26.12.1)"
+        : `Non-compliant with engines range (^22.23.4 || ^24.22.1 || >=26.12.1); current: ${process.version}`,
     });
 
     // Inspect Android CLI

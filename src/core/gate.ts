@@ -119,6 +119,7 @@ export interface GateRecord {
   baseline_type?: string | null;
   evidence: string[];
   evidence_sha256: string | null;
+  evidence_hashes?: Record<string, string>;
   approved_by: string | null;
   approved_at: string | null;
   revoked_reason: string | null;
@@ -231,6 +232,15 @@ export async function getNormalizedFileHash(filePath: string): Promise<string> {
     ".xml",
     ".html",
     ".js",
+    ".ts",
+    ".tsx",
+    ".kt",
+    ".kts",
+    ".java",
+    ".py",
+    ".ps1",
+    ".sh",
+    ".gradle",
     ".css",
     ".yaml",
     ".yml",
@@ -522,7 +532,8 @@ export async function archiveCurrentCaseAndReset(
   const pad = (n: number) => String(n).padStart(2, "0");
   const d = new Date();
   const tsStr = `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}-${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}`;
-  const newCaseId = `CASE-${tsStr}`;
+  const hexSuffix = crypto.randomBytes(2).toString("hex");
+  const newCaseId = `CASE-${tsStr}-${hexSuffix}`;
 
   state.case_id = newCaseId;
   state.target_name = targetApp.name;
@@ -558,6 +569,55 @@ export async function archiveCurrentCaseAndReset(
   }
 
   await saveCaseStateAtomic(root, state, -1, true);
+
+  // Write a FRESH, clean interview_state.json with newCaseId, status: "NOT_STARTED", and empty arrays into .agents/state/interview_state.json
+  const nowIso = new Date().toISOString();
+  const cleanInterviewState = {
+    schema_version: 1,
+    case_id: newCaseId,
+    session: {
+      session_id: `INT-SESSION-${newCaseId}`,
+      status: "NOT_STARTED",
+      current_goal: null,
+      current_stage: "STAGE_03_PRODUCT_DEFINITION",
+      active_domain: null,
+      design_mode: null,
+      max_clarification_per_goal: 2,
+      max_total_questions: 15,
+      created_at: nowIso,
+      updated_at: nowIso,
+    },
+    goals: [],
+    questions: [],
+    answers: [],
+    decisions: [],
+    assumptions: [],
+    conflicts: [],
+    unknowns: [],
+    scope_changes: [],
+    sufficiency_evaluation: {
+      verdict: "NEEDS_INPUT",
+      evaluated_at: nowIso,
+      goal_evaluations: [],
+      blocking_reasons: [
+        "No goals have been recorded in the interview state.",
+      ],
+      deferred_decisions: [],
+      assumptions_summary: {
+        total: 0,
+        benign: 0,
+        critical: 0,
+        pending_approval: 0,
+      },
+      summary:
+        "Chưa có mục tiêu nào được ghi nhận. Hãy bắt đầu bằng cách nạp hồ sơ và phân tích mục tiêu.",
+    },
+    last_updated: nowIso,
+  };
+  await writeUtf8NoBomAtomic(
+    interviewStatePath,
+    JSON.stringify(cleanInterviewState, null, 2)
+  );
 
   await appendEventAtomic(root, {
     action: "CASE_INITIALIZED",
@@ -708,6 +768,24 @@ export async function runGateAction(
                     `Gate ${g} SHA-256 mismatch! Expected: ${gateObj.evidence_sha256}, Actual: ${actualHash}`
                   );
                 }
+              }
+            }
+          }
+
+          if (gateObj.evidence_hashes && typeof gateObj.evidence_hashes === "object") {
+            for (const [evRel, expectedHash] of Object.entries(gateObj.evidence_hashes)) {
+              const evFilePath = path.isAbsolute(evRel) ? evRel : path.join(repoRoot, evRel);
+              if (fsSync.existsSync(evFilePath)) {
+                const actualHash = await getNormalizedFileHash(evFilePath);
+                if (actualHash !== expectedHash) {
+                  errors.push(
+                    `Gate ${g} evidence SHA-256 mismatch for ${evRel}! Expected: ${expectedHash}, Actual: ${actualHash}`
+                  );
+                }
+              } else {
+                errors.push(
+                  `Gate ${g} evidence file not found for hash verification: ${evRel}`
+                );
               }
             }
           }
@@ -865,10 +943,19 @@ export async function runGateAction(
           ? "PASS_WITH_LIMITATIONS"
           : "PASS";
 
+      const evidenceHashes: Record<string, string> = {};
+      for (const item of evList) {
+        const itemPath = path.isAbsolute(item) ? item : path.join(repoRoot, item);
+        if (fsSync.existsSync(itemPath)) {
+          evidenceHashes[item] = await getNormalizedFileHash(itemPath);
+        }
+      }
+
       state.gates[resolvedGate] = {
         state: finalState,
         evidence: evList,
         evidence_sha256: sha,
+        evidence_hashes: evidenceHashes,
         approved_by: approver,
         approved_at: now,
         revoked_reason: null,
@@ -1222,4 +1309,13 @@ export async function runGateAction(
     default:
       throw new Error(`Unknown gate action: ${(options as any).action}`);
   }
+}
+
+/**
+ * Validates gate states and evidence immutability.
+ */
+export async function validateGate(
+  options: { repoRoot?: string; gate?: string } = {}
+): Promise<{ valid: boolean; errors: string[]; warnings: string[] }> {
+  return (await runGateAction({ action: "validate", ...options })) as any;
 }

@@ -175,7 +175,7 @@ export async function createSnapshot(
   const backupDir = options?.backupDir
     ? path.resolve(options.backupDir)
     : paths.backup;
-  const maxSnapshots = options?.maxSnapshots ?? 10;
+  const maxSnapshots = Math.max(1, options?.maxSnapshots ?? 10);
 
   if (!fsSync.existsSync(buildDir)) {
     await fs.mkdir(buildDir, { recursive: true });
@@ -244,11 +244,36 @@ export async function createSnapshot(
 }
 
 /**
+ * Safely moves a file or directory, handling cross-device / EXDEV errors
+ * by falling back to copyDirClean / copyFile + removeSafeItem.
+ */
+async function safeMove(src: string, dest: string): Promise<void> {
+  try {
+    await fs.rename(src, dest);
+  } catch (err: any) {
+    if (err.code === "EXDEV") {
+      const stat = await fs.lstat(src);
+      if (stat.isDirectory()) {
+        await copyDirClean(src, dest, new Set());
+        await removeSafeItem(src);
+      } else {
+        await fs.mkdir(path.dirname(dest), { recursive: true });
+        await fs.copyFile(src, dest);
+        await removeSafeItem(src);
+      }
+    } else {
+      throw err;
+    }
+  }
+}
+
+/**
  * Enforces maximum snapshot retention limit by pruning older snapshots.
  */
 async function rotateSnapshots(backupDir: string, maxSnapshots: number): Promise<void> {
   if (!fsSync.existsSync(backupDir)) return;
 
+  const limit = Math.max(1, maxSnapshots);
   const entries = await fs.readdir(backupDir, { withFileTypes: true });
   const snapshotDirs = entries
     .filter((e) => e.isDirectory() && !e.name.startsWith("."))
@@ -256,8 +281,8 @@ async function rotateSnapshots(backupDir: string, maxSnapshots: number): Promise
     .sort()
     .reverse(); // Newest first
 
-  if (snapshotDirs.length > maxSnapshots) {
-    const toRemove = snapshotDirs.slice(maxSnapshots);
+  if (snapshotDirs.length > limit) {
+    const toRemove = snapshotDirs.slice(limit);
     for (const dirName of toRemove) {
       const dirPath = path.join(backupDir, dirName);
       await removeSafeItem(dirPath);
@@ -267,7 +292,7 @@ async function rotateSnapshots(backupDir: string, maxSnapshots: number): Promise
 
 /**
  * Restores a snapshot into buildDir using a 2-phase atomic swap (.staging -> .safety -> buildDir)
- * after 100% SHA-256 manifest verification.
+ * after 100% SHA-256 two-way manifest verification.
  */
 export async function restoreSnapshot(
   options?: RestoreOptions
@@ -335,21 +360,29 @@ export async function restoreSnapshot(
     );
   }
 
+  // Global snapshot sorting: Sort validSnapshots globally across all candidate directories descending
+  validSnapshots.sort((a, b) => b.snapshotId.localeCompare(a.snapshotId));
+
   const targetSnapshot = validSnapshots[0];
   const snapshotDir = targetSnapshot.dirPath;
   const snapshotId = targetSnapshot.snapshotId;
   const activeBackupRoot = path.dirname(snapshotDir);
 
-  // Read manifest if available
+  // Strictly require valid manifest.json; reject restore if manifest is missing or invalid
   const manifestPath = path.join(snapshotDir, "manifest.json");
-  let manifest: SnapshotManifest | null = null;
-  if (fsSync.existsSync(manifestPath)) {
-    try {
-      const raw = await fs.readFile(manifestPath, "utf8");
-      manifest = JSON.parse(raw);
-    } catch (err: any) {
-      throw new Error(`Invalid manifest.json in snapshot ${snapshotId}: ${err.message}`);
+  if (!fsSync.existsSync(manifestPath)) {
+    throw new Error(`Missing manifest.json in snapshot ${snapshotId}: restore rejected`);
+  }
+
+  let manifest: SnapshotManifest;
+  try {
+    const raw = await fs.readFile(manifestPath, "utf8");
+    manifest = JSON.parse(raw);
+    if (!manifest || !Array.isArray(manifest.files)) {
+      throw new Error("manifest.json has invalid structure (missing files array)");
     }
+  } catch (err: any) {
+    throw new Error(`Invalid manifest.json in snapshot ${snapshotId}: ${err.message}`);
   }
 
   // PHASE 1: Prepare staging directory
@@ -368,19 +401,36 @@ export async function restoreSnapshot(
       new Set(["manifest.json"])
     );
 
-    // Verify 100% SHA-256 from manifest if manifest exists
-    if (manifest && manifest.files) {
-      for (const mf of manifest.files) {
-        const stagedFilePath = path.join(stagingDir, mf.path);
-        if (!fsSync.existsSync(stagedFilePath)) {
-          throw new Error(`Missing file during staging verification: ${mf.path}`);
-        }
-        const stagedHash = await computeFileSha256(stagedFilePath);
-        if (stagedHash.toUpperCase() !== mf.sha256.toUpperCase()) {
-          throw new Error(
-            `SHA-256 hash mismatch at file: ${mf.path} (Expected: ${mf.sha256}, Actual: ${stagedHash})`
-          );
-        }
+    // Verify 100% two-way matching between staging files and manifest.files
+    const stagedFiles = await getAllFiles(stagingDir);
+    const stagedFileMap = new Map<string, string>(); // relPath -> fullPath
+    for (const sf of stagedFiles) {
+      stagedFileMap.set(sf.relPath.replace(/\\/g, "/"), sf.fullPath);
+    }
+
+    const manifestPathSet = new Set<string>();
+
+    for (const mf of manifest.files) {
+      const normPath = mf.path.replace(/\\/g, "/");
+      manifestPathSet.add(normPath);
+      const stagedFilePath = stagedFileMap.get(normPath);
+      if (!stagedFilePath || !fsSync.existsSync(stagedFilePath)) {
+        throw new Error(`Missing file during staging verification: ${mf.path}`);
+      }
+      const stagedHash = await computeFileSha256(stagedFilePath);
+      if (stagedHash.toUpperCase() !== mf.sha256.toUpperCase()) {
+        throw new Error(
+          `SHA-256 hash mismatch at file: ${mf.path} (Expected: ${mf.sha256}, Actual: ${stagedHash})`
+        );
+      }
+    }
+
+    // Two-way match: ensure no extraneous files exist in staging that are not in manifest
+    for (const stagedRelPath of stagedFileMap.keys()) {
+      if (!manifestPathSet.has(stagedRelPath)) {
+        throw new Error(
+          `Extraneous file in staging not listed in manifest.json: ${stagedRelPath}`
+        );
       }
     }
 
@@ -399,7 +449,7 @@ export async function restoreSnapshot(
         if (entry.isSymbolicLink()) {
           await fs.unlink(currentPath);
         } else {
-          await fs.rename(currentPath, safetyPath);
+          await safeMove(currentPath, safetyPath);
         }
       }
     } else {
@@ -411,7 +461,7 @@ export async function restoreSnapshot(
     for (const entry of stagedEntries) {
       const srcPath = path.join(stagingDir, entry.name);
       const destPath = path.join(buildDir, entry.name);
-      await fs.rename(srcPath, destPath);
+      await safeMove(srcPath, destPath);
     }
 
     // Clean up temporary safety and staging directories
@@ -438,7 +488,7 @@ export async function restoreSnapshot(
           const savedPath = path.join(safetyDir, s.name);
           const restorePath = path.join(buildDir, s.name);
           try {
-            await fs.rename(savedPath, restorePath);
+            await safeMove(savedPath, restorePath);
           } catch {
             // Ignore error during recovery move
           }

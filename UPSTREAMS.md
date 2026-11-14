@@ -7,9 +7,9 @@ Checked: **2026-11-13**. Primary upstream source is pinned to the exact commit S
 ## 1. Upstream Engine: morluto/rea
 
 - **Repository**: https://github.com/morluto/rea
-- **Release Tag**: `rea-agents-6.9.0`
+- **Release Tag**: `rea-agents-6.9.0` (tương thích các bản phát hành `rea-agents@6.9.0` / `rea-agents@6.10.0`)
 - **Pinned Commit**: `5cddc69c51a0fb18d021417199046314581ba9c2`
-- **Package name**: `rea-agents@6.9.0` (published 2026-11-12)
+- **Package name**: `rea-agents@6.9.0` / `rea-agents@6.10.0` (published 2026-11-12)
 - **Declared License**: MIT
 - **Primary Source Skill**: `.agents/skills/reverse-engineer-anything/SKILL.md` (Upstream Skill Version: `v62`, kèm 8 references đầy đủ gồm `desktop-build.md`)
 - **Key References**:
@@ -36,9 +36,13 @@ Checked: **2026-11-13**. Primary upstream source is pinned to the exact commit S
      - Điều phối sinh mã nguồn và kiểm chứng độc lập (`05_`).
 
 3. **Kiểm tra tương thích Runtime & Ranh giới Riêng tư (Scoped Privacy Statement)**:
-   * **Môi trường thực thi**: Engine dịch ngược (JADX, Apktool, REA MCP) thực thi hoàn toàn cục bộ trên máy trạm của người dùng.
+   * **Môi trường thực thi & Yêu cầu Runtime Upstream REA 6.9.0 / 6.10.0**:
+     - **Node.js Runtime**: Node.js >= 18.0.0 (khuyến nghị LTS 20.x hoặc 22.x) hỗ trợ module ESM và Stdio MCP Transport.
+     - **Java Development Kit**: Java JDK >= 17 (OpenJDK 17/21) cho JADX (>= 1.5.0) và Apktool (>= 2.9.0) dịch ngược bytecode Dalvik/ART.
+     - **Android SDK Build-Tools**: `zipalign`, `apksigner` cho khâu đóng gói và kiểm chứng chữ ký số APK.
+     - **Local Execution Boundary**: Toàn bộ engine phân tích và dịch ngược chạy hoàn toàn cục bộ (100% offline local), không gửi file nhị phân ra internet.
    * **Truyền dữ liệu (Data Egress)**: Việc gửi dữ liệu ngữ cảnh ra ngoài internet phụ thuộc vào AI Agent Provider được cấu hình (ví dụ: Google Antigravity, Anthropic Claude, hoặc Local LLM). Bộ kit áp dụng chính sách che mờ 100% bí mật `[REDACTED]` trước khi đưa vào context.
-   * `health_check.ps1` kiểm tra đăng ký MCP client (`REGISTRATION_ALIGNED`). Lệnh cấu hình chính xác: `npx -y rea-agents@6.9.0 setup --client antigravity --yes`.
+   * `health_check.ps1` và `src/core/health-check.ts` kiểm tra đăng ký MCP client (`REGISTRATION_ALIGNED`). Lệnh cấu hình chính xác: `npx -y rea-agents@6.9.0 setup --client antigravity --yes` (hoặc `rea-agents@6.10.0`).
 
 ---
 
@@ -53,7 +57,7 @@ Checked: **2026-11-13**. Primary upstream source is pinned to the exact commit S
    * Nguyên tắc: Triển khai đúng phạm vi chốt trong bản đặc tả đóng băng (Frozen Spec), có điều kiện dừng rõ ràng, ngăn chặn triệt để tình trạng over-building hoặc tự ý phình tính năng.
 
 3. **Chuẩn Thiết Kế Giao Diện & Tokens (UI Design)**: `ui-ux-pro-max/ui-styling` & Design Systems
-   * Nguyên tắc: Hợp đồng giao diện 3 tầng điều khiển bằng `design.md`. Ánh xạ tokens thành CSS Variables (`:root`) và Tailwind CSS CDN utility classes, loại bỏ hoàn toàn việc hardcode mã màu tùy tiện. Single-file web zero-install.
+   * Nguyên tắc: Hợp đồng giao diện 3 tầng điều khiển bằng `design.md`. Ánh xạ tokens thành CSS Variables (`:root`) và bộ utility classes nội bộ tự chứa (Self-contained, không sử dụng Tailwind CSS CDN ngoại vi, tuân thủ nghiêm ngặt chế độ ngoại tuyến Route A và quy tắc quản trị thiết kế Design Governance), loại bỏ hoàn toàn việc hardcode mã màu tùy tiện. Single-file web zero-install hoàn toàn tự chứa.
 
 4. **Chuẩn Kiến Trúc Màn Hình & Trạng Thái UI**: `kimducanh27-cpu/app-adr-ui` (`templates/04-APP-FLOW/04-SCREEN-INVENTORY.md` & `06-STATE-AND-EXCEPTION-MATRIX.md`)
    * Nguyên tắc: Tách bạch rõ ranh giới các bước: Không vẽ UI khi chưa có `Screen Inventory` và `State Matrix`. Giao diện phải định nghĩa trước 4 trạng thái (`Loading`, `Empty`, `Success`, `Error Recovery`) để không bao giờ bị đơ hoặc trắng trang.

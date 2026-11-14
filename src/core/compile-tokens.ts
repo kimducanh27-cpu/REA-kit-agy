@@ -24,14 +24,69 @@ export interface CompileTokensResult {
     radiusLg: string;
     targetMin: string;
   };
+  typography?: {
+    fontMain: string;
+    fontSizeSm: string;
+    fontSizeBase: string;
+    fontSizeLg: string;
+    fontSizeXl: string;
+    lineHeightBase: string;
+  };
+  duration?: {
+    fast: string;
+    base: string;
+    slow: string;
+  };
+}
+
+/**
+ * Extracts a normalized string value from W3C DTCG 2025.10 token value representations.
+ * Handles:
+ * - DTCG Color objects with .hex (e.g. { hex: "#2563eb", colorSpace: "srgb" })
+ * - DTCG Dimension / Duration objects with .value and .unit (e.g. { value: 12, unit: "px" })
+ * - Raw numbers (e.g. 1.5 -> "1.5")
+ * - Raw strings (e.g. "#ffffff" -> "#ffffff", "6px" -> "6px")
+ */
+export function extractDtcgValue(raw: unknown): string {
+  if (raw === null || raw === undefined) return "";
+  if (typeof raw === "string") return raw;
+  if (typeof raw === "number") return String(raw);
+  if (typeof raw === "object") {
+    const obj = raw as any;
+    // If object with .hex, return .hex
+    if (typeof obj.hex === "string") {
+      return obj.hex;
+    }
+    // If object with .value and .unit, return `${raw.value}${raw.unit}`
+    if (obj.value !== undefined && obj.unit !== undefined) {
+      return `${obj.value}${obj.unit}`;
+    }
+    // If nested $value exists
+    if (obj.$value !== undefined) {
+      return extractDtcgValue(obj.$value);
+    }
+    // If object with just .value
+    if (obj.value !== undefined && typeof obj.value !== "object") {
+      return String(obj.value);
+    }
+  }
+  return String(raw);
 }
 
 export function resolveTokenRef(
-  refStr: string,
+  refStr: unknown,
   rootTokens: any,
   maxHops = 10
 ): string {
-  let currentStr = String(refStr);
+  if (typeof refStr === "object" && refStr !== null) {
+    const extracted = extractDtcgValue(refStr);
+    if (!extracted.startsWith("{")) {
+      return extracted;
+    }
+    refStr = extracted;
+  }
+
+  let currentStr = String(refStr ?? "");
   let hop = 0;
 
   while (hop < maxHops) {
@@ -53,10 +108,11 @@ export function resolveTokenRef(
 
     if (curr && typeof curr === "object") {
       if ("$value" in curr) {
-        currentStr = String(curr.$value);
+        currentStr = extractDtcgValue(curr.$value);
       } else if ("value" in curr) {
-        currentStr = String(curr.value);
+        currentStr = extractDtcgValue(curr.value);
       } else {
+        currentStr = extractDtcgValue(curr);
         break;
       }
     } else if (typeof curr === "string" || typeof curr === "number") {
@@ -66,7 +122,7 @@ export function resolveTokenRef(
     }
   }
 
-  return currentStr;
+  return extractDtcgValue(currentStr);
 }
 
 export function toComposeColorHex(hex: string): string {
@@ -146,10 +202,12 @@ export async function compileTokens(
   if (tokens.semantic?.color && typeof tokens.semantic.color === "object") {
     for (const [key, val] of Object.entries(tokens.semantic.color)) {
       const rawVal =
-        (val as any)?.$value ??
-        (val as any)?.value ??
-        (typeof val === "string" ? val : "");
-      semColors[key] = resolveTokenRef(String(rawVal), tokens);
+        (val as any)?.$value !== undefined
+          ? (val as any).$value
+          : (val as any)?.value !== undefined
+          ? (val as any).value
+          : val;
+      semColors[key] = resolveTokenRef(rawVal, tokens);
     }
   }
 
@@ -157,10 +215,12 @@ export async function compileTokens(
   if (tokens.global?.color && typeof tokens.global.color === "object") {
     for (const [key, val] of Object.entries(tokens.global.color)) {
       const rawVal =
-        (val as any)?.$value ??
-        (val as any)?.value ??
-        (typeof val === "string" ? val : "");
-      const resolved = resolveTokenRef(String(rawVal), tokens);
+        (val as any)?.$value !== undefined
+          ? (val as any).$value
+          : (val as any)?.value !== undefined
+          ? (val as any).value
+          : val;
+      const resolved = resolveTokenRef(rawVal, tokens);
       if (!semColors[key]) {
         semColors[key] = resolved;
       }
@@ -181,31 +241,68 @@ export async function compileTokens(
     info: semColors["info"] || "#0284c7",
   };
 
+  // Dimensions from global.dimension
   const dim = tokens.global?.dimension;
-  const radiusSm = dim?.["radius-sm"]
-    ? resolveTokenRef(
-        String(dim["radius-sm"].$value ?? dim["radius-sm"].value ?? dim["radius-sm"]),
-        tokens
-      )
-    : "6px";
-  const radiusMd = dim?.["radius-md"]
-    ? resolveTokenRef(
-        String(dim["radius-md"].$value ?? dim["radius-md"].value ?? dim["radius-md"]),
-        tokens
-      )
-    : "12px";
-  const radiusLg = dim?.["radius-lg"]
-    ? resolveTokenRef(
-        String(dim["radius-lg"].$value ?? dim["radius-lg"].value ?? dim["radius-lg"]),
-        tokens
-      )
-    : "20px";
-  const targetMin = dim?.["target-min"]
-    ? resolveTokenRef(
-        String(dim["target-min"].$value ?? dim["target-min"].value ?? dim["target-min"]),
-        tokens
-      )
-    : "48px";
+  function getDimVal(key: string, fallback: string): string {
+    if (!dim || !dim[key]) return fallback;
+    const raw =
+      dim[key].$value !== undefined
+        ? dim[key].$value
+        : dim[key].value !== undefined
+        ? dim[key].value
+        : dim[key];
+    const resolved = resolveTokenRef(raw, tokens);
+    return extractDtcgValue(resolved) || fallback;
+  }
+
+  const radiusSm = getDimVal("radius-sm", "6px");
+  const radiusMd = getDimVal("radius-md", "12px");
+  const radiusLg = getDimVal("radius-lg", "20px");
+  const targetMin = getDimVal("target-min", "48px");
+
+  // Typography dynamically from global.font
+  const fontObj = tokens.global?.font || {};
+  function getFontVal(key: string, fallback: string): string {
+    const entry = fontObj[key];
+    if (!entry) return fallback;
+    const raw =
+      entry.$value !== undefined
+        ? entry.$value
+        : entry.value !== undefined
+        ? entry.value
+        : entry;
+    const resolved = resolveTokenRef(raw, tokens);
+    return extractDtcgValue(resolved) || fallback;
+  }
+
+  const fontMain = getFontVal(
+    "family-main",
+    '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif'
+  );
+  const fontSizeSm = getFontVal("size-sm", "14px");
+  const fontSizeBase = getFontVal("size-base", "16px");
+  const fontSizeLg = getFontVal("size-lg", "20px");
+  const fontSizeXl = getFontVal("size-xl", "24px");
+  const lineHeightBase = getFontVal("line-height-base", "1.5");
+
+  // Motion duration dynamically from global.duration
+  const durationObj = tokens.global?.duration || {};
+  function getDurationVal(key: string, fallback: string): string {
+    const entry = durationObj[key];
+    if (!entry) return fallback;
+    const raw =
+      entry.$value !== undefined
+        ? entry.$value
+        : entry.value !== undefined
+        ? entry.value
+        : entry;
+    const resolved = resolveTokenRef(raw, tokens);
+    return extractDtcgValue(resolved) || fallback;
+  }
+
+  const durationFast = getDurationVal("fast", "150ms");
+  const durationBase = getDurationVal("base", "250ms");
+  const durationSlow = getDurationVal("slow", "400ms");
 
   await fs.mkdir(outputDir, { recursive: true });
   const generatedFiles: string[] = [];
@@ -232,17 +329,17 @@ export async function compileTokens(
     `  --touch-target-min: ${targetMin};`,
     "",
     "  /* Typography */",
-    '  --font-main: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;',
-    "  --font-size-sm: 14px;",
-    "  --font-size-base: 16px;",
-    "  --font-size-lg: 20px;",
-    "  --font-size-xl: 24px;",
-    "  --line-height-base: 1.5;",
+    `  --font-main: ${fontMain};`,
+    `  --font-size-sm: ${fontSizeSm};`,
+    `  --font-size-base: ${fontSizeBase};`,
+    `  --font-size-lg: ${fontSizeLg};`,
+    `  --font-size-xl: ${fontSizeXl};`,
+    `  --line-height-base: ${lineHeightBase};`,
     "",
     "  /* Motion Tokens */",
-    "  --motion-duration-fast: 150ms;",
-    "  --motion-duration-base: 250ms;",
-    "  --motion-duration-slow: 400ms;",
+    `  --motion-duration-fast: ${durationFast};`,
+    `  --motion-duration-base: ${durationBase};`,
+    `  --motion-duration-slow: ${durationSlow};`,
     "  --motion-easing-standard: cubic-bezier(0.2, 0, 0, 1);",
     "  --motion-easing-emphasized: cubic-bezier(0.05, 0.7, 0.1, 1);",
     "  --motion-easing-accelerate: cubic-bezier(0.3, 0, 0.8, 0.15);",
@@ -297,6 +394,12 @@ export async function compileTokens(
   generatedFiles.push(colorKtOut);
 
   // 3. Generate Type.kt (Jetpack Compose Typography)
+  const parseNumOnly = (s: string) => s.replace(/[^0-9.]/g, "");
+  const numSm = parseNumOnly(fontSizeSm) || "14";
+  const numBase = parseNumOnly(fontSizeBase) || "16";
+  const numLg = parseNumOnly(fontSizeLg) || "20";
+  const numXl = parseNumOnly(fontSizeXl) || "24";
+
   const typeKtLines: string[] = [
     "package ui.theme",
     "",
@@ -314,23 +417,23 @@ export async function compileTokens(
     "val Typography = Typography(",
     "    bodySmall = TextStyle(",
     "        fontFamily = FontFamily.Default,",
-    "        fontSize = 14.sp,",
+    `        fontSize = ${numSm}.sp,`,
     "        lineHeight = 20.sp",
     "    ),",
     "    bodyLarge = TextStyle(",
     "        fontFamily = FontFamily.Default,",
-    "        fontSize = 16.sp,",
+    `        fontSize = ${numBase}.sp,`,
     "        lineHeight = 24.sp",
     "    ),",
     "    titleLarge = TextStyle(",
     "        fontFamily = FontFamily.Default,",
-    "        fontSize = 20.sp,",
+    `        fontSize = ${numLg}.sp,`,
     "        fontWeight = FontWeight.Bold,",
     "        lineHeight = 28.sp",
     "    ),",
     "    headlineMedium = TextStyle(",
     "        fontFamily = FontFamily.Default,",
-    "        fontSize = 24.sp,",
+    `        fontSize = ${numXl}.sp,`,
     "        fontWeight = FontWeight.Bold,",
     "        lineHeight = 32.sp",
     "    )",
@@ -597,6 +700,19 @@ export async function compileTokens(
       radiusMd,
       radiusLg,
       targetMin,
+    },
+    typography: {
+      fontMain,
+      fontSizeSm,
+      fontSizeBase,
+      fontSizeLg,
+      fontSizeXl,
+      lineHeightBase,
+    },
+    duration: {
+      fast: durationFast,
+      base: durationBase,
+      slow: durationSlow,
     },
   };
 }

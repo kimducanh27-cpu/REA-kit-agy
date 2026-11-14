@@ -5,6 +5,7 @@ import {
   ListToolsRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
 import path from "node:path";
+import fs from "node:fs";
 import { initWorkspace } from "./core/init.js";
 import { runHealthCheck } from "./core/health-check.js";
 import { compileTokens } from "./core/compile-tokens.js";
@@ -37,6 +38,80 @@ const server = new Server(
   }
 );
 
+const interviewInputSchema = {
+  type: "object" as const,
+  properties: {
+    action: {
+      type: "string",
+      enum: [
+        "init",
+        "status",
+        "record-goal",
+        "record-question",
+        "record-answer",
+        "record-decision",
+        "record-assumption",
+        "record-unknown",
+        "record-conflict",
+        "resolve-conflict",
+        "record-scope-change",
+        "evaluate-sufficiency",
+        "validate",
+      ],
+      description: "Interview action to execute",
+    },
+    caseId: { type: "string", description: "Case ID" },
+    goalId: { type: "string", description: "Goal ID" },
+    questionId: { type: "string", description: "Question ID" },
+    answerId: { type: "string", description: "Answer ID" },
+    decisionId: { type: "string", description: "Decision ID" },
+    assumptionId: { type: "string", description: "Assumption ID" },
+    unknownId: { type: "string", description: "Unknown ID" },
+    conflictId: { type: "string", description: "Conflict ID" },
+    changeId: { type: "string", description: "Change ID" },
+    description: { type: "string", description: "Description text" },
+    text: { type: "string", description: "Question or content text" },
+    reason: { type: "string", description: "Reason or rationale" },
+    justification: { type: "string", description: "Justification" },
+    domain: { type: "string", description: "Domain classification" },
+    expectedInfo: { type: "string", description: "Expected information" },
+    topicKey: { type: "string", description: "Topic key for deduplication" },
+    answer: { type: "string", description: "Raw answer text" },
+    interpreted: { type: "string", description: "Interpreted answer" },
+    type: { type: "string", description: "Answer type" },
+    source: { type: "string", description: "Answer source" },
+    confidence: { type: "string", description: "Confidence level" },
+    selectedOption: { type: "string", description: "Selected option" },
+    options: { type: "string", description: "Options (comma-separated or JSON array)" },
+    owner: { type: "string", description: "Decision owner" },
+    approvalStatus: { type: "string", description: "Approval status" },
+    approval: { type: "string", description: "Approval" },
+    rationale: { type: "string", description: "Rationale" },
+    impact: { type: "string", description: "Impact assessment" },
+    riskLevel: { type: "string", description: "Risk level" },
+    verificationTask: { type: "string", description: "Verification task" },
+    conflictingItems: { type: "string", description: "Conflicting item IDs" },
+    explanation: { type: "string", description: "Conflict explanation" },
+    severity: { type: "string", description: "Conflict severity" },
+    resolutionStrategy: { type: "string", description: "Resolution strategy" },
+    previousScope: { type: "string", description: "Previous scope description" },
+    newScope: { type: "string", description: "New scope description" },
+    goalIds: { type: "string", description: "Related goal IDs (comma-separated)" },
+    decisionIds: { type: "string", description: "Related decision IDs (comma-separated)" },
+    evidenceRefs: { type: "string", description: "Evidence references (comma-separated)" },
+    relatedRequirements: { type: "string", description: "Related requirements (comma-separated)" },
+    downstreamDeps: { type: "string", description: "Downstream dependencies (comma-separated)" },
+    priority: { type: "string", description: "Priority level" },
+    status: { type: "string", description: "Status value" },
+    force: { type: "boolean", description: "Force overwrite or action override" },
+    supersede: { type: "boolean", description: "Allow superseding question / topic" },
+    allowRepeat: { type: "boolean", description: "Allow repeating identical question" },
+    spontaneous: { type: "boolean", description: "Record unsolicited spontaneous answer" },
+    repoRoot: { type: "string", description: "Repository root directory (optional)" },
+  },
+  required: ["action"],
+};
+
 server.setRequestHandler(ListToolsRequestSchema, async () => {
   return {
     tools: [
@@ -54,6 +129,31 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
               type: "boolean",
               description: "Force re-initialization and overwrite existing state",
             },
+            repoRoot: {
+              type: "string",
+              description: "Repository root directory (optional)",
+            },
+          },
+        },
+      },
+      {
+        name: "init_workspace",
+        description: "Alias for kit_init - Initialize workspace with 5 standard directories, state machines, and event log",
+        inputSchema: {
+          type: "object",
+          properties: {
+            dir: {
+              type: "string",
+              description: "Target workspace directory (default: workspace root)",
+            },
+            force: {
+              type: "boolean",
+              description: "Force re-initialization and overwrite existing state",
+            },
+            repoRoot: {
+              type: "string",
+              description: "Repository root directory (optional)",
+            },
           },
         },
       },
@@ -66,6 +166,10 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
             checkExternalTools: {
               type: "boolean",
               description: "Whether to probe external CLI tools (java, jadx, apktool, etc.)",
+            },
+            repoRoot: {
+              type: "string",
+              description: "Repository root directory (optional)",
             },
           },
         },
@@ -88,6 +192,10 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
               type: "string",
               description: "Path to design.md to update preview code fences",
             },
+            repoRoot: {
+              type: "string",
+              description: "Repository root directory (optional)",
+            },
           },
         },
       },
@@ -108,6 +216,10 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
             allowHighRisk: {
               type: "boolean",
               description: "Allow approved high-risk indicators without failing gate",
+            },
+            repoRoot: {
+              type: "string",
+              description: "Repository root directory (optional)",
             },
           },
         },
@@ -134,6 +246,10 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
             force: {
               type: "boolean",
               description: "Force restore without prompt",
+            },
+            repoRoot: {
+              type: "string",
+              description: "Repository root directory (optional)",
             },
           },
         },
@@ -184,6 +300,10 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
               enum: ["PASS", "PASS_WITH_LIMITATIONS", "SKIPPED", "NOT_APPLICABLE"],
               description: "Gate completion mode",
             },
+            repoRoot: {
+              type: "string",
+              description: "Repository root directory (optional)",
+            },
           },
           required: ["action"],
         },
@@ -206,6 +326,10 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
               type: "string",
               description: "Optional target profile",
             },
+            repoRoot: {
+              type: "string",
+              description: "Repository root directory (optional)",
+            },
           },
           required: ["task"],
         },
@@ -213,78 +337,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
       {
         name: "kit_interview",
         description: "Adaptive Interview Engine for Requirements Elicitation & Domain Intelligence",
-        inputSchema: {
-          type: "object",
-          properties: {
-            action: {
-              type: "string",
-              enum: [
-                "init",
-                "status",
-                "record-goal",
-                "record-question",
-                "record-answer",
-                "record-decision",
-                "record-assumption",
-                "record-unknown",
-                "record-conflict",
-                "resolve-conflict",
-                "record-scope-change",
-                "evaluate-sufficiency",
-                "validate",
-              ],
-              description: "Interview action to execute",
-            },
-            caseId: { type: "string", description: "Case ID" },
-            force: { type: "boolean", description: "Force overwrite or action override" },
-            supersede: { type: "boolean", description: "Allow superseding question / topic" },
-            allowRepeat: { type: "boolean", description: "Allow repeating identical question" },
-            spontaneous: { type: "boolean", description: "Record unsolicited spontaneous answer" },
-            goalId: { type: "string", description: "Goal ID" },
-            questionId: { type: "string", description: "Question ID" },
-            answerId: { type: "string", description: "Answer ID" },
-            decisionId: { type: "string", description: "Decision ID" },
-            assumptionId: { type: "string", description: "Assumption ID" },
-            unknownId: { type: "string", description: "Unknown ID" },
-            conflictId: { type: "string", description: "Conflict ID" },
-            changeId: { type: "string", description: "Change ID" },
-            description: { type: "string", description: "Description text" },
-            text: { type: "string", description: "Question or content text" },
-            reason: { type: "string", description: "Reason or rationale" },
-            justification: { type: "string", description: "Justification" },
-            domain: { type: "string", description: "Domain classification" },
-            expectedInfo: { type: "string", description: "Expected information" },
-            topicKey: { type: "string", description: "Topic key for deduplication" },
-            answer: { type: "string", description: "Raw answer text" },
-            interpreted: { type: "string", description: "Interpreted answer" },
-            type: { type: "string", description: "Answer type" },
-            source: { type: "string", description: "Answer source" },
-            confidence: { type: "string", description: "Confidence level" },
-            selectedOption: { type: "string", description: "Selected option" },
-            options: { type: "string", description: "Options (comma-separated or JSON array)" },
-            owner: { type: "string", description: "Decision owner" },
-            approvalStatus: { type: "string", description: "Approval status" },
-            approval: { type: "string", description: "Approval" },
-            rationale: { type: "string", description: "Rationale" },
-            impact: { type: "string", description: "Impact assessment" },
-            riskLevel: { type: "string", description: "Risk level" },
-            verificationTask: { type: "string", description: "Verification task" },
-            conflictingItems: { type: "string", description: "Conflicting item IDs" },
-            explanation: { type: "string", description: "Conflict explanation" },
-            severity: { type: "string", description: "Conflict severity" },
-            resolutionStrategy: { type: "string", description: "Resolution strategy" },
-            previousScope: { type: "string", description: "Previous scope description" },
-            newScope: { type: "string", description: "New scope description" },
-            goalIds: { type: "string", description: "Related goal IDs (comma-separated)" },
-            decisionIds: { type: "string", description: "Related decision IDs (comma-separated)" },
-            evidenceRefs: { type: "string", description: "Evidence references (comma-separated)" },
-            relatedRequirements: { type: "string", description: "Related requirements (comma-separated)" },
-            downstreamDeps: { type: "string", description: "Downstream dependencies (comma-separated)" },
-            priority: { type: "string", description: "Priority level" },
-            status: { type: "string", description: "Status value" },
-          },
-          required: ["action"],
-        },
+        inputSchema: interviewInputSchema,
       },
       // Backwards compatibility tools
       {
@@ -296,6 +349,10 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
             checkExternalTools: {
               type: "boolean",
               description: "Whether to probe external CLI tools",
+            },
+            repoRoot: {
+              type: "string",
+              description: "Repository root directory (optional)",
             },
           },
         },
@@ -309,6 +366,10 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
             tokensFile: { type: "string" },
             outputDir: { type: "string" },
             designDoc: { type: "string" },
+            repoRoot: {
+              type: "string",
+              description: "Repository root directory (optional)",
+            },
           },
         },
       },
@@ -321,6 +382,10 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
             targetDir: { type: "string" },
             reportDir: { type: "string" },
             allowHighRisk: { type: "boolean" },
+            repoRoot: {
+              type: "string",
+              description: "Repository root directory (optional)",
+            },
           },
         },
       },
@@ -331,6 +396,10 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           type: "object",
           properties: {
             maxSnapshots: { type: "number" },
+            repoRoot: {
+              type: "string",
+              description: "Repository root directory (optional)",
+            },
           },
         },
       },
@@ -341,6 +410,11 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           type: "object",
           properties: {
             snapshotId: { type: "string" },
+            force: { type: "boolean" },
+            repoRoot: {
+              type: "string",
+              description: "Repository root directory (optional)",
+            },
           },
         },
       },
@@ -357,6 +431,10 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
             reason: { type: "string" },
             details: { type: "string" },
             mode: { type: "string" },
+            repoRoot: {
+              type: "string",
+              description: "Repository root directory (optional)",
+            },
           },
           required: ["action"],
         },
@@ -370,6 +448,10 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
             task: { type: "string" },
             stage: { type: "string" },
             profile: { type: "string" },
+            repoRoot: {
+              type: "string",
+              description: "Repository root directory (optional)",
+            },
           },
           required: ["task"],
         },
@@ -381,6 +463,10 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           type: "object",
           properties: {
             planId: { type: "string" },
+            repoRoot: {
+              type: "string",
+              description: "Repository root directory (optional)",
+            },
           },
           required: ["planId"],
         },
@@ -392,6 +478,10 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           type: "object",
           properties: {
             packId: { type: "string" },
+            repoRoot: {
+              type: "string",
+              description: "Repository root directory (optional)",
+            },
           },
           required: ["packId"],
         },
@@ -399,13 +489,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
       {
         name: "interview_action",
         description: "Alias for kit_interview",
-        inputSchema: {
-          type: "object",
-          properties: {
-            action: { type: "string" },
-          },
-          required: ["action"],
-        },
+        inputSchema: interviewInputSchema,
       },
     ],
   };
@@ -419,7 +503,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       case "kit_init":
       case "init_workspace": {
         const result = await initWorkspace({
-          dir: (args as any)?.dir || defaultWorkspaceRoot,
+          dir: (args as any)?.dir || (args as any)?.repoRoot || defaultWorkspaceRoot,
           force: (args as any)?.force,
         });
         return {
@@ -646,7 +730,21 @@ export async function startMcpServer() {
   await server.connect(transport);
 }
 
-if (process.argv[1] && process.argv[1].endsWith("mcp.js")) {
+function isEntrypoint(): boolean {
+  if (!process.argv[1]) return false;
+  try {
+    const realScript = fs.realpathSync(process.argv[1]);
+    const normalized = path.normalize(realScript).toLowerCase();
+    const base = path.basename(normalized);
+    return base === "mcp.js" || base === "mcp.ts" || base === "rea-kit-mcp" || base.startsWith("mcp.");
+  } catch {
+    const normalized = path.normalize(process.argv[1]).toLowerCase();
+    const base = path.basename(normalized);
+    return base === "mcp.js" || base === "mcp.ts" || base === "rea-kit-mcp" || base.startsWith("mcp.");
+  }
+}
+
+if (isEntrypoint()) {
   startMcpServer().catch((err) => {
     console.error("Failed to start MCP server:", err);
     process.exit(1);

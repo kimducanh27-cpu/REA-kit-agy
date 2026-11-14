@@ -47,6 +47,21 @@ export function removeCommentsOnly(code: string): string {
   });
 }
 
+export function hasEsmSyntax(code: string): boolean {
+  if (!code) return false;
+  const clean = removeCommentsAndStrings(code);
+  if (/(?:^|[;\n])\s*import\s+(?:(?:[\w*\s{},]+)\s+from\s+)?['"][^'"]+['"]/m.test(clean)) {
+    return true;
+  }
+  if (/(?:^|[;\n])\s*export\s+(?:default\b|\*|\{|\b(?:const|let|var|function|class|async)\b)/m.test(clean)) {
+    return true;
+  }
+  if (/(?:^|[;\n])\s*await\s+[\w$([{]/m.test(clean)) {
+    return true;
+  }
+  return false;
+}
+
 export function getShannonEntropy(str: string): number {
   if (!str) return 0.0;
   const freq = new Map<string, number>();
@@ -246,8 +261,13 @@ export async function verifyCode(
 
   // 3. JavaScript syntax (external .js and inline <script>)
   const jsFiles = allTargetFiles.filter((f) => f.toLowerCase().endsWith(".js"));
-  function validateJsCode(code: string, sourceLabel: string): void {
+  function validateJsCode(code: string, sourceLabel: string, isModule = false): void {
     if (!code || !code.trim()) return;
+    if (isModule || hasEsmSyntax(code)) {
+      // ESM syntax (import/export/top-level await) or <script type="module"> is not supported by vm.Script.
+      // Skip passing to vm.Script to prevent false-positive syntax errors.
+      return;
+    }
     try {
       new vm.Script(code, { filename: sourceLabel });
     } catch (err: any) {
@@ -262,17 +282,27 @@ export async function verifyCode(
 
   for (const htmlPath of htmlFiles) {
     const content = await fs.readFile(htmlPath, "utf8");
-    const scriptRegex =
-      /<script(?![^>]*\bsrc\s*=)(?![^>]*\btype\s*=\s*["'](?:application\/json|application\/ld\+json|importmap|text\/template)["'])[^>]*>([\s\S]*?)<\/script>/gi;
+    const scriptRegex = /<script\b([^>]*)>([\s\S]*?)<\/script>/gi;
     let match: RegExpExecArray | null;
     let blockIdx = 0;
     while ((match = scriptRegex.exec(content)) !== null) {
+      const attrs = match[1] || "";
+      const inlineJs = match[2];
+      if (/\bsrc\s*=/i.test(attrs)) continue;
+      if (
+        /\btype\s*=\s*["'](?:application\/json|application\/ld\+json|importmap|text\/template)["']/i.test(
+          attrs
+        )
+      ) {
+        continue;
+      }
       blockIdx++;
-      const inlineJs = match[1];
+      const isModule = /\btype\s*=\s*["']module["']/i.test(attrs);
       if (inlineJs && inlineJs.trim()) {
         validateJsCode(
           inlineJs,
-          `${path.basename(htmlPath)} [inline <script #${blockIdx}>]`
+          `${path.basename(htmlPath)} [inline <script #${blockIdx}>]`,
+          isModule
         );
       }
     }
@@ -313,16 +343,20 @@ export async function verifyCode(
   const filesToScanSecrets = [...allTargetFiles].filter((f) => {
     const ext = path.extname(f).toLowerCase();
     const base = path.basename(f).toLowerCase();
+    if (base.endsWith(".min.js")) return false;
     return checkExts.includes(ext) || base.includes(".gradle") || base.startsWith(".env");
   });
 
   const reportFiles = await getAllFiles(reportDir, (f) => {
     const ext = path.extname(f).toLowerCase();
+    const base = path.basename(f).toLowerCase();
+    if (base.endsWith(".min.js")) return false;
     return !isExcludedFile(f) && checkExts.includes(ext);
   });
   filesToScanSecrets.push(...reportFiles);
 
   for (const filePath of filesToScanSecrets) {
+    if (path.basename(filePath).toLowerCase().endsWith(".min.js")) continue;
     let text = "";
     try {
       text = await fs.readFile(filePath, "utf8");
@@ -341,15 +375,19 @@ export async function verifyCode(
     }
 
     // 4.2 Base64-encoded secrets
-    const base64Candidates = text.match(/\b[A-Za-z0-9+/]{24,}={0,2}\b/g) || [];
+    // Skip data:image/ URIs and limit candidate length to 24..512 chars
+    const textWithoutImages = text.replace(/data:image\/[a-zA-Z0-9+.-]+;base64,[A-Za-z0-9+/=]+/gi, "");
+    const base64Candidates = textWithoutImages.match(/\b[A-Za-z0-9+/]{24,512}={0,2}\b/g) || [];
     for (const cand of base64Candidates) {
+      if (cand.length < 24 || cand.length > 512) continue;
       try {
         const decoded = Buffer.from(cand, "base64").toString("utf8");
         if (decoded && decoded.length >= 16) {
           for (const pat of leakPatterns) {
             if (pat.test(decoded)) {
+              const candSha = crypto.createHash("sha256").update(cand).digest("hex");
               errors.push(
-                `Base64 secret leak in ${path.basename(filePath)} (${cand})`
+                `Base64 secret leak in ${path.basename(filePath)} ([REDACTED_SECRET_CANDIDATE: sha256=${candSha}])`
               );
               break;
             }
@@ -592,9 +630,14 @@ export async function verifyCode(
       hasVal = true;
     }
 
-    if (hasVal && typeof val === "string") {
-      out[currentPath] = val;
-      return out;
+    if (hasVal) {
+      if (typeof val === "string") {
+        out[currentPath] = val;
+        return out;
+      } else if (val && typeof val === "object" && typeof val.hex === "string") {
+        out[currentPath] = val.hex;
+        return out;
+      }
     }
 
     for (const [k, v] of Object.entries(obj)) {
@@ -640,13 +683,39 @@ export async function verifyCode(
 
         for (const [k, v] of Object.entries(dtcg)) {
           if (/^#[0-9a-fA-F]{3,8}$/.test(v)) {
-            colorMap[k.toLowerCase()] = v;
-            const leaf = k.includes(".") ? k.substring(k.lastIndexOf(".") + 1) : k;
-            colorMap[leaf.toLowerCase()] = v;
-            const semMatch = k.match(/^semantic\.color\.(.+)$/i);
-            if (semMatch) colorMap[semMatch[1].toLowerCase()] = v;
-            const globMatch = k.match(/^global\.color\.(.+)$/i);
-            if (globMatch) colorMap[globMatch[1].toLowerCase()] = v;
+            const kLower = k.toLowerCase();
+            colorMap[kLower] = v;
+
+            // Fix Leaf-Key Collision (P0): In DTCG token extraction, ONLY map leaf/short keys
+            // from semantic.color.* or global.color.*. NEVER allow component.* (e.g.
+            // component.button.primary.background, component.card.background) to overwrite short-key colorMap["background"].
+            if (!kLower.startsWith("component.")) {
+              const semMatch = k.match(/^semantic\.color\.(.+)$/i);
+              if (semMatch) {
+                const subKey = semMatch[1].toLowerCase();
+                colorMap[subKey] = v;
+                if (subKey.includes(".")) {
+                  colorMap[subKey.replace(/\./g, "-")] = v;
+                  const leaf = subKey.substring(subKey.lastIndexOf(".") + 1);
+                  colorMap[leaf] = v;
+                }
+              }
+
+              const globMatch = k.match(/^global\.color\.(.+)$/i);
+              if (globMatch) {
+                const subKey = globMatch[1].toLowerCase();
+                colorMap[subKey] = v;
+                if (subKey.includes(".")) {
+                  colorMap[subKey.replace(/\./g, "-")] = v;
+                  const leaf = subKey.substring(subKey.lastIndexOf(".") + 1);
+                  colorMap[leaf] = v;
+                }
+              }
+
+              if (!k.includes(".")) {
+                colorMap[kLower] = v;
+              }
+            }
           }
         }
       } catch {
