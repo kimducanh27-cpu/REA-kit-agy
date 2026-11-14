@@ -19,7 +19,7 @@ $OutputEncoding = [System.Text.Encoding]::UTF8
 $scriptDir = $PSScriptRoot
 if (-not $scriptDir) { $scriptDir = (Get-Location).Path }
 $repoRoot = $scriptDir
-while ($repoRoot -and -not (Test-Path (Join-Path $repoRoot "docs\adrs"))) {
+while ($repoRoot -and -not (Test-Path (Join-Path $repoRoot "docs/adrs"))) {
     $parent = Split-Path $repoRoot -Parent
     if ($parent -eq $repoRoot -or [string]::IsNullOrEmpty($parent)) { break }
     $repoRoot = $parent
@@ -28,7 +28,7 @@ if (-not $repoRoot) {
     $repoRoot = (Get-Location).Path
 }
 
-$adrDir = Join-Path $repoRoot "docs\adrs"
+$adrDir = Join-Path $repoRoot "docs/adrs"
 
 if (-not (Test-Path $adrDir)) {
     Write-Host "[!] Không tìm thấy thư mục ADR tại: $adrDir" -ForegroundColor Red
@@ -242,7 +242,11 @@ switch ($Action) {
         }
 
         $formattedId = "{0:D4}" -f $newNum
-        $slug = $titleText.ToLower() -replace '[^a-z0-9]+', '-' -replace '^-+|-+$', ''
+        $normalized = $titleText.Replace('đ', 'd').Replace('Đ', 'D').Normalize([System.Text.NormalizationForm]::FormD)
+        $asciiChars = -join ($normalized.ToCharArray() | Where-Object {
+            [System.Globalization.CharUnicodeInfo]::GetUnicodeCategory($_) -ne [System.Globalization.UnicodeCategory]::NonSpacingMark
+        })
+        $slug = $asciiChars.ToLower() -replace '[^a-z0-9]+', '-' -replace '^-+|-+$', ''
         if ([string]::IsNullOrWhiteSpace($slug)) { $slug = "new-record" }
 
         $fileName = "$formattedId-$slug.md"

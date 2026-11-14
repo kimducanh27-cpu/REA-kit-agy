@@ -1,8 +1,10 @@
 {
-  "case_id": null,
+  "schema_version": 2,
+  "case_id": "CASE-INITIAL",
   "target_name": null,
   "target_class": "ANDROID_APK",
-  "target_type": "ANDROID_APK",
+  "build_strategy": null,
+  "build_route": null,
   "current_phase": "STAGE_00_BOOTSTRAP",
   "current_step": "00_PROJECT_BOOTSTRAP",
   "current_gate_status": "GATE_00_READY",
@@ -18,20 +20,54 @@
     "gate_06_handoff_signed": false
   },
   "artifacts": {
+    "backup_file": null,
     "baseline_evidence": null,
-    "unknowns_and_coverage": null,
-    "frozen_spec": null,
-    "implementation_plan": null,
-    "build_qa_report": null,
-    "hard_verify_report": null,
-    "handoff_bundle": null
+    "scan_report": "03_KET_QUA_KIEM_TRA/bao-cao-hien-trang.md",
+    "unknowns_and_coverage": "03_KET_QUA_KIEM_TRA/UNKNOWNS_AND_COVERAGE.md",
+    "design_contract": "02_YEU_CAU_CUA_TOI/design.md",
+    "frozen_spec": "03_KET_QUA_KIEM_TRA/dac-ta-yeu-cau-da-chot.md",
+    "implementation_plan": "03_KET_QUA_KIEM_TRA/KE_HOACH_TRIEN_KHAI.md",
+    "build_qa_report": "03_KET_QUA_KIEM_TRA/KET_QUA_KIEM_THU.md",
+    "hard_verify_report": "03_KET_QUA_KIEM_TRA/BAO_CAO_NGHIEM_THU_HARD_VERIFY.md",
+    "handoff_bundle": "05_MA_NGUON_PHAT_TRIEN/BAN_GIAO_SAN_PHAM.md"
   },
   "metrics": {
     "coverage_score": null,
     "unknowns_count": 0,
     "risk_level": "LOW",
-    "review_convergence_rounds": 0
+    "review_convergence_rounds": 0,
+    "max_convergence_rounds": 2
   },
-  "last_updated": "2026-11-13T18:30:00+07:00",
-  "notes": "Hệ thống máy trạng thái 6 Giai đoạn STAGE_00_BOOTSTRAP .. STAGE_05_VALIDATION · 14 Bước (V1 Target: ANDROID_APK)"
+  "gate_invalidation_map": {
+    "REJECT_GATE_03": {
+      "revert_to_phase": "STAGE_03_PRODUCT_DEFINITION",
+      "revert_to_step": "06_REA_INTERVIEW",
+      "reset_gates": [
+        "gate_03_spec_frozen",
+        "gate_04_build_qa_passed",
+        "gate_05_hard_verify_passed",
+        "gate_06_handoff_signed"
+      ]
+    },
+    "REJECT_GATE_04": {
+      "revert_to_phase": "STAGE_04_IMPLEMENTATION",
+      "revert_to_step": "09_REA_BUILD",
+      "reset_gates": [
+        "gate_04_build_qa_passed",
+        "gate_05_hard_verify_passed",
+        "gate_06_handoff_signed"
+      ]
+    },
+    "REJECT_GATE_05": {
+      "revert_to_phase": "STAGE_04_IMPLEMENTATION",
+      "revert_to_step": "09_REA_BUILD",
+      "reset_gates": [
+        "gate_04_build_qa_passed",
+        "gate_05_hard_verify_passed",
+        "gate_06_handoff_signed"
+      ]
+    }
+  },
+  "last_updated": "2026-11-14T08:35:00+07:00",
+  "notes": "Hệ thống máy trạng thái 6 Giai đoạn STAGE_00_BOOTSTRAP .. STAGE_05_VALIDATION · 14 Bước (V1.1 Target: ANDROID_APK)"
 }

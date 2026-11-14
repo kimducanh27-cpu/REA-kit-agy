@@ -74,29 +74,15 @@ Maintain a capability matrix with version, platform, prerequisites, operation ef
 
 A case retains target identity/authorization, input references and hashes, complete Evidence exports/index, human report, questions/decisions, requirements/design, implementation branch, tests and handoff. 
 
-The internal case structure inside `03_KET_QUA_KIEM_TRA/` follows a standardized schema:
+The canonical artifact layout inside `03_KET_QUA_KIEM_TRA/` uses a flat, non-tech-friendly structure mapped directly in `.agents/state/active_case.json` (matching `docs/WORKFLOW_LIFECYCLE.md` and `templates/10-CASE-MANIFEST-TEMPLATE.json`):
 ```text
 03_KET_QUA_KIEM_TRA/
-└── case-APP-001/
-    ├── 00_CASE_MANIFEST.json        # Manifest định danh ca, metadata, SHA-256 (schema: templates/10-CASE-MANIFEST-TEMPLATE.json)
-    ├── 01_INTAKE/
-    │   ├── INPUT_MANIFEST.json      # Danh mục file đầu vào & hash SHA-256
-    │   └── BACKUP_MANIFEST.json     # Chứng thực bản sao lưu an toàn sang 04_
-    ├── 02_INVESTIGATION/
-    │   ├── SCAN_REPORT.md           # Báo cáo quét tĩnh và phân tích cấu trúc
-    │   ├── EVIDENCE_INDEX.json      # Chỉ mục bằng chứng gốc từ REA Engine
-    │   ├── FEATURE_DOSSIERS/        # Hồ sơ bóc tách chi tiết từng tính năng
-    │   └── UNKNOWN_REGISTER.json    # Sổ theo dõi điểm mù và vùng mã chưa xác minh
-    ├── 03_AUDIT/
-    │   ├── AUDIT_REPORT.md          # Báo cáo kiểm toán độc lập
-    │   └── COVERAGE_MATRIX.json     # Ma trận độ phủ bằng chứng (Coverage Score)
-    ├── 04_DECISIONS/
-    │   └── DECISION_LOG.md          # Nhật ký quyết định người dùng đã chốt
-    ├── 05_PLAN/
-    │   ├── APPROVED_SPEC.md         # Đặc tả yêu cầu đóng băng (Frozen Spec)
-    │   ├── ARCHITECTURE.md          # Kiến trúc kỹ thuật của app mới
-    │   └── TASKS.json               # Danh sách nhiệm vụ nguyên tử & phụ thuộc
-    └── HANDOFF.json                 # Hợp đồng bàn giao pha (schema: templates/11-HANDOFF-CONTRACT-TEMPLATE.json)
+├── bao-cao-hien-trang.md                # Sản phẩm Bước 04 (Báo cáo hiện trạng & Evidence IDs — templates/01)
+├── UNKNOWNS_AND_COVERAGE.md             # Sản phẩm Bước 05 (Sổ theo dõi điểm mù & Coverage Score — templates/06)
+├── dac-ta-yeu-cau-da-chot.md            # Sản phẩm Bước 07 (Đặc tả đóng băng, Strategy & Build Route — templates/02)
+├── KE_HOACH_TRIEN_KHAI.md               # Sản phẩm Bước 08 (Kế hoạch 6 Vertical Slices nguyên tử — templates/07)
+├── KET_QUA_KIEM_THU.md                  # Sản phẩm Bước 10 (Chứng chỉ QA & Independent Review — templates/04)
+└── BAO_CAO_NGHIEM_THU_HARD_VERIFY.md    # Sản phẩm Bước 12 (Bảng đối chiếu 1-1 Hard Verify — templates/08)
 ```
 
 Never store real user artifacts, private Evidence, source code or secrets in this public repository. Use synthetic/public fixtures.
@@ -145,7 +131,7 @@ See SECURITY_REVIEW_MODEL.md and upstream SECURITY.md / DISCLAIMER.md.
 
 ### Delivery model — ACCEPTED (referencing ADR-0002)
 
-- **Skill-first over upstream REA MCP (ACCEPTED via ADR-0002):** The kit delegates tool execution directly to upstream REA via local stdio MCP (`tools/list`, `binary_session`, `discover_tools`) and provides native Vietnamese orchestration skills (`rea-scan`, `rea-interview`, `rea-build`), Markdown prompt templates, and lightweight PowerShell helper scripts.
+- **Skill-first over upstream REA MCP (ACCEPTED via ADR-0002):** The kit delegates tool execution directly to upstream REA via local stdio MCP (`tools/list`, `binary_session`, `discover_tools`) and provides native Vietnamese orchestration skills (`rea-scan`, `rea-audit`, `rea-interview`, `rea-plan`, `rea-build`, `memory-consolidation`), Markdown prompt templates, and lightweight PowerShell helper scripts.
 - **Thin CLI wrapper (REJECTED for V1 via ADR-0002):** A custom binary or npm package wrapper is rejected for V1 to eliminate premature abstraction, compilation, and maintenance overhead.
 - **Status:** ACCEPTED. The Skill-first delivery model is approved per ADR-0002.
 

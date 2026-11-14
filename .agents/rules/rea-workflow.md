@@ -19,7 +19,7 @@ globs: "**/*"
 
 5. **Giới hạn quyền hành động & Vận hành Thiết bị/AVD:**
    - Phân tích tĩnh (Static Analysis) luôn là mặc định an toàn: Sử dụng REA MCP `inspect_android_package` (công cụ phân tích tĩnh cục bộ dựa trên JADX decompiler, KHÔNG PHẢI lệnh ADB) để bóc tách cấu trúc APK an toàn mà không cần kết nối thiết bị.
-   - Khi chạy động với Android APK: Tận dụng các lệnh an toàn của **Android CLI** (`android layout`, `android screen capture -o <file_path>`) và REA ADB (`capture_adb_screen` với tham số bắt buộc `serial`, `output-directory`; `start_adb_app` với tham số bắt buộc `serial`, `package`) trên máy ảo AVD hoặc thiết bị kiểm thử được kết nối qua Antigravity Device Hub.
+   - Khi chạy động với Android APK: Tận dụng các lệnh an toàn của **Android CLI** (`android layout`, `android screen capture -o <file_path>`) và REA ADB (`capture_adb_screen` với tham số bắt buộc `serial`, `output_directory`; `start_adb_app` với tham số bắt buộc `serial`, `package`) trên máy ảo AVD hoặc thiết bị kiểm thử được kết nối qua Antigravity Device Hub.
    - Tuyệt đối KHÔNG tự ý can thiệp thiết bị cá nhân ngoài phạm vi kiểm thử hoặc gửi request ra mạng công cộng nếu chưa được người dùng xác nhận.
 
 6. **Tuyên bố bảo mật chuẩn mực (Scoped Security Claims):**

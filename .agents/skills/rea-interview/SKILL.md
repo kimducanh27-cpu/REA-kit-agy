@@ -1,55 +1,44 @@
 ---
 name: rea-interview
-description: Phỏng vấn làm rõ yêu cầu người dùng sau khi đã có báo cáo phân tích từ rea-scan, sổ Unknowns và file 02_YEU_CAU_CUA_TOI/ho-so-va-muc-tieu.md. Chốt Design System 3 tầng, lựa chọn Build Route (Route A Web Zero-Install, Route B Android Native, Route C Patch/Hybrid), đóng băng đặc tả sản phẩm và chia nhỏ kế hoạch triển khai nguyên tử. Phụ trách STAGE_03_PRODUCT_DEFINITION theo docs/WORKFLOW_LIFECYCLE.md.
+description: Phụ trách độc quyền Bước 06 (REA Interview) và Bước 07 (Spec & Design Gate) trong STAGE_03 (Product Definition). Phỏng vấn người dùng từ 3-5 câu tiếng Việt đời thường, chốt Chiến lược phát triển (Strategies 1-4) và Lộ trình nền tảng (Build Routes A/B/C), khóa hợp đồng Design System 3 tầng tại 02_YEU_CAU_CUA_TOI/design.md và xuất đặc tả đóng băng vào 03_KET_QUA_KIEM_TRA/dac-ta-yeu-cau-da-chot.md.
 ---
 
-# KỸ NĂNG: ĐỊNH HÌNH SẢN PHẨM & KẾ HOẠCH TRIỂN KHAI (REA-INTERVIEW)
+# KỸ NĂNG: PHỎNG VẤN ĐỊNH HÌNH SẢN PHẨM & ĐÓNG BĂNG ĐẶC TẢ (REA-INTERVIEW)
 
-Kỹ năng chuyên biệt cho **STAGE_03_PRODUCT_DEFINITION** theo khung chuẩn 6 Stage · 14 Bước tại `docs/WORKFLOW_LIFECYCLE.md`.
-Phụ trách từ khâu đối thoại yêu cầu, lựa chọn hướng phát triển (Build Routes), đóng băng đặc tả đến lập kế hoạch triển khai nguyên tử để chuyển giao cho Stage 04.
+Kỹ năng chuyên biệt cho **Bước 06 (`06_REA_INTERVIEW`)** và **Bước 07 (`07_SPEC_AND_DESIGN`)** thuộc **STAGE_03 · PRODUCT DEFINITION** theo `docs/WORKFLOW_LIFECYCLE.md`.
+*(Lưu ý ranh giới: Bước 08 Lập kế hoạch triển khai 6 Vertical Slices & mở Cổng 03 do kỹ năng `rea-plan` đảm nhiệm riêng biệt).*
 
 ---
 
-## 1. QUY TRÌNH THỰC HIỆN 3 BƯỚC
+## 1. QUY TRÌNH THỰC HIỆN (BƯỚC 06 & BƯỚC 07)
 
 ### BƯỚC 06: REA INTERVIEW (Phỏng Vấn Người Dùng & Chốt Hướng Phát Triển)
-1. Đọc đồng thời 3 nguồn tài liệu:
-   - `02_YEU_CAU_CUA_TOI/ho-so-va-muc-tieu.md` (mong muốn cá nhân)
-   - `03_KET_QUA_KIEM_TRA/bao-cao-hien-trang.md` (hiện trạng ứng dụng gốc)
-   - `03_KET_QUA_KIEM_TRA/UNKNOWNS_AND_COVERAGE.md` (các điểm mù và rủi ro)
-2. Đặt từ 3 đến 5 câu hỏi tiếng Việt đời thường, có sẵn gợi ý lựa chọn (A/B/C):
-   - **Lựa chọn Build Route (3 Hướng Tái Tạo Mã Nguồn)**:
-     * *Route A (Mặc định — Zero-Install Web App)*: Web App độc lập (`index.html`, `styles.css`, `app.js`) mở chạy ngay trên trình duyệt mà không cần cài đặt bất kỳ công cụ nào.
-     * *Route B (Android Native Project)*: Ứng dụng Android chuẩn (khởi tạo qua Antigravity Android CLI `android create` hoặc template Gradle/Kotlin/Jetpack Compose), hỗ trợ build APK và chạy thử trực tiếp trên máy ảo AVD / Antigravity Device Hub.
-     * *Route C (Patch APK / Resources hoặc Web/Hybrid)*: Vá tài nguyên/smali trực tiếp trên gói APK gốc, hoặc đóng gói ứng dụng Hybrid (Capacitor/PWA).
-   - **Tương đồng hay Tối giản**: Muốn giữ nguyên luồng app cũ hay tinh gọn lại?
-   - **Xử lý Unknowns**: Các chức năng bị mã hóa/chưa rõ có cần thay thế bằng chuẩn Web/Native hay mock data không?
-   - **Giao diện & Trải nghiệm**: Chọn bảng màu nhận diện thương hiệu hay làm mới theo phong cách hiện đại?
-   - **Ranh giới bảo mật**: App có cần kết nối server ngoài hay chạy 100% cục bộ?
+1. **Đọc đồng thời 3 nguồn tài liệu đầu vào**:
+   - `02_YEU_CAU_CUA_TOI/ho-so-va-muc-tieu.md` (mong muốn ban đầu của người dùng).
+   - `03_KET_QUA_KIEM_TRA/bao-cao-hien-trang.md` (hiện trạng ứng dụng gốc từ Bước 04).
+   - `03_KET_QUA_KIEM_TRA/UNKNOWNS_AND_COVERAGE.md` (sổ theo dõi điểm mù từ Bước 05).
+2. **Cập nhật trạng thái chờ người dùng trước khi đặt câu hỏi**:
+   - Ghi ngay vào `.agents/state/active_case.json`: `current_phase = "STAGE_03_PRODUCT_DEFINITION"`, `current_step = "06_REA_INTERVIEW"`, `current_gate_status = "GATE_03_WAITING_USER_INPUT"`.
+3. **Đặt từ 3 đến 5 câu hỏi tiếng Việt đời thường, có gợi ý lựa chọn rõ ràng**:
+   - **Câu 1 — Chiến lược phát triển mã nguồn (`build_strategy` — 4 lựa chọn)**:
+     * *Strategy 1 (`STRATEGY_1_EXTEND`)*: Tiếp tục phát triển nối tiếp trên mã nguồn hiện tại (khi đã có source repo tốt).
+     * *Strategy 2 (`STRATEGY_2_FEATURE_BRANCH`)*: Tạo nhánh riêng để phát triển cô lập tính năng mới.
+     * *Strategy 3 (`STRATEGY_3_COMPATIBLE_CLEANROOM`)*: Xây dựng bản tương thích mới sạch sẽ dựa trên hành vi quan sát được.
+     * *Strategy 4 (`STRATEGY_4_FULL_REWRITE`)*: Viết lại hoàn toàn kiến trúc mới từ đầu.
+   - **Câu 2 — Lộ trình nền tảng đích (`build_route` — 3 lựa chọn)**:
+     * *Route A (`ROUTE_A_WEB_ZERO_INSTALL` — Mặc định cho người non-tech)*: Web App độc lập (`index.html`, `styles.css`, `app.js`) nhấp đúp mở chạy ngay trên trình duyệt, không cần cài môi trường.
+     * *Route B (`ROUTE_B_ANDROID_NATIVE`)*: Dự án Android Native chuẩn (khởi tạo qua Android CLI `android create` hoặc Gradle + Kotlin + Jetpack Compose) trong `05_MA_NGUON_PHAT_TRIEN/android/`.
+     * *Route C (`ROUTE_C_PATCH_HYBRID`)*: Vá tài nguyên/smali trên gói APK hoặc đóng gói Hybrid (PWA/Capacitor).
+   - **Câu 3 — Giải quyết các điểm mù (`Unknowns`)**: Chọn phương án thay thế bằng chuẩn mở, dùng mock data cục bộ hay lược bỏ đối với từng mã `UNK-XX` trong sổ Unknowns.
+   - **Câu 4 — Tính năng & Giao diện**: Giữ/bỏ màn hình nào, chọn phong cách màu sắc nào?
+   - **Câu 5 — Ranh giới dữ liệu & Mạng**: Chạy 100% cục bộ offline hay được phép kết nối API ngoài (nếu có API ngoài, ghi nhận rõ để mở cờ `-AllowHighRisk` ở Stage 04)?
 
 ### BƯỚC 07: SPEC & DESIGN GATE (Hợp Đồng Giao Diện & Đặc Tả Đóng Băng)
-1. **Thiết lập Design System 3 tầng** tại `02_YEU_CAU_CUA_TOI/design.md`:
-   - Tầng 1: Primitive Tokens (Màu sắc, Font, Spacing, Radius, Shadow cho cả Web CSS và Android Compose/XML).
-   - Tầng 2: Semantic Components (Button, Card, Form Input, Header, Modal).
-   - Tầng 3: 4 Trạng thái giao diện bắt buộc (`Loading`, `Empty`, `Success`, `Error`).
-2. **Đóng băng đặc tả sản phẩm** theo `templates/02-SPEC-TEMPLATE.md` vào:
+1. Sau khi người dùng trả lời, cập nhật `active_case.json`: `current_step = "07_SPEC_AND_DESIGN"`, lưu `build_strategy` và `build_route` đã chọn.
+2. **Thiết lập Design System 3 tầng** tại `02_YEU_CAU_CUA_TOI/design.md` theo `templates/05-DESIGN-TOKEN-TEMPLATE.md`:
+   - Tầng 1: Primitive Tokens (Màu sắc, Typography, Spacing, Radius, Shadow cho Web CSS `:root` hoặc Android Compose `Color.kt`/`Theme.kt`).
+   - Tầng 2: Semantic Components (Button, Card, Input, Header, Modal/Dialog).
+   - Tầng 3: 4 Trạng thái giao diện bắt buộc (`Loading`, `Empty`, `Success`, `Error Recovery` bảo toàn form input theo `RULE-INIT-001`).
+3. **Xuất đặc tả sản phẩm** theo `templates/02-SPEC-TEMPLATE.md` vào:
    👉 `03_KET_QUA_KIEM_TRA/dac-ta-yeu-cau-da-chot.md`.
-   Bao gồm: Build Route đã chọn (Route A, Route B hoặc Route C), luồng nghiệp vụ, danh sách màn hình, tiêu chí nghiệm thu (Acceptance Criteria).
-
-### BƯỚC 08: IMPLEMENTATION PLAN (Kế Hoạch Triển Khai Nguyên Tử)
-1. Chia nhỏ toàn bộ dự án thành các nhiệm vụ nguyên tử (Atomic Tasks) độc lập theo đúng Build Route đã chọn.
-2. Xác định rõ quan hệ phụ thuộc (Dependency Graph) và thứ tự thực hiện từ UI tĩnh đến Logic nghiệp vụ.
-3. Xuất file kế hoạch theo `templates/07-IMPLEMENTATION-PLAN-TEMPLATE.md` vào:
-   👉 `03_KET_QUA_KIEM_TRA/KE_HOACH_TRIEN_KHAI.md`.
-4. **CỔNG 03 (Quality Gate 03: `gate_03_spec_frozen`)**:
-   - Yêu cầu người dùng duyệt kế hoạch và đặc tả.
-   - Khi được phê duyệt:
-     * Cập nhật `active_case.json`: `gates.gate_03_spec_frozen = true`, `current_phase = "STAGE_03_PRODUCT_DEFINITION"`, `current_step = "08_IMPLEMENTATION_PLAN"`.
-     * Đồng bộ bảng tiến độ trong `docs/PROGRESS.md`.
-   - **Vòng lặp sửa sai (Reject Loop)**: Nếu người dùng không đồng ý, tạo bản `SPEC_v2.md` và lùi về Bước 06/07 để phỏng vấn lại. Tuyệt đối không xóa tài liệu cũ.
-
----
-
-## 2. NGUYÊN TẮC GIAO TIẾP
-- Ngôn ngữ: 100% tiếng Việt thân thiện, không dùng thuật ngữ kỹ thuật khó hiểu.
-- Không hỏi dồn dập; nếu người dùng trả lời ngắn, AI tự hoàn thiện chi tiết theo hướng an toàn nhất và xin xác nhận.
+4. Chuyển giao ngay cho kỹ năng **`rea-plan`** để lập kế hoạch triển khai nguyên tử ở Bước 08.

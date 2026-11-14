@@ -27,16 +27,19 @@ To deliver REA-kit-agy—providing localized Vietnamese workflows, human-in-the-
 
 * **Option 1: Custom Engine Fork** — Fork `morluto/rea`, modify tool definitions, translate outputs into Vietnamese internally, and distribute custom builds.
 * **Option 2: Standalone CLI Wrapper (`rea-kit-cli`)** — Build a Node.js or Go command-line wrapper binary that wraps REA CLI, manages git branches, executes validations, and exposes custom CLI subcommands.
-* **Option 3: Skill-First Delivery with Upstream Stdio MCP and Native Agent Skills** — Consume upstream REA as an unmodified local stdio MCP server; orchestrate all Vietnamese workflows via native agent skills (`rea-scan`, `rea-interview`, `rea-build`), Markdown prompt templates, and lightweight PowerShell scripts (`.agents/scripts/`).
+* **Option 3: Skill-First Delivery with Upstream Stdio MCP and Native Agent Skills** — Consume upstream REA as an unmodified local stdio MCP server; orchestrate all Vietnamese workflows via native agent skills (`rea-scan`, `rea-audit`, `rea-interview`, `rea-plan`, `rea-build`, `memory-consolidation`), Markdown prompt templates, and lightweight PowerShell scripts (`.agents/scripts/`).
 
 ## Decision Outcome
 
 Chosen option: **Option 3: Skill-First Delivery with Upstream Stdio MCP and Native Agent Skills**.
 
-The architecture delegates tool execution entirely to upstream REA via local stdio MCP (`tools/list`, `binary_session`, `discover_tools`). REA-kit-agy encapsulates the orchestration logic into three domain-specific Vietnamese skills:
-1. `rea-scan`: Stage 01 intake preflight, target classification, evidence collection, and security boundary checking.
-2. `rea-interview`: Stage 02 evidence analysis, unknown gap detection, and interactive decision interview via structured questions.
-3. `rea-build`: Stage 03-05 architecture specification, isolated implementation in `05_MA_NGUON_PHAT_TRIEN`, automated verification, and handoff bundling.
+The architecture delegates tool execution entirely to upstream REA via local stdio MCP (`tools/list`, `binary_session`, `discover_tools`). REA-kit-agy encapsulates the orchestration logic into six domain-specific Vietnamese skills plus the upstream REA skill:
+1. `rea-scan`: Stage 01 intake preflight, baseline capture, and Stage 02 Step 03–04 investigation.
+2. `rea-audit`: Stage 02 Step 05 independent evidence audit, coverage scoring, and Unknowns ledger (Gate 02).
+3. `rea-interview`: Stage 03 Step 06–07 user interview, build strategy/route selection, and frozen specification.
+4. `rea-plan`: Stage 03 Step 08 6-Vertical-Slice atomic implementation planning (Gate 03).
+5. `rea-build`: Stage 04–05 code generation, independent QA (`verify_code.ps1`), 1-to-1 Hard Verify, and release handoff (Gates 04–06).
+6. `memory-consolidation`: Anthropic 4-layer memory dreaming, retroactive drift correction, and index maintenance.
 
 Operational tasks requiring deterministic execution (health checks, test verification, backup/rollback, and ADR inspection) are handled by transparent, dependency-free PowerShell scripts in `.agents/scripts/`.
 

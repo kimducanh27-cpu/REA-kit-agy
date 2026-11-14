@@ -35,27 +35,21 @@ Chosen option: **Option 3: Four-Tier Local Hybrid Memory Architecture**.
 
 The system partitions case memory into four complementary tiers, all residing strictly in local workspace storage:
 
-### Tier 1: Event Log (Append-Only Audit Ledger)
-- **Files:** Git commit history, `.agents/state/events.jsonl`, local conversation transcripts.
-- **Role:** Immutable, append-only record of every command executed, tool invoked, gate checked, and backup taken. Guarantees forensic auditability and enables atomic rollback via `.agents/scripts/rollback.ps1`.
+### Layer 1: Transcripts & Event Logs (Ground-Truth Session Ledger)
+- **Files:** `.agents/state/cases/session_<TIMESTAMP>.md`, Git commit history.
+- **Role:** Searchable event log of commands executed, REA Evidence IDs collected, test verdicts, and user decisions. Serves as the ground-truth baseline for retroactive verification during offline consolidation (*Dreaming*).
 
-### Tier 2: Operational State (Dynamic Single Source of Truth)
-- **Files:** `.agents/state/active_case.json`.
-- **Role:** Compact, low-latency JSON object representing current execution status:
-  - `case_id`, `target_name`, `target_class`
-  - `current_phase`, `current_step`, `current_gate_status`
-  - `gates` checklist (boolean verification flags for Gate 01 through Gate 06)
-  - `artifacts` mapping (file paths to generated reports, specs, and bundles)
-  - `metrics` (coverage score, unknown count, risk level, review rounds)
-- Read and mutated by the primary coordinator agent at stage transitions.
+### Layer 2: Memory Notes (Salient Observations, Strategies & Trap Warnings)
+- **Files:** `.agents/state/MEMORY.md` (Verified Memory Notes table) and `.agents/state/learned_rules.json`.
+- **Role:** Stores provenance-verified technical rules, working tool configurations, architectural decisions, and failure/recovery traps (never restricted to failures-only, per Anthropic's CL-Bench findings).
 
-### Tier 3: Durable Knowledge (Repository-Level Rules & Blueprints)
-- **Files:** `.agents/state/learned_rules.json`, `docs/adrs/`, `docs/ARCHITECTURE.md`, `templates/`.
-- **Role:** Cross-session institutional memory. Stores domain heuristics (e.g. `RULE-INIT-001` form preservation), architectural invariants, approved design tokens, and verified templates. Survives case resets and informs future analyses.
+### Layer 3: Memory Representations (Interlinked Knowledge Wiki)
+- **Files:** `docs/WORKFLOW_LIFECYCLE.md`, `docs/ARCHITECTURE.md`, `docs/SOURCE_AUDIT.md`, `docs/adrs/0001..0006`, `templates/`.
+- **Role:** Structured, cross-linked documentation maps that organize domain architecture and lifecycle specifications across sessions.
 
-### Tier 4: Injected Context (Ephemeral Task-Scoped Working Memory)
-- **Files:** `prompts/*.md`, active template instances, dynamic skill guidelines.
-- **Role:** Just-in-time contextual prompt segments injected into the LLM context window during specific tasks. Keeps active context small, highly focused, and free of unnecessary background noise.
+### Layer 4: Injected Context & Operational State (Preemptively Loaded Session Header)
+- **Files:** `.agents/state/active_case.json` (6-Gate / 14-Step operational state machine), `AGENTS.md`, `docs/HANDOFF.md`, and the compact `MEMORY.md` index (strictly capped at `<= 200 lines` or `25 KB` per Claude Code Auto-Memory standards).
+- **Role:** Preemptively loaded at the start of every session (`prompts/00-SESSION-CONTINUITY.md`) so the agent immediately knows current case state, verified rules, and where to find deeper Layer 2/3 records.
 
 ### Positive Consequences
 

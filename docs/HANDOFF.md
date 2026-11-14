@@ -64,7 +64,7 @@ A Vietnamese-first kit using upstream REA (https://github.com/morluto/rea) and G
     * 08-HARD-VERIFY-TEMPLATE
     * 09-HANDOFF-BUNDLE-TEMPLATE
 - **Antigravity integration**:
-  - 4 skills: 1 upstream engine skill (`.agents/skills/reverse-engineer-anything/`) + 3 orchestration skills (`rea-scan`, `rea-interview`, `rea-build`)
+  - 7 skills: 1 upstream engine skill (`.agents/skills/reverse-engineer-anything/` v62) + 6 orchestration skills (`rea-scan`, `rea-audit`, `rea-interview`, `rea-plan`, `rea-build`, `memory-consolidation`)
   - `.agents/rules/rea-workflow.md` (Antigravity YAML rule for security and lifecycle integrity)
   - `.agents/scripts/health_check.ps1` (Tested: 6/6 components verified ready, including runtime REA doctor & Auto-Resume banner)
   - `.agents/scripts/verify_code.ps1` (Deterministic syntax, tag & secret checker, exit code 0/1)

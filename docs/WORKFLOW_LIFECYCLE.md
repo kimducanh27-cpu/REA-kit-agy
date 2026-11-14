@@ -92,12 +92,12 @@ flowchart TD
   1. **Quy trình với Android APK (Mục tiêu cốt lõi V1)**:
      - Tận dụng plugin **Android CLI** của Antigravity kết hợp cùng công cụ **REA ADB** và phân tích tĩnh JADX:
        * Khởi chạy ứng dụng trên máy ảo AVD hoặc thiết bị thật qua Antigravity Device Hub bằng lệnh `start_adb_app` (tham số bắt buộc: `serial`, `package`) hoặc lệnh `android`.
-       * Chụp ảnh màn hình giao diện thực tế bằng `android screen capture -o <file_path>` hoặc lệnh REA ADB `capture_adb_screen` (tham số bắt buộc: `serial`, `output-directory`) và lưu vào `01_THA_APP_VAO_DAY/baseline/`.
+       * Chụp ảnh màn hình giao diện thực tế bằng `android screen capture -o <file_path>` hoặc lệnh REA ADB `capture_adb_screen` (tham số bắt buộc: `serial`, `output_directory`) và lưu vào `01_THA_APP_VAO_DAY/baseline/`.
        * Trích xuất phân cấp giao diện (UI Hierarchy) trực tiếp bằng `android layout` để lập danh mục màn hình sống (Live Screen Inventory).
   2. **Quy trình với ứng dụng khác (Web, Electron ASAR, Desktop)**:
      - Chạy thử app gốc trên trình duyệt hoặc runtime cục bộ, chụp ảnh giao diện và ghi nhận luồng thao tác mẫu.
   3. **Cơ chế Fallback (Nếu không có máy ảo/thiết bị thật/không chạy được runtime)**:
-     - Tự động chuyển sang bóc tách tài nguyên tĩnh với REA MCP `inspect_android_package` (lưu ý: `inspect_android_package` là công cụ phân tích tĩnh cục bộ dựa trên JADX decompiler, KHÔNG PHẢI lệnh ADB) để trích xuất layout XML, drawables, strings, AndroidManifest.xml đối với APK hoặc bóc tách assets/HTML tĩnh.
+     - Tự động chuyển sang bóc tách tài nguyên tĩnh 3 lớp với REA MCP: `inspect_android_package` (JADX tĩnh lấy Manifest, permissions, classes), `decode_android_resources` (Apktool >= 2.9.2 lấy `strings.xml`/resources), và `open_binary` + `inspect_artifact`/`extract_artifact` (lấy `res/layout/*.xml`, drawables, assets) đối với APK hoặc bóc tách assets/HTML tĩnh.
      - Đánh dấu runtime là `SKIPPED (Tĩnh)`. Tuyệt đối không dừng lại hay báo lỗi crash terminal.
 - **CỔNG 01 (`gate_01_baseline_verified`)**: Đã có đủ ảnh giao diện hoặc đã trích xuất toàn bộ tài nguyên tĩnh dự phòng.
 
@@ -200,7 +200,7 @@ flowchart TD
 #### Bước 12: Hard Verify (Đối Chiếu 1-1 Với App Gốc)
 - **Hành động Agent**:
   1. Đặt app mới cạnh app gốc để đối chiếu từng tính năng và giao diện:
-     - **Với Android**: Sử dụng `android screen capture -o <file_path>` hoặc REA ADB `capture_adb_screen` (tham số bắt buộc: `serial`, `output-directory`) để ghi lại hình ảnh app mới; chạy `android layout` để trích xuất cây cấu trúc component và so sánh 1-1 với layout baseline thu được tại Bước 02.
+     - **Với Android**: Sử dụng `android screen capture -o <file_path>` hoặc REA ADB `capture_adb_screen` (tham số bắt buộc: `serial`, `output_directory`) để ghi lại hình ảnh app mới; chạy `android layout` để trích xuất cây cấu trúc component và so sánh 1-1 với layout baseline thu được tại Bước 02.
      - **Với Web**: So sánh trực tiếp trên trình duyệt hoặc đối chiếu với ảnh chụp màn hình trong `01_THA_APP_VAO_DAY/baseline/`.
   2. Lập bảng đối chiếu trực quan 3 cột:
      - **Cột 1: Khớp 100%**: Các chức năng và UI chuẩn xác như bản gốc.
@@ -225,7 +225,7 @@ flowchart TD
 
 | Cổng Kiểm Soát | Vị Trí Vòng Đời | Điều Kiện Vượt Qua (Passing Criteria) | Hành Động Khi Bị Từ Chối (Reject Loop) |
 | :--- | :--- | :--- | :--- |
-| **GATE 01** (`gate_01_baseline_verified`) | Sau Bước 02 | Có ảnh chụp app gốc (từ AVD/Device Hub qua `android screen capture -o <file_path>`/`capture_adb_screen` [yêu cầu `serial`, `output-directory`] hoặc browser) hoặc đã bóc tách tài nguyên tĩnh dự phòng (`inspect_android_package` qua JADX tĩnh). | Bổ sung file vào `01_` hoặc chạy lại chế độ Static Fallback. |
+| **GATE 01** (`gate_01_baseline_verified`) | Sau Bước 02 | Có ảnh chụp app gốc (từ AVD/Device Hub qua `android screen capture -o <file_path>`/`capture_adb_screen` [yêu cầu `serial`, `output_directory`] hoặc browser) hoặc đã bóc tách tài nguyên tĩnh dự phòng (`inspect_android_package` qua JADX tĩnh). | Bổ sung file vào `01_` hoặc chạy lại chế độ Static Fallback. |
 | **GATE 02** (`gate_02_audit_passed`) | Sau Bước 05 | Đạt Scoped Static Audit (kiểm toán tĩnh có giới hạn phạm vi, phát hiện patterns nghi vấn, che mờ API Keys `[REDACTED]`, không over-claim quét sạch mã độc, xuất đủ `UNKNOWNS_AND_COVERAGE.md`). | Điều tra bổ sung các file nghi vấn tại Bước 04. |
 | **GATE 03** (`gate_03_spec_frozen`) | Sau Bước 08 | Người dùng duyệt `dac-ta-yeu-cau-da-chot.md` (bao gồm lựa chọn Build Route) và `KE_HOACH_TRIEN_KHAI.md`. | Tạo bản `SPEC_v2.md`, lùi về Bước 06 để phỏng vấn lại. Không xóa bản cũ. |
 | **GATE 04** (`gate_04_build_qa_passed`) | Sau Bước 10 | Syntax check 100% OK, không có HIGH RISK chưa duyệt, Independent Reviewer PASS. | Lùi về Bước 09 tối đa 2 lần. Nếu vẫn lỗi, dừng lại báo cáo người dùng. |

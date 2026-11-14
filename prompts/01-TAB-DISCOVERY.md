@@ -7,37 +7,40 @@
 ```markdown
 # Tab 01 — Stage 01: Discovery (Bước 01: App Intake & Bước 02: Reference Baseline)
 
-Read and follow `AGENTS.md` and `docs/WORKFLOW_LIFECYCLE.md`.
+Read and follow `AGENTS.md`, `.agents/state/MEMORY.md`, and `docs/WORKFLOW_LIFECYCLE.md`.
 
 ## Active Skills for this Tab:
-- Local Kit Skills: `rea-scan`, `reverse-engineer-anything`
-- Host Plugin Skills: `android-cli`, `android-device-hub`, `investigate-first`
+- Local Kit Skills (Bắt buộc): `rea-scan`, `reverse-engineer-anything`
+- Optional Host Plugins (Nếu máy có cài đặt): `android-cli`
 
 You are executing **STAGE_01 · DISCOVERY**:
 
-### BƯỚC 01: APP INTAKE / PREFLIGHT (Tiếp nhận & Kiểm tra)
-1. Kiểm tra thư mục `01_THA_APP_VAO_DAY/`. Xác định file đầu vào (Android APK, Electron ASAR, ZIP, Web URL, v.v.).
-2. **SAO LƯU AN TOÀN**: Tự động sao chép nguyên vẹn file gốc sang thư mục `04_SAO_LUU_AN_TOAN/` (đặt cờ Read-Only).
-3. Đọc `UPSTREAMS.md` để đảm bảo REA engine đã sẵn sàng.
-4. Cập nhật `active_case.json`: `target_name`, `target_type`, `current_phase = "STAGE_01_DISCOVERY"`, `current_step = "01_APP_INTAKE"`.
+### BƯỚC 01: APP INTAKE / PREFLIGHT (Tiếp nhận & Sao lưu Bất khả xâm phạm)
+1. Kiểm tra thư mục `01_THA_APP_VAO_DAY/`. Xác định file đầu vào (`.apk`, `.asar`, `.zip`, thư mục mã nguồn, v.v.).
+2. **SAO LƯU AN TOÀN**: Sao chép nguyên vẹn file gốc sang `04_SAO_LUU_AN_TOAN/` và đối chiếu SHA-256.
+3. Cập nhật `.agents/state/active_case.json`: `case_id`, `target_name`, `target_class`, `backup_verified = true`, `artifacts.backup_file`, `current_phase = "STAGE_01_DISCOVERY"`, `current_step = "01_APP_INTAKE"`.
 
 ### BƯỚC 02: REFERENCE BASELINE (Đo kiểm Ứng dụng Gốc)
 1. **Nếu mục tiêu là Android APK (`.apk`)**:
-   - Kiểm tra Antigravity Device Hub và máy ảo AVD:
-     * Nếu có máy ảo AVD hoặc thiết bị thật kết nối: Khởi chạy app với `start_adb_app` hoặc lệnh Android CLI.
-     * Chụp ảnh màn hình giao diện baseline bằng lệnh `android screen capture -o <file_path>` hoặc `capture_adb_screen` và lưu vào `01_THA_APP_VAO_DAY/baseline/`.
-     * Bóc tách phân cấp giao diện (UI Component Hierarchy) bằng lệnh `android layout` để lập danh mục màn hình gốc.
-   - **Cơ chế Fallback tĩnh**: Nếu máy người dùng chưa có AVD / Device Hub / thiết bị thật kết nối, tự động chuyển sang bóc tách tài nguyên tĩnh với `inspect_android_package` (layout XML, strings.xml, icons, drawable, AndroidManifest.xml) và đánh dấu trạng thái runtime là `SKIPPED (Tĩnh)`. Tuyệt đối không dừng lại hay báo lỗi crash terminal.
-2. **Nếu là các định dạng khác (Web, Electron ASAR, Desktop)**:
-   - Chạy thử app trong trình duyệt hoặc runtime cục bộ, chụp ảnh baseline và ghi nhận luồng thao tác.
-3. **CỔNG 01 (Quality Gate 01: `gate_01_baseline_verified`)**:
-   - Khi có đủ ảnh chụp baseline HOẶC đã bóc tách tài nguyên tĩnh dự phòng:
-   - Cập nhật `active_case.json`: `gates.gate_01_baseline_verified = true`, `current_step = "02_REFERENCE_BASELINE"`.
-   - Cập nhật checklist trong `docs/PROGRESS.md`.
+   - Kiểm tra xem máy có kết nối AVD hoặc thiết bị qua Android CLI / ADB không:
+     * **Nếu có AVD / Thiết bị**:
+       1. Cài đặt và khởi chạy APK bằng lệnh Android CLI `android run <đường_dẫn_apk>` (hoặc chạy `adb install -r <đường_dẫn_apk>` trước khi gọi REA MCP `start_adb_app` với tham số `serial`, `package`).
+       2. Chụp ảnh màn hình baseline bằng `android screen capture -o 01_THA_APP_VAO_DAY/baseline/screen_01.png` hoặc REA MCP `capture_adb_screen` (tham số JSON bắt buộc: `serial` và `output_directory` — dùng đúng tên trường snake_case `output_directory` với đường dẫn tuyệt đối).
+       3. Trích xuất phân cấp giao diện bằng `android layout --full` lưu vào `01_THA_APP_VAO_DAY/baseline/layout_01.json`.
+     * **Cơ chế Fallback Tĩnh 3 Lớp (Nếu không có AVD / Thiết bị)**:
+       1. Gọi `inspect_android_package` (JADX tĩnh) để trích xuất Manifest declarations, permissions và danh mục classes.
+       2. Gọi `decode_android_resources` (nếu có Apktool >= 2.9.2) để trích xuất `strings.xml` và resource tables.
+       3. Gọi `open_binary` + `inspect_artifact` / `extract_artifact` để lấy danh mục `res/layout/*.xml`, drawables và assets.
+       4. Đánh dấu trạng thái baseline là `SKIPPED (Static Fallback)`. Tuyệt đối không dừng hay báo lỗi crash.
+2. **Nếu là định dạng khác (Web, Electron ASAR, Desktop, Source Repo)**:
+   - Thu thập baseline hoặc kiểm kê cấu trúc tương ứng.
+3. **MỞ CỔNG 01 (`gate_01_baseline_verified = true`)**:
+   - Cập nhật `active_case.json`: `gates.gate_01_baseline_verified = true`, `current_step = "02_REFERENCE_BASELINE"`, `current_gate_status = "GATE_01_PASSED"`.
+   - Đồng bộ checklist trong `docs/PROGRESS.md`.
 
 ### BÁO CÁO CHO NGƯỜI DÙNG:
 Báo cáo ngắn gọn bằng tiếng Việt đời thường:
 - Loại file đã nhận & xác nhận đã sao lưu an toàn vào `04_SAO_LUU_AN_TOAN/`.
-- Trạng thái Baseline (Chạy thử qua AVD/Device Hub với `android layout`/`android screen capture`, hoặc Bóc tách tài nguyên tĩnh dự phòng).
-- Thông báo CỔNG 01 ĐÃ MỞ. Hướng dẫn người dùng mở `prompts/02-TAB-REVERSE-ENGINEERING.md` để dán tiếp.
+- Kết quả thu thập Baseline (Qua AVD/Device Hub hoặc Static Fallback 3 lớp).
+- Thông báo **CỔNG 01 ĐÃ MỞ** và hướng dẫn dán tiếp `prompts/02-TAB-REVERSE-ENGINEERING.md`.
 ```

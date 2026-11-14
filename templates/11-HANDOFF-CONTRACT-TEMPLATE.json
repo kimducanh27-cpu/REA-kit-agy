@@ -20,8 +20,14 @@
     "next_phase"
   ],
   "properties": {
-    "schema_version": { "type": "integer", "default": 1 },
-    "case_id": { "type": "string", "example": "APP-001" },
+    "schema_version": {
+      "type": "integer",
+      "default": 1
+    },
+    "case_id": {
+      "type": "string",
+      "example": "APP-001"
+    },
     "phase": {
       "type": "string",
       "enum": [
@@ -33,73 +39,139 @@
         "STAGE_05_VALIDATION"
       ]
     },
-    "run_id": { "type": "string", "example": "RUN-001" },
+    "run_id": {
+      "type": "string",
+      "example": "RUN-001"
+    },
     "status": {
       "type": "string",
-      "enum": ["READY_FOR_NEXT", "BLOCKED", "NEEDS_APPROVAL", "FAILED"]
+      "enum": [
+        "READY_FOR_NEXT",
+        "BLOCKED",
+        "NEEDS_APPROVAL",
+        "FAILED"
+      ]
     },
     "inputs": {
       "type": "array",
-      "items": { "type": "string" },
-      "example": ["01_THA_APP_VAO_DAY/target.apk"]
+      "items": {
+        "type": "string"
+      },
+      "example": [
+        "01_THA_APP_VAO_DAY/target.apk"
+      ]
     },
     "outputs": {
       "type": "array",
-      "items": { "type": "string" },
-      "example": ["03_KET_QUA_KIEM_TRA/case-APP-001/02_INVESTIGATION/SCAN_REPORT.md"]
+      "items": {
+        "type": "string"
+      },
+      "example": [
+        "03_KET_QUA_KIEM_TRA/bao-cao-hien-trang.md",
+        "03_KET_QUA_KIEM_TRA/UNKNOWNS_AND_COVERAGE.md"
+      ]
     },
     "source_hashes": {
       "type": "object",
-      "additionalProperties": { "type": "string" },
+      "additionalProperties": {
+        "type": "string"
+      },
       "example": {
         "01_THA_APP_VAO_DAY/target.apk": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
       }
     },
     "evidence_refs": {
       "type": "array",
-      "items": { "type": "string" },
-      "example": ["EVID-APK-001", "EVID-MANIFEST-002"]
+      "items": {
+        "type": "string"
+      },
+      "example": [
+        "EVID-APK-001",
+        "EVID-MANIFEST-002"
+      ]
     },
     "coverage": {
       "type": "object",
       "properties": {
-        "score_percent": { "type": "number", "example": 85.0 },
-        "assessed_modules": { "type": "integer", "example": 12 },
-        "total_modules": { "type": "integer", "example": 14 }
+        "score_percent": {
+          "type": "number",
+          "example": 85.0
+        },
+        "assessed_modules": {
+          "type": "integer",
+          "example": 12
+        },
+        "total_modules": {
+          "type": "integer",
+          "example": 14
+        }
       }
     },
     "unknown_ids": {
       "type": "array",
-      "items": { "type": "string" },
-      "example": ["UNK-001", "UNK-002"]
+      "items": {
+        "type": "string"
+      },
+      "example": [
+        "UNK-001",
+        "UNK-002"
+      ]
     },
     "decision_ids": {
       "type": "array",
-      "items": { "type": "string" },
-      "example": ["DEC-001", "DEC-002"]
+      "items": {
+        "type": "string"
+      },
+      "example": [
+        "DEC-001",
+        "DEC-002"
+      ]
     },
     "checks": {
       "type": "array",
       "items": {
         "type": "object",
         "properties": {
-          "name": { "type": "string" },
-          "result": { "type": "string", "enum": ["PASS", "FAIL", "SKIPPED"] },
-          "details": { "type": "string" }
+          "name": {
+            "type": "string"
+          },
+          "result": {
+            "type": "string",
+            "enum": [
+              "PASS",
+              "FAIL",
+              "SKIPPED"
+            ]
+          },
+          "details": {
+            "type": "string"
+          }
         }
       }
     },
     "approval": {
-      "type": ["object", "null"],
+      "type": [
+        "object",
+        "null"
+      ],
       "properties": {
-        "approved_by": { "type": "string" },
-        "approved_at": { "type": "string", "format": "date-time" },
-        "scope": { "type": "string" }
+        "approved_by": {
+          "type": "string"
+        },
+        "approved_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "scope": {
+          "type": "string"
+        }
       }
     },
     "blockers": {
       "type": "array",
-      "items": { "type": "string" }
+      "items": {
+        "type": "string"
+      }
     },
     "next_phase": {
       "type": "string",

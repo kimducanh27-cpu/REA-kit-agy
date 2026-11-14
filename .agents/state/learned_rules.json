@@ -1,8 +1,26 @@
 [
   {
     "rule_id": "RULE-INIT-001",
-    "trigger_event": "INITIALIZATION",
+    "memory_ref": "MEM-005",
+    "category": "UI_RESILIENCE",
+    "trigger_event": "FORM_ERROR_HANDLING",
     "description": "Không bao giờ tự ý xóa các trường dữ liệu người dùng đang nhập khi xảy ra lỗi mạng hoặc lỗi API.",
-    "preventive_action": "Bảo toàn 100% form input value khi chuyển sang Error State, hiển thị nút Retry."
+    "validated_strategy": "Bảo toàn 100% form input state khi chuyển sang Error State, hiển thị banner giải thích nguyên nhân và nút Thử lại (Retry)."
+  },
+  {
+    "rule_id": "RULE-REC-002",
+    "memory_ref": "MEM-004",
+    "category": "ROLLBACK_SAFETY",
+    "trigger_event": "SNAPSHOT_AND_ROLLBACK",
+    "description": "Không tạo hoặc khôi phục từ thư mục snapshot rỗng (.backup/) và không gọi Remove-Item -Recurse đi xuyên qua ReparsePoint (symlink/junction).",
+    "validated_strategy": "Kiểm tra số lượng file thực tế (> 0 file ngoài .gitkeep) trước khi tạo/khôi phục snapshot; tách xử lý ReparsePoint bằng [System.IO.Directory]::Delete."
+  },
+  {
+    "rule_id": "RULE-REA-003",
+    "memory_ref": "MEM-002",
+    "category": "MCP_CONTRACT_FIDELITY",
+    "trigger_event": "ANDROID_INSPECTION",
+    "description": "Không truyền tham số CLI 'output-directory' (có gạch ngang) vào MCP tool capture_adb_screen và không dùng inspect_android_package để lấy res/layout XML.",
+    "validated_strategy": "Truyền 'output_directory' (snake_case, đường dẫn tuyệt đối) cho capture_adb_screen; dùng decode_android_resources (Apktool) cho strings/resources và open_binary + extract_artifact cho layout XML."
   }
 ]

@@ -1,14 +1,13 @@
-﻿# Script Kiểm tra Sức khỏe Toàn diện Workspace & Runtime REA-kit-agy
+﻿# Script Kiểm tra Sức khỏe Toàn diện Workspace & Runtime REA-kit-agy v1.1
 $OutputEncoding = [System.Text.Encoding]::UTF8
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 
-# Tree-climbing từ $PSScriptRoot để tìm docs\WORKFLOW_LIFECYCLE.md và xác định $repoRoot
-$scriptDir = $PSScriptRoot
-if (-not $scriptDir) { $scriptDir = (Get-Location).Path }
+# Tree-climbing từ $PSScriptRoot để tìm docs/WORKFLOW_LIFECYCLE.md và xác định $repoRoot
+$scriptDir = if ($PSScriptRoot) { $PSScriptRoot } else { (Get-Location).Path }
 $current = $scriptDir
 $repoRoot = $null
 while ($current) {
-    if (Test-Path (Join-Path $current "docs\WORKFLOW_LIFECYCLE.md")) {
+    if (Test-Path (Join-Path $current "docs/WORKFLOW_LIFECYCLE.md")) {
         $repoRoot = $current
         break
     }
@@ -21,7 +20,7 @@ if (-not $repoRoot) {
 }
 
 Write-Host "==========================================================" -ForegroundColor Cyan
-Write-Host "   ĐANG KIỂM TRA HỆ THỐNG WORKSPACE REA-KIT-AGY...        " -ForegroundColor Cyan
+Write-Host "   ĐANG KIỂM TRA HỆ THỐNG WORKSPACE REA-KIT-AGY v1.1...   " -ForegroundColor Cyan
 Write-Host "   Repo Root: $repoRoot" -ForegroundColor DarkCyan
 Write-Host "==========================================================" -ForegroundColor Cyan
 
@@ -54,54 +53,61 @@ if ($allCoreDocsOk) {
     Write-Host "[!] (2/6) Thiếu AGENTS.md, HUONG_DAN_SU_DUNG.md hoặc REVIEW.md." -ForegroundColor Red
 }
 
-# 3. Kiểm tra Kỹ năng: 6 Skills điều phối + 1 Skill lõi Upstream
+# 3. Kiểm tra Kỹ năng: 6 Skills điều phối + 1 Skill lõi Upstream (v62, đủ 8 references)
 $skills = @("rea-scan", "rea-audit", "rea-interview", "rea-plan", "rea-build", "memory-consolidation", "reverse-engineer-anything")
 $allSkillsOk = $true
 foreach ($sk in $skills) {
-    if (-not (Test-Path (Join-Path $repoRoot ".agents\skills\$sk\SKILL.md"))) { $allSkillsOk = $false }
+    if (-not (Test-Path (Join-Path $repoRoot ".agents/skills/$sk/SKILL.md"))) { $allSkillsOk = $false }
 }
 if ($allSkillsOk) {
-    Write-Host "[OK] (3/6) Bộ kỹ năng đầy đủ (6 skills điều phối + 1 skill lõi REA gốc)." -ForegroundColor Green
+    Write-Host "[OK] (3/6) Bộ kỹ năng đầy đủ (6 skills điều phối + 1 skill lõi REA v62)." -ForegroundColor Green
     $score++
 } else {
-    Write-Host "[!] (3/6) Thiếu một trong các kỹ năng trong .agents\skills." -ForegroundColor Red
+    Write-Host "[!] (3/6) Thiếu một trong các kỹ năng trong .agents/skills." -ForegroundColor Red
 }
 
 # 4. Kiểm tra Luật an toàn (Rules)
-if (Test-Path (Join-Path $repoRoot ".agents\rules\rea-workflow.md")) {
+if (Test-Path (Join-Path $repoRoot ".agents/rules/rea-workflow.md")) {
     Write-Host "[OK] (4/6) Luật an toàn và bảo vệ dữ liệu đã được kích hoạt." -ForegroundColor Green
     $score++
 } else {
-    Write-Host "[!] (4/6) Thiếu luật an toàn trong .agents\rules." -ForegroundColor Red
+    Write-Host "[!] (4/6) Thiếu luật an toàn trong .agents/rules." -ForegroundColor Red
 }
 
-# 5. Kiểm tra Bộ nhớ ngữ cảnh (docs/) & Bộ nhớ sự cố (state/)
-$docs = @("docs\PRD.md", "docs\ARCHITECTURE.md", "docs\PROGRESS.md", "docs\HANDOFF.md", "docs\PLAN.md", "docs\WORKFLOW_LIFECYCLE.md")
+# 5. Kiểm tra Bộ nhớ ngữ cảnh (docs/) & Bộ nhớ 4 tầng (MEMORY.md, active_case.json, learned_rules.json)
+$docs = @("docs/PRD.md", "docs/ARCHITECTURE.md", "docs/PROGRESS.md", "docs/HANDOFF.md", "docs/PLAN.md", "docs/WORKFLOW_LIFECYCLE.md")
 $allDocsOk = $true
 foreach ($doc in $docs) {
     if (-not (Test-Path (Join-Path $repoRoot $doc))) { $allDocsOk = $false }
 }
-if (-not (Test-Path (Join-Path $repoRoot ".agents\state\learned_rules.json")) -or -not (Test-Path (Join-Path $repoRoot ".agents\state\active_case.json"))) {
-    $allDocsOk = $false
+$stateFiles = @(".agents/state/MEMORY.md", ".agents/state/learned_rules.json", ".agents/state/active_case.json")
+foreach ($sf in $stateFiles) {
+    if (-not (Test-Path (Join-Path $repoRoot $sf))) { $allDocsOk = $false }
 }
 if ($allDocsOk) {
-    Write-Host "[OK] (5/6) Bộ hồ sơ ngữ cảnh (Context Docs) và Bộ nhớ sự cố (State) hoàn chỉnh." -ForegroundColor Green
+    Write-Host "[OK] (5/6) Hồ sơ ngữ cảnh (docs/) và Bộ nhớ 4 tầng (MEMORY.md, active_case.json, learned_rules.json) hoàn chỉnh." -ForegroundColor Green
     $score++
 } else {
-    Write-Host "[!] (5/6) Thiếu một số tài liệu trong docs/ hoặc file state." -ForegroundColor Red
+    Write-Host "[!] (5/6) Thiếu tài liệu trong docs/ hoặc file state trong .agents/state/." -ForegroundColor Red
 }
 
-# 6. Kiểm tra REA Engine & MCP Runtime trên máy
+# 6. Kiểm tra REA Engine & MCP Runtime trên máy (Ưu tiên binary `rea` cài sẵn trước khi gọi `npx --no-install`)
 $mcpOk = $false
 try {
-    $npxCmd = Get-Command npx -ErrorAction SilentlyContinue
-    if ($npxCmd) {
-        $doctorRaw = & npx -y rea-agents doctor --client antigravity --json 2>$null
-        if ($doctorRaw) {
-            $doctorJson = $doctorRaw | ConvertFrom-Json -ErrorAction SilentlyContinue
-            if ($doctorJson -and ($doctorJson.healthy -eq $true -or ($doctorJson.registrations | Where-Object { $_.client -eq "antigravity" -and $_.state -eq "aligned" }))) {
-                $mcpOk = $true
-            }
+    $reaCmd = Get-Command rea -ErrorAction SilentlyContinue
+    $doctorRaw = $null
+    if ($reaCmd) {
+        $doctorRaw = & rea doctor --client antigravity --json 2>$null
+    } else {
+        $npxCmd = Get-Command npx -ErrorAction SilentlyContinue
+        if ($npxCmd) {
+            $doctorRaw = & npx --no-install rea-agents doctor --client antigravity --json 2>$null
+        }
+    }
+    if ($doctorRaw) {
+        $doctorJson = $doctorRaw | ConvertFrom-Json -ErrorAction SilentlyContinue
+        if ($doctorJson -and ($doctorJson.healthy -eq $true -or ($doctorJson.registrations | Where-Object { $_.client -eq "antigravity" -and $_.state -eq "aligned" }))) {
+            $mcpOk = $true
         }
     }
 } catch {
@@ -121,9 +127,9 @@ if ($mcpOk) {
 $androidCmd = Get-Command android -ErrorAction SilentlyContinue
 $adbCmd = Get-Command adb -ErrorAction SilentlyContinue
 if ($androidCmd) {
-    Write-Host "[OK] Android CLI khả dụng: Hỗ trợ AVD, Device Hub, android layout, android screen." -ForegroundColor Green
+    Write-Host "[OK] Android CLI khả dụng: Hỗ trợ AVD, Device Hub, 'android layout --full', 'android screen capture -o <path>', 'android run'." -ForegroundColor Green
 } else {
-    Write-Host "[i] Android CLI: Chưa phát hiện trong PATH (REA-kit-agy tự động kích hoạt Static Fallback XML/Assets)." -ForegroundColor Yellow
+    Write-Host "[i] Android CLI: Chưa phát hiện trong PATH (REA-kit-agy tự động kích hoạt Static Fallback qua JADX/Apktool/Artifact Inventory)." -ForegroundColor Yellow
 }
 
 Write-Host "==========================================================" -ForegroundColor Cyan
@@ -135,18 +141,19 @@ if ($score -eq $total) {
 }
 
 # Hiển thị Tự động phục hồi phiên (Auto-Resume Banner)
-$activeCasePath = Join-Path $repoRoot ".agents\state\active_case.json"
+$activeCasePath = Join-Path $repoRoot ".agents/state/active_case.json"
 if (Test-Path $activeCasePath) {
     try {
         $case = Get-Content $activeCasePath -Raw -Encoding UTF8 | ConvertFrom-Json
         if ($case) {
             Write-Host ""
             Write-Host "--- TIẾN ĐỘ DỰ ÁN (LIFECYCLE STATUS) ---" -ForegroundColor Yellow
+            Write-Host " Case ID        : $($case.case_id) (Revision $($case.revision))" -ForegroundColor White
             Write-Host " Stage hiện tại : $($case.current_phase)" -ForegroundColor White
             Write-Host " Target Class   : $($case.target_class)" -ForegroundColor White
             Write-Host " Bước hiện tại  : $($case.current_step)" -ForegroundColor White
             Write-Host " Trạng thái Gate: $($case.current_gate_status)" -ForegroundColor White
-            Write-Host " Android CLI    : $(if ($androidCmd) { 'SẴN SÀNG (AVD / Device Hub / layout / screen)' } else { 'STATIC FALLBACK (Bóc tách tài nguyên tĩnh XML/Smali)' })" -ForegroundColor $(if ($androidCmd) { 'Green' } else { 'Yellow' })
+            Write-Host " Android CLI    : $(if ($androidCmd) { 'SẴN SÀNG (AVD / Device Hub / layout / screen capture)' } else { 'STATIC FALLBACK (JADX + Apktool + Artifact Inventory)' })" -ForegroundColor $(if ($androidCmd) { 'Green' } else { 'Yellow' })
             Write-Host " ADB Tool       : $(if ($adbCmd) { 'KHẢ DỤNG' } else { 'Chưa cấu hình trong PATH' })" -ForegroundColor $(if ($adbCmd) { 'Green' } else { 'Gray' })
             Write-Host " Hướng dẫn tiếp : $($case.next_prompt_guide)" -ForegroundColor Cyan
             Write-Host "----------------------------------------" -ForegroundColor Yellow

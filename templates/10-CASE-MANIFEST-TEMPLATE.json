@@ -1,53 +1,260 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "CaseManifest",
-  "description": "Internal manifest tracking end-to-end case artifacts and metadata in 03_KET_QUA_KIEM_TRA/case-<ID>/",
+  "description": "Canonical schema for .agents/state/active_case.json tracking end-to-end case artifacts and 6-gate state transitions",
   "type": "object",
   "required": [
+    "schema_version",
     "case_id",
     "target_name",
     "target_class",
-    "current_stage",
+    "current_phase",
     "current_step",
-    "gate_status",
-    "created_at",
-    "updated_at",
-    "artifacts"
+    "current_gate_status",
+    "revision",
+    "backup_verified",
+    "gates",
+    "artifacts",
+    "metrics",
+    "last_updated"
   ],
   "properties": {
-    "case_id": { "type": "string", "example": "APP-001" },
-    "target_name": { "type": "string", "example": "sample-calculator.apk" },
+    "schema_version": {
+      "type": "integer",
+      "default": 2
+    },
+    "case_id": {
+      "type": "string",
+      "example": "APP-001"
+    },
+    "target_name": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "example": "sample-calculator.apk"
+    },
     "target_class": {
       "type": "string",
-      "enum": ["ANDROID_APK", "ELECTRON_ASAR", "NATIVE_BINARY", "WEB_APP", "SOURCE_REPO", "CAPTURE"]
+      "enum": [
+        "ANDROID_APK",
+        "WEB_SPA",
+        "ELECTRON_DESKTOP",
+        "NATIVE_BINARY",
+        "SOURCE_REPO",
+        "CAPTURE"
+      ]
     },
-    "current_stage": { "type": "string", "example": "STAGE_01_DISCOVERY" },
-    "current_step": { "type": "string", "example": "01_APP_INTAKE" },
-    "gate_status": { "type": "string", "example": "GATE_00_READY" },
-    "created_at": { "type": "string", "format": "date-time" },
-    "updated_at": { "type": "string", "format": "date-time" },
-    "owner_authorized": { "type": "boolean", "default": true },
-    "allowed_operations": {
-      "type": "array",
-      "items": { "type": "string" },
-      "example": ["static", "device_adb", "screen_capture"]
+    "build_strategy": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "enum": [
+        "STRATEGY_1_EXTEND",
+        "STRATEGY_2_FEATURE_BRANCH",
+        "STRATEGY_3_COMPATIBLE_CLEANROOM",
+        "STRATEGY_4_FULL_REWRITE",
+        null
+      ]
+    },
+    "build_route": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "enum": [
+        "ROUTE_A_WEB_ZERO_INSTALL",
+        "ROUTE_B_ANDROID_NATIVE",
+        "ROUTE_C_PATCH_HYBRID",
+        null
+      ]
+    },
+    "current_phase": {
+      "type": "string",
+      "enum": [
+        "STAGE_00_BOOTSTRAP",
+        "STAGE_01_DISCOVERY",
+        "STAGE_02_REVERSE_ENGINEERING",
+        "STAGE_03_PRODUCT_DEFINITION",
+        "STAGE_04_IMPLEMENTATION",
+        "STAGE_05_VALIDATION"
+      ]
+    },
+    "current_step": {
+      "type": "string",
+      "enum": [
+        "00_PROJECT_BOOTSTRAP",
+        "01_APP_INTAKE",
+        "02_REFERENCE_BASELINE",
+        "03_REA_SCAN",
+        "04_REA_INVESTIGATE",
+        "05_REA_AUDIT",
+        "06_REA_INTERVIEW",
+        "07_SPEC_AND_DESIGN",
+        "08_IMPLEMENTATION_PLAN",
+        "09_REA_BUILD",
+        "10_BUILD_QA",
+        "11_SMOKE_TEST",
+        "12_HARD_VERIFY",
+        "13_RELEASE_AND_HANDOFF"
+      ]
+    },
+    "current_gate_status": {
+      "type": "string",
+      "example": "GATE_00_READY"
+    },
+    "next_prompt_guide": {
+      "type": "string"
+    },
+    "revision": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "backup_verified": {
+      "type": "boolean",
+      "default": false
+    },
+    "gates": {
+      "type": "object",
+      "required": [
+        "gate_01_baseline_verified",
+        "gate_02_audit_passed",
+        "gate_03_spec_frozen",
+        "gate_04_build_qa_passed",
+        "gate_05_hard_verify_passed",
+        "gate_06_handoff_signed"
+      ],
+      "properties": {
+        "gate_01_baseline_verified": {
+          "type": "boolean"
+        },
+        "gate_02_audit_passed": {
+          "type": "boolean"
+        },
+        "gate_03_spec_frozen": {
+          "type": "boolean"
+        },
+        "gate_04_build_qa_passed": {
+          "type": "boolean"
+        },
+        "gate_05_hard_verify_passed": {
+          "type": "boolean"
+        },
+        "gate_06_handoff_signed": {
+          "type": "boolean"
+        }
+      }
     },
     "artifacts": {
       "type": "object",
       "properties": {
-        "intake_manifest": { "type": "string", "example": "01_INTAKE/INPUT_MANIFEST.json" },
-        "backup_manifest": { "type": "string", "example": "01_INTAKE/BACKUP_MANIFEST.json" },
-        "scan_report": { "type": "string", "example": "02_INVESTIGATION/SCAN_REPORT.md" },
-        "evidence_index": { "type": "string", "example": "02_INVESTIGATION/EVIDENCE_INDEX.json" },
-        "unknown_register": { "type": "string", "example": "02_INVESTIGATION/UNKNOWN_REGISTER.json" },
-        "audit_report": { "type": "string", "example": "03_AUDIT/AUDIT_REPORT.md" },
-        "coverage_matrix": { "type": "string", "example": "03_AUDIT/COVERAGE_MATRIX.json" },
-        "decision_log": { "type": "string", "example": "04_DECISIONS/DECISION_LOG.md" },
-        "approved_spec": { "type": "string", "example": "05_PLAN/APPROVED_SPEC.md" },
-        "architecture": { "type": "string", "example": "05_PLAN/ARCHITECTURE.md" },
-        "tasks": { "type": "string", "example": "05_PLAN/TASKS.json" },
-        "handoff_contract": { "type": "string", "example": "HANDOFF.json" }
+        "backup_file": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "example": "04_SAO_LUU_AN_TOAN/sample-calculator.apk"
+        },
+        "baseline_evidence": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "example": "01_THA_APP_VAO_DAY/baseline/"
+        },
+        "scan_report": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "example": "03_KET_QUA_KIEM_TRA/bao-cao-hien-trang.md"
+        },
+        "unknowns_and_coverage": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "example": "03_KET_QUA_KIEM_TRA/UNKNOWNS_AND_COVERAGE.md"
+        },
+        "design_contract": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "example": "02_YEU_CAU_CUA_TOI/design.md"
+        },
+        "frozen_spec": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "example": "03_KET_QUA_KIEM_TRA/dac-ta-yeu-cau-da-chot.md"
+        },
+        "implementation_plan": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "example": "03_KET_QUA_KIEM_TRA/KE_HOACH_TRIEN_KHAI.md"
+        },
+        "build_qa_report": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "example": "03_KET_QUA_KIEM_TRA/KET_QUA_KIEM_THU.md"
+        },
+        "hard_verify_report": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "example": "03_KET_QUA_KIEM_TRA/BAO_CAO_NGHIEM_THU_HARD_VERIFY.md"
+        },
+        "handoff_bundle": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "example": "05_MA_NGUON_PHAT_TRIEN/BAN_GIAO_SAN_PHAM.md"
+        }
       }
+    },
+    "metrics": {
+      "type": "object",
+      "properties": {
+        "coverage_score": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "unknowns_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "risk_level": {
+          "type": "string",
+          "enum": [
+            "LOW",
+            "MEDIUM",
+            "HIGH"
+          ]
+        },
+        "review_convergence_rounds": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "max_convergence_rounds": {
+          "type": "integer",
+          "default": 2
+        }
+      }
+    },
+    "last_updated": {
+      "type": "string",
+      "format": "date-time"
     }
   }
 }

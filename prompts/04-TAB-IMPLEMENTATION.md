@@ -7,49 +7,42 @@
 ```markdown
 # Tab 04 — Stage 04: Implementation (Bước 09: REA Build & Bước 10: Build QA / Code Review)
 
-Read and follow `AGENTS.md`, `REVIEW.md`, and `docs/WORKFLOW_LIFECYCLE.md`.
+Read and follow `AGENTS.md`, `REVIEW.md`, `.agents/state/MEMORY.md`, and `docs/WORKFLOW_LIFECYCLE.md`.
 
 ## Active Skills for this Tab:
-- Local Kit Skills: `rea-build`
-- Host Plugin Skills: `tdd`, `surgical-patch`, `lean-build`, `safe-refactor`, `compose-preview`, `ui-styling`
+- Local Kit Skills (Bắt buộc): `rea-build`
+- Optional Host Plugins (Nếu máy có cài đặt): `android-cli`
 
 ## Điều kiện tiên quyết:
-Kiểm tra `.agents/state/active_case.json`. Nếu `gates.gate_03_spec_frozen` chưa đạt (`false`), dừng lại và yêu cầu hoàn thành Stage 03 trước.
+Đọc `.agents/state/active_case.json`. Nếu `gates.gate_03_spec_frozen` là `false`, dừng lại và yêu cầu hoàn thành Tab 03 trước.
 
 You are executing **STAGE_04 · IMPLEMENTATION**:
 
 ### BƯỚC 09: REA BUILD (Phát Triển Mã Nguồn Theo Build Route)
-1. **LÁ CHẮN HOÀN TÁC**: Chạy lệnh snapshot tự động trước khi sửa mã nguồn:
-   `powershell -ExecutionPolicy Bypass -File .\.agents\scripts\rollback.ps1 -Snapshot`
-2. Đọc `03_KET_QUA_KIEM_TRA/KE_HOACH_TRIEN_KHAI.md` và `02_YEU_CAU_CUA_TOI/design.md`.
-3. Triển khai mã nguồn vào `05_MA_NGUON_PHAT_TRIEN/` theo Build Route đã thống nhất:
-   - **Route A (Web App Zero-Install)**: `index.html`, `styles.css`, `app.js` (chạy trực tiếp trên trình duyệt, tuân thủ `ui-styling` và 4 trạng thái UI).
-   - **Route B (Android Native Project)**: Cấu trúc thư mục Android chuẩn bằng `android create`, Kotlin/Compose files, `build.gradle`, `AndroidManifest.xml`.
-   - **Route C (Patch APK / Resources)**: Các file đã chỉnh sửa (`res/`, `smali/`, assets) kèm script repackage/sign.
-4. **Bản xem trước Staged Preview**: Nếu là bản sửa đổi Web, xuất ra `05_MA_NGUON_PHAT_TRIEN/preview.html` trước khi ghi đè `index.html`.
+1. Cập nhật `active_case.json`: `current_phase = "STAGE_04_IMPLEMENTATION"`, `current_step = "09_REA_BUILD"`.
+2. **LÁ CHẮN HOÀN TÁC**: Chạy lệnh tạo snapshot tự động trước khi sửa mã nguồn:
+   `powershell -NoProfile -ExecutionPolicy Bypass -File .\.agents\scripts\rollback.ps1 -Snapshot`
+3. Đọc kỹ `03_KET_QUA_KIEM_TRA/KE_HOACH_TRIEN_KHAI.md`, `03_KET_QUA_KIEM_TRA/dac-ta-yeu-cau-da-chot.md`, `02_YEU_CAU_CUA_TOI/design.md` và `.agents/state/learned_rules.json`.
+4. Triển khai mã nguồn vào `05_MA_NGUON_PHAT_TRIEN/` theo `build_route` đã duyệt:
+   - **`ROUTE_A_WEB_ZERO_INSTALL`**: `index.html`, `styles.css`, `app.js` (chạy trực tiếp trên trình duyệt, đủ 4 trạng thái UI). Nếu cập nhật app đã có, xuất `preview.html` trước.
+   - **`ROUTE_B_ANDROID_NATIVE`**: Khởi tạo dự án Android chuẩn bằng `android create` hoặc Gradle + Kotlin + Jetpack Compose trong `05_MA_NGUON_PHAT_TRIEN/android/`.
+   - **`ROUTE_C_PATCH_HYBRID`**: Vá tài nguyên/smali hoặc đóng gói Hybrid theo đặc tả.
 
 ### BƯỚC 10: BUILD QA / CODE REVIEW (Thẩm Định Độc Lập & Kiểm Soát Rủi Ro)
-1. **Thẩm định 2 trục độc lập** theo `REVIEW.md`:
-   - Trục Tiêu chuẩn (Standards): Đối chiếu Design Tokens và 4 trạng thái UI.
-   - Trục Đặc tả (Spec): Đối chiếu tiêu chí hoàn thành trong `dac-ta-yeu-cau-da-chot.md`.
-2. **Bộ lọc dẹp nhiễu (High-Signal Filter)**: Không bắt bẻ phong cách code/comment râu ria, chỉ báo cáo lỗi thực tế.
-3. Chạy script kiểm tra cú pháp và quét rủi ro:
-   `powershell -ExecutionPolicy Bypass -File .\.agents\scripts\verify_code.ps1`
-4. **Khống chế vòng lặp tự sửa (Review Convergence Cap)**: Tối đa 2 vòng lặp tự sửa lỗi cú pháp.
-5. **Chốt chặn phân tầng rủi ro**:
-   - `LOW RISK`: UI/Text tĩnh ➔ Tự động duyệt sau khi syntax OK.
-   - `MEDIUM RISK`: Logic form, LocalStorage / SQLite ➔ Báo cáo checklist tính năng.
-   - `HIGH RISK` / `SYNTAX ERROR`: Lỗi cú pháp hoặc gọi mạng ngoài không phép ➔ **CHẶN ĐỨNG**. Không cho phép sang Stage 05.
-6. Xuất báo cáo kiểm thử vào:
+1. Cập nhật `active_case.json`: `current_step = "10_BUILD_QA"`.
+2. **Thẩm định 2 trục độc lập** theo `REVIEW.md` (Trục Standards đối chiếu `design.md` & 4 UI States; Trục Spec đối chiếu `dac-ta-yeu-cau-da-chot.md`).
+3. **Chạy kiểm tra xác định**:
+   `powershell -NoProfile -ExecutionPolicy Bypass -File .\.agents\scripts\verify_code.ps1`
+   *(Chỉ thêm cờ `-AllowHighRisk` nếu đặc tả đã được người dùng phê duyệt cho phép kết nối API ngoài).*
+4. **Khống chế vòng lặp tự sửa (`review_convergence_rounds <= 2`)**:
+   - Mỗi lần sửa lỗi, tăng `metrics.review_convergence_rounds += 1` trong `active_case.json`. Quá 2 vòng vẫn lỗi thì dừng ngay và báo cáo người dùng.
+5. Xuất báo cáo kiểm thử theo `templates/04-TEST-RESULT-TEMPLATE.md` vào:
    👉 `03_KET_QUA_KIEM_TRA/KET_QUA_KIEM_THU.md`.
-7. **CỔNG 04 (Quality Gate 04: `gate_04_build_qa_passed`)**:
-   - Khi syntax 100% OK và không còn lỗi chặn:
-   - Cập nhật `active_case.json`: `gates.gate_04_build_qa_passed = true`, `current_phase = "STAGE_04_IMPLEMENTATION"`, `current_step = "10_BUILD_QA"`.
-   - Cập nhật checklist trong `docs/PROGRESS.md`.
+6. **MỞ CỔNG 04 (`gate_04_build_qa_passed = true`)**:
+   - Khi `verify_code.ps1` đạt `Exit Code 0`: Cập nhật `active_case.json` (`gates.gate_04_build_qa_passed = true`, `current_gate_status = "GATE_04_PASSED"`) và đồng bộ `docs/PROGRESS.md`.
 
 ### BÁO CÁO CHO NGƯỜI DÙNG:
-Báo cáo ngắn gọn bằng tiếng Việt đời thường:
-- Kết quả kiểm tra cú pháp và mức độ rủi ro (LOW/MEDIUM/HIGH).
+- Kết quả `verify_code.ps1` và cấp độ rủi ro (`LOW` / `MEDIUM` / `HIGH`).
 - Giải thích 3 câu hỏi đời thường (Explainer: Vừa làm gì, Tại sao, Cách mở xem thử).
-- Thông báo CỔNG 04 ĐÃ MỞ. Hướng dẫn dán `prompts/05-TAB-VALIDATION.md`.
+- Thông báo **CỔNG 04 ĐÃ MỞ** và hướng dẫn dán tiếp `prompts/05-TAB-VALIDATION.md`.
 ```

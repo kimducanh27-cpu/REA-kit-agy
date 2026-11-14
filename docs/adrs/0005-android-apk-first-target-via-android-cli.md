@@ -94,4 +94,4 @@ This synthesis creates an end-to-end pipeline: drop an `.apk` file into `01_THA_
   - [ADR-0002: Skill-First Delivery](0002-skill-first-delivery.md)
   - [ARCHITECTURE.md](../ARCHITECTURE.md) (Section 5: Target Routing Examples)
   - [UPSTREAMS.md](../../UPSTREAMS.md)
-  - Upstream REA Reference: `.agents/skills/reverse-engineer-anything/references/android-apk-and-device.md`
+  - Upstream REA Reference: `.agents/skills/reverse-engineer-anything/references/android-applications.md`

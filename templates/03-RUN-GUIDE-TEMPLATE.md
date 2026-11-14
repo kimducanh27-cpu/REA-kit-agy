@@ -16,7 +16,7 @@
 1. **Kiểm tra thiết bị kết nối:**
    - Sử dụng Antigravity Device Hub hoặc chạy lệnh:
      ```powershell
-     android devices
+     adb devices
      ```
 2. **Biên dịch & Cài đặt qua Gradle:**
    - Mở terminal tại thư mục `05_MA_NGUON_PHAT_TRIEN/android/`:
