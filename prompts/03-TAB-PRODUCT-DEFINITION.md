@@ -8,7 +8,10 @@
 # Tab 03 — Stage 03: Product Definition (Bước 06: Interview, Bước 07: Spec & Design & Bước 08: Implementation Plan)
 
 Read and follow `AGENTS.md`, `REVIEW.md`, and `docs/WORKFLOW_LIFECYCLE.md`.
-Activate Skill `rea-interview`.
+
+## Active Skills for this Tab:
+- Local Kit Skills: `rea-interview`
+- Host Plugin Skills: `ui-styling`, `design-system`
 
 ## Điều kiện tiên quyết:
 Kiểm tra `.agents/state/active_case.json`. Nếu `gates.gate_02_audit_passed` chưa đạt (`false`), dừng lại và yêu cầu hoàn thành Stage 02 trước.
@@ -24,12 +27,16 @@ You are executing **STAGE_03 · PRODUCT DEFINITION**:
    - Mức độ tương đồng với app gốc (Giữ nguyên hay tối giản?).
    - Phương án giải quyết các Unknowns phát hiện ở Bước 05.
    - Các tính năng mới cần bổ sung hoặc lược bỏ.
+   - **Chốt Build Route**:
+     * Route A (Web App Zero-Install): Chạy ngay trên trình duyệt máy tính/di động.
+     * Route B (Android Native Project): Xây dựng lại app Android mới bằng Kotlin/Jetpack Compose.
+     * Route C (Patch APK / Resources): Vá và can thiệp trực tiếp gói APK gốc.
 3. Chờ người dùng trả lời và tổng hợp thành tài liệu rõ ràng.
 
 ### BƯỚC 07: SPEC & DESIGN GATE (Đặc Tả Đóng Băng & Hợp Đồng Giao Diện)
-1. Chốt hợp đồng thiết kế **Design System 3 tầng** trong `02_YEU_CAU_CUA_TOI/design.md`:
-   - Tầng 1: Primitive Tokens (Màu sắc hex, Font chữ hệ thống, Spacing, Bo góc).
-   - Tầng 2: Semantic Components (Button, Card, Input, Header).
+1. Chốt hợp đồng thiết kế **Design System 3 tầng** trong `02_YEU_CAU_CUA_TOI/design.md` (sử dụng skill `design-system` và `ui-styling`):
+   - Tầng 1: Primitive Tokens (Màu sắc hex, Font chữ hệ thống, Spacing, Bo góc, hoặc Android XML/Compose tokens).
+   - Tầng 2: Semantic Components (Button, Card, Input, Header, Navigation).
    - Tầng 3: 4 Trạng thái giao diện bắt buộc (`Loading`, `Empty`, `Success`, `Error`).
 2. Xuất tài liệu đặc tả yêu cầu đã chốt theo `templates/02-SPEC-TEMPLATE.md` vào:
    👉 `03_KET_QUA_KIEM_TRA/dac-ta-yeu-cau-da-chot.md`.
@@ -47,5 +54,5 @@ You are executing **STAGE_03 · PRODUCT DEFINITION**:
    - **Vòng lặp sửa sai (Reject Loop)**: Nếu người dùng yêu cầu chỉnh sửa, tạo bản `SPEC_v2.md` và lùi về Bước 06/07. Tuyệt đối không xóa bản cũ.
 
 ### BÁO CÁO CHO NGƯỜI DÙNG:
-Trình bày tóm tắt đặc tả và kế hoạch chia task. Đề nghị người dùng duyệt để mở CỔNG 03 và bắt đầu viết code tại Stage 04.
+Trình bày tóm tắt đặc tả, Build Route đã chọn và kế hoạch chia task. Đề nghị người dùng duyệt để mở CỔNG 03 và bắt đầu viết code tại Stage 04.
 ```

@@ -53,11 +53,12 @@ Tạo đầy đủ các thư mục sau:
 ### BƯỚC 4: TẠO BỘ PROMPTS/ VÀ TEMPLATES/ (6 STAGE · 14 BƯỚC)
 1. Trong `prompts/`:
    - `00-SESSION-CONTINUITY.md` (Phục hồi phiên & Auto-Resume)
-   - `01-TAB-DISCOVERY.md` (Stage 01: Intake & Baseline — STAGE_01_DISCOVERY)
-   - `02-TAB-REVERSE-ENGINEERING.md` (Stage 02: Scan, Investigate & Audit — STAGE_02_REVERSE_ENGINEERING)
-   - `03-TAB-PRODUCT-DEFINITION.md` (Stage 03: Interview, Spec & Plan — STAGE_03_PRODUCT_DEFINITION)
-   - `04-TAB-IMPLEMENTATION.md` (Stage 04: Build & Build QA — STAGE_04_IMPLEMENTATION)
-   - `05-TAB-VALIDATION.md` (Stage 05: Smoke Test, Hard Verify & Handoff — STAGE_05_VALIDATION)
+   - `01-TAB-DISCOVERY.md` (Stage 01: Intake & Baseline — STAGE_01_DISCOVERY — Active Skills: `rea-scan`, `reverse-engineer-anything`, `android-cli`, `android-device-hub`)
+   - `02-TAB-REVERSE-ENGINEERING.md` (Stage 02: Scan, Investigate & Audit — STAGE_02_REVERSE_ENGINEERING — Active Skills: `rea-scan`, `reverse-engineer-anything`, `android-cli`)
+   - `03-TAB-PRODUCT-DEFINITION.md` (Stage 03: Interview, Spec & Plan — STAGE_03_PRODUCT_DEFINITION — Active Skills: `rea-interview`, `ui-styling`, `design-system`)
+   - `04-TAB-IMPLEMENTATION.md` (Stage 04: Build & Build QA — STAGE_04_IMPLEMENTATION — Active Skills: `rea-build`, `surgical-patch`, `lean-build`, `ui-styling`)
+   - `05-TAB-VALIDATION.md` (Stage 05: Smoke Test, Hard Verify & Handoff — STAGE_05_VALIDATION — Active Skills: `rea-build`, `code-review`, `android-cli`, `android-device-hub`)
+   *(Lưu ý: Mọi prompt 01-05 đều khai báo tường minh khối `## Active Skills for this Tab` để AI Agent kích hoạt chính xác kỹ năng cần dùng).*
 2. Trong `templates/`:
    - `01-REPORT-TEMPLATE.md` (Báo cáo hiện trạng)
    - `02-SPEC-TEMPLATE.md` (Đặc tả đóng băng)

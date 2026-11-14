@@ -8,8 +8,10 @@
 # Tab 05 — Stage 05: Validation (Bước 11: Smoke Test, Bước 12: Hard Verify & Bước 13: Release & Handoff)
 
 Read and follow `AGENTS.md`, `REVIEW.md`, and `docs/WORKFLOW_LIFECYCLE.md`.
-Activate Skill `rea-build`.
-Tận dụng plugin `Android CLI` của Google Antigravity và công cụ REA ADB.
+
+## Active Skills for this Tab:
+- Local Kit Skills: `rea-build`
+- Host Plugin Skills: `code-review` (thẩm định tiêu chuẩn & spec độc lập), `android-cli`, `android-device-hub`
 
 ## Điều kiện tiên quyết:
 Kiểm tra `.agents/state/active_case.json`. Nếu `gates.gate_04_build_qa_passed` chưa đạt (`false`), dừng lại và yêu cầu hoàn thành Stage 04 trước.
@@ -19,13 +21,13 @@ You are executing **STAGE_05 · VALIDATION**:
 ### BƯỚC 11: RUN APP / SMOKE TEST (Khởi Chạy & Kiểm Thử Nhanh)
 1. **Với Web App (Route A)**: Hướng dẫn người dùng mở chạy thử ứng dụng tại `05_MA_NGUON_PHAT_TRIEN/index.html` trên trình duyệt.
 2. **Với Android Native / APK (Route B & C)**:
-   - Cài đặt và khởi chạy app mới trên máy ảo AVD hoặc thiết bị thật kết nối qua Antigravity Device Hub bằng lệnh `start_adb_app` hoặc Android CLI.
+   - Cài đặt và khởi chạy app mới trên máy ảo AVD hoặc thiết bị thật kết nối qua Antigravity Device Hub bằng lệnh `start_adb_app` hoặc lệnh Android CLI.
 3. Kiểm tra nhanh các luồng thao tác chính (Happy Path) để đảm bảo không bị crash hoặc vỡ giao diện.
 
 ### BƯỚC 12: HARD VERIFY (Đối Chiếu 1-1 Với App Gốc)
 1. Đặt app mới cạnh app gốc (hoặc đối chiếu với ảnh chụp/tài nguyên tại `01_THA_APP_VAO_DAY/baseline/`):
    - **Với Android Native / APK**:
-     * Chụp ảnh màn hình app mới bằng lệnh `android screen` hoặc `capture_adb_screen`.
+     * Chụp ảnh màn hình app mới bằng lệnh `android screen capture -o <file_path>` hoặc `capture_adb_screen`.
      * Trích xuất cây phân cấp giao diện bằng lệnh `android layout` và đối chiếu 1-1 với cây layout baseline của app gốc ghi nhận từ Bước 02.
    - **Với Web App**: So sánh trực tiếp trên trình duyệt hoặc đối chiếu visual với baseline.
 2. Lập bảng đối chiếu trực quan 3 cột:
@@ -53,5 +55,5 @@ You are executing **STAGE_05 · VALIDATION**:
    - Đồng bộ toàn bộ dữ liệu vào `docs/PROGRESS.md` và `docs/HANDOFF.md`.
 
 ### BÁO CÁO CHO NGƯỜI DÙNG:
-Báo cáo hoàn tất dự án, chúc mừng người dùng và hướng dẫn cách mở ứng dụng hoàn thiện (trên trình duyệt hoặc máy ảo AVD/Device Hub).
+Báo cáo hoàn tất dự án, chúc mừng người dùng và hướng dẫn cách mở ứng dụng hoàn thiện tại `05_MA_NGUON_PHAT_TRIEN/`.
 ```

@@ -8,8 +8,10 @@
 # Tab 01 — Stage 01: Discovery (Bước 01: App Intake & Bước 02: Reference Baseline)
 
 Read and follow `AGENTS.md` and `docs/WORKFLOW_LIFECYCLE.md`.
-Activate Skill `rea-scan` and `reverse-engineer-anything`.
-Tận dụng plugin `Android CLI` của Google Antigravity và công cụ REA ADB.
+
+## Active Skills for this Tab:
+- Local Kit Skills: `rea-scan`, `reverse-engineer-anything`
+- Host Plugin Skills: `android-cli`, `android-device-hub`
 
 You are executing **STAGE_01 · DISCOVERY**:
 
@@ -23,7 +25,7 @@ You are executing **STAGE_01 · DISCOVERY**:
 1. **Nếu mục tiêu là Android APK (`.apk`)**:
    - Kiểm tra Antigravity Device Hub và máy ảo AVD:
      * Nếu có máy ảo AVD hoặc thiết bị thật kết nối: Khởi chạy app với `start_adb_app` hoặc lệnh Android CLI.
-     * Chụp ảnh màn hình giao diện baseline sống bằng lệnh `android screen` hoặc `capture_adb_screen` và lưu vào `01_THA_APP_VAO_DAY/baseline/`.
+     * Chụp ảnh màn hình giao diện baseline bằng lệnh `android screen capture -o <file_path>` hoặc `capture_adb_screen` và lưu vào `01_THA_APP_VAO_DAY/baseline/`.
      * Bóc tách phân cấp giao diện (UI Component Hierarchy) bằng lệnh `android layout` để lập danh mục màn hình gốc.
    - **Cơ chế Fallback tĩnh**: Nếu máy người dùng chưa có AVD / Device Hub / thiết bị thật kết nối, tự động chuyển sang bóc tách tài nguyên tĩnh với `inspect_android_package` (layout XML, strings.xml, icons, drawable, AndroidManifest.xml) và đánh dấu trạng thái runtime là `SKIPPED (Tĩnh)`. Tuyệt đối không dừng lại hay báo lỗi crash terminal.
 2. **Nếu là các định dạng khác (Web, Electron ASAR, Desktop)**:
@@ -36,6 +38,6 @@ You are executing **STAGE_01 · DISCOVERY**:
 ### BÁO CÁO CHO NGƯỜI DÙNG:
 Báo cáo ngắn gọn bằng tiếng Việt đời thường:
 - Loại file đã nhận & xác nhận đã sao lưu an toàn vào `04_SAO_LUU_AN_TOAN/`.
-- Trạng thái Baseline (Chạy thử qua AVD/Device Hub với `android layout`/`android screen`, hoặc Bóc tách tài nguyên tĩnh dự phòng).
+- Trạng thái Baseline (Chạy thử qua AVD/Device Hub với `android layout`/`android screen capture`, hoặc Bóc tách tài nguyên tĩnh dự phòng).
 - Thông báo CỔNG 01 ĐÃ MỞ. Hướng dẫn người dùng mở `prompts/02-TAB-REVERSE-ENGINEERING.md` để dán tiếp.
 ```
