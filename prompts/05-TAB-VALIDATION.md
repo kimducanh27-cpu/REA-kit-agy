@@ -14,7 +14,7 @@ Read and follow `AGENTS.md`, `REVIEW.md`, `.agents/state/MEMORY.md`, and `docs/W
 - Optional Host Plugins (Nếu máy có cài đặt): `android-cli`
 
 ## Điều kiện tiên quyết:
-Đọc `.agents/state/active_case.json`. Nếu `gates.gate_04_build_qa_passed` là `false`, dừng lại và yêu cầu hoàn thành Tab 04 trước.
+Đọc `.agents/state/active_case.json` hoặc chạy `powershell -File .agents/scripts/gate.ps1 status`. Bắt buộc Cổng 04 đã đạt trạng thái `PASS` mới được tiếp tục.
 
 You are executing **STAGE_05 · VALIDATION**:
 
@@ -32,14 +32,15 @@ You are executing **STAGE_05 · VALIDATION**:
    👉 `03_KET_QUA_KIEM_TRA/BAO_CAO_NGHIEM_THU_HARD_VERIFY.md`.
 4. **CỔNG 05 (`gate_05_hard_verify_passed`)**:
    - Yêu cầu người dùng xác nhận nghiệm thu.
-   - **Khi đạt**: Cập nhật `active_case.json` (`gates.gate_05_hard_verify_passed = true`, `current_gate_status = "GATE_05_PASSED"`).
-   - **Nếu chưa đạt (Reject Loop — Gate Invalidation Invariant)**: Lập `03_KET_QUA_KIEM_TRA/FIX_PLAN_v2.md`, tăng `revision += 1`, **bắt buộc đặt `gates.gate_04_build_qa_passed = false` và `gates.gate_05_hard_verify_passed = false`**, reset `metrics.review_convergence_rounds = 0`, và lùi `current_phase = "STAGE_04_IMPLEMENTATION"`, `current_step = "09_REA_BUILD"`.
+   - **Khi đạt**: Chạy lệnh `powershell -File .agents/scripts/gate.ps1 open 5 -Evidence "03_KET_QUA_KIEM_TRA/BAO_CAO_NGHIEM_THU_HARD_VERIFY.md"` (nếu không có runtime baseline, dùng `-Mode PASS_WITH_LIMITATIONS` cho kiểm chứng đặc tả SPEC_ACCEPTANCE).
+   - **Nếu chưa đạt (Reject Loop — Cascade Invalidation)**: Lập `03_KET_QUA_KIEM_TRA/FIX_PLAN_v2.md`, chạy lệnh `powershell -File .agents/scripts/gate.ps1 reject 5 -Reason "Phát hiện lỗi sai lệch khi kiểm thử độc lập"` (Script sẽ tự động vô hiệu hóa Gate 04, 05, 06 và đưa về Stage 04 Step 09 một cách an toàn).
 
 ### BƯỚC 13: RELEASE & HANDOFF (Đóng Gói & Bàn Giao Trọn Gói)
 1. Cập nhật `active_case.json`: `current_step = "13_RELEASE_AND_HANDOFF"`.
 2. Xuất gói bàn giao kèm Plain-Language Explainer và hướng dẫn `HOAN_TAC.bat` theo `templates/09-HANDOFF-BUNDLE-TEMPLATE.md` vào:
    👉 `05_MA_NGUON_PHAT_TRIEN/BAN_GIAO_SAN_PHAM.md`.
-3. **MỞ CỔNG 06 (`gate_06_handoff_signed = true`)**:
-   - Khi người dùng xác nhận ký nhận bàn giao ("You Land It, You Own It"), cập nhật `active_case.json`: `gates.gate_06_handoff_signed = true`, `current_gate_status = "GATE_06_COMPLETED"`, `next_prompt_guide = "Dán 'prompts/06-CONSOLIDATION-AND-MEMORY.md' để chạy Dreaming lưu bài học vào bộ nhớ dài hạn."`.
+3. **MỞ CỔNG 06 (`gate_06_handoff_signed`)**:
+   - Khi người dùng xác nhận ký nhận bàn giao ("You Land It, You Own It"), chạy lệnh: `powershell -File .agents/scripts/gate.ps1 open 6 -Evidence "05_MA_NGUON_PHAT_TRIEN/BAN_GIAO_SAN_PHAM.md"`.
+   - Cập nhật `next_prompt_guide = "Dán 'prompts/06-CONSOLIDATION-AND-MEMORY.md' để chạy Dreaming lưu bài học vào bộ nhớ dài hạn."`.
    - Đồng bộ toàn bộ dữ liệu vào `docs/PROGRESS.md` và `docs/HANDOFF.md`.
 ```

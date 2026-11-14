@@ -16,9 +16,23 @@ Agent chính vận hành: **Google Antigravity** (kèm hỗ trợ Claude Code, C
 
 ---
 
-## 2. KHUNG VÒNG ĐỜI 6 STAGE · 14 BƯỚC & 6 CỔNG KIỂM SOÁT (GATES)
+## 2. KHUNG VÒNG ĐỜI 6 STAGE · 14 BƯỚC & ĐIỀU PHỐI RWO v2 (CONDITIONAL DAG)
 
-Mọi hoạt động đều phải tuân thủ tuần tự qua 6 Stage và 6 Cổng kiểm soát trong `.agents/state/active_case.json`:
+Coordinator đóng vai trò **REA Workflow Orchestrator (RWO)**, điều phối ca làm việc theo Đồ thị phụ thuộc (DAG) tại `docs/WORKFLOW_DEPENDENCIES.md` và quyết định kiến trúc `docs/adrs/0007-conditional-workflow-orchestration.md`.
+
+### Quy tắc Điều phối Động:
+- **Không ép chạy tuyến tính 14 bước**: Trước khi thực thi, Coordinator dùng `prompts/00-WORKFLOW-ROUTER.md` để phân loại yêu cầu (`NEW_CASE`, `RESUME`, `CHANGE_REQUEST`, `BUGFIX`, `ANALYSIS_ONLY`, `PLAN_ONLY`) và xuất Bảng Kế hoạch Thực thi.
+- **Phân loại 4 cấp độ bước**: `MANDATORY` (bắt buộc an toàn), `CONDITIONAL` (theo ngữ cảnh), `OPTIONAL` (tùy chọn), `NOT_APPLICABLE` (không áp dụng).
+- **11 Trạng thái Cổng**: `NOT_STARTED`, `IN_PROGRESS`, `PASS`, `PASS_WITH_LIMITATIONS`, `SKIPPED`, `NOT_APPLICABLE`, `WAIVED`, `BLOCKED`, `FAILED`, `INVALIDATED`, `REUSED_VALIDATED`.
+- **Hợp đồng Bằng chứng Bắt buộc**: Mọi lệnh `gate.ps1 open` bắt buộc phải kèm tham số `-Evidence <path>` tồn tại trên ổ đĩa và tính mã hash SHA-256. Cấm mở cổng khống.
+- **Quy tắc Miễn trừ (Waiver Policy)**: Khi người dùng miễn một bước (ví dụ thiếu AVD), cổng ghi `WAIVED` hoặc `PASS_WITH_LIMITATIONS` kèm lý do và rủi ro. Tuyệt đối cấm biến Waiver thành PASS.
+- **Thu hồi Thác đổ (Cascade Invalidation)**: Reject một cổng thượng nguồn sẽ tự động thu hồi toàn bộ các cổng hạ nguồn phụ thuộc theo bản đồ Invalidation Closure.
+
+---
+
+## 3. CHI TIẾT 6 GIAI ĐOẠN & 6 CỔNG KIỂM SOÁT (GATES)
+
+Mọi hoạt động đều phải tuân thủ qua 6 Stage và 6 Cổng kiểm soát trong `.agents/state/active_case.json`:
 
 1. **STAGE 00 · FOUNDATION / BOOTSTRAP (Khởi tạo nền móng)**:
    - Bước 00: Khởi tạo Git, Workspace, cấu hình Agent, State persistence.
@@ -73,7 +87,7 @@ Mọi hoạt động đều phải tuân thủ tuần tự qua 6 Stage và 6 C�
 
 ---
 
-## 3. HỢP ĐỒNG THIẾT KẾ CHỐNG UI SLOP (ANTI-SLOP DESIGN CONTRACT)
+## 4. HỢP ĐỒNG THIẾT KẾ CHỐNG UI SLOP (ANTI-SLOP DESIGN CONTRACT)
 
 Mọi quá trình thiết kế giao diện tại STAGE_03 và kiểm định tại STAGE_04–05 đều phải tuân thủ 7 điều khoản:
 1. **Product-Driven Design**: Không tái sử dụng layout mẫu khuôn sáo (dashboard/card/gradient) cho nhiều sản phẩm.
@@ -86,15 +100,15 @@ Mọi quá trình thiết kế giao diện tại STAGE_03 và kiểm định t�
 
 ---
 
-## 4. QUY TẮC SỬA SAI KHI CỔNG BỊ TỪ CHỐI (REJECT / RETRY LOOP)
+## 5. QUY TẮC SỬA SAI KHI CỔNG BỊ TỪ CHỐI (CASCADE INVALIDATION & RETRY LOOP)
 - Tuyệt đối không xóa hay ghi đè mất lịch sử tài liệu cũ.
 - Đánh số phiên bản kế tiếp: `SPEC_v2.md` hoặc `FIX_PLAN_v2.md`.
-- Lùi trạng thái trong `active_case.json` bằng script: `gate.ps1 reject <gate_id> -Reason <lý_do>`.
-- Giữ nguyên các bằng chứng cũ để kiểm thử hồi quy (Regression Testing).
+- Lùi trạng thái và thu hồi thác đổ trong `active_case.json` bằng script: `gate.ps1 reject <gate_id> -Reason <lý_do>`.
+- Giữ nguyên các bằng chứng cũ hợp lệ để kiểm thử hồi quy (Regression Testing theo `docs/WORKFLOW_DEPENDENCIES.md`).
 
 ---
 
-## 5. ĐỊNH TUYẾN THƯ MỤC HỆ THỐNG CHUẨN XÁC
+## 6. ĐỊNH TUYẾN THƯ MỤC HỆ THỐNG CHUẨN XÁC
 - `01_THA_APP_VAO_DAY/`: File app gốc và ảnh chụp/layout baseline (`baseline/`).
 - `02_YEU_CAU_CUA_TOI/`: Lưu `ho-so-va-muc-tieu.md` và hợp đồng thiết kế `design.md` (Tokens 3 tầng).
 - `03_KET_QUA_KIEM_TRA/`: Lưu toàn bộ tài liệu kiểm toán, đặc tả, kế hoạch và nghiệm thu:

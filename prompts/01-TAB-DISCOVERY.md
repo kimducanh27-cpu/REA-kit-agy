@@ -31,11 +31,12 @@ You are executing **STAGE_01 · DISCOVERY**:
        1. Gọi `inspect_android_package` (JADX tĩnh) để trích xuất Manifest declarations, permissions và danh mục classes.
        2. Gọi `decode_android_resources` (nếu có Apktool >= 2.9.2) để trích xuất `strings.xml` và resource tables.
        3. Gọi `open_binary` + `inspect_artifact` / `extract_artifact` để lấy danh mục `res/layout/*.xml`, drawables và assets.
-       4. Đánh dấu trạng thái baseline là `SKIPPED (Static Fallback)`. Tuyệt đối không dừng hay báo lỗi crash.
+       4. Đánh dấu trạng thái baseline là `PASS_WITH_LIMITATIONS (Static Fallback)`. Tuyệt đối không dừng hay báo lỗi crash.
 2. **Nếu là định dạng khác (Web, Electron ASAR, Desktop, Source Repo)**:
    - Thu thập baseline hoặc kiểm kê cấu trúc tương ứng.
-3. **MỞ CỔNG 01 (`gate_01_baseline_verified = true`)**:
-   - Cập nhật `active_case.json`: `gates.gate_01_baseline_verified = true`, `current_step = "02_REFERENCE_BASELINE"`, `current_gate_status = "GATE_01_PASSED"`.
+3. **MỞ CỔNG 01 (`gate_01_baseline_verified`)**:
+   - Chạy lệnh: `powershell -File .agents/scripts/gate.ps1 open 1 -Evidence "04_SAO_LUU_AN_TOAN/<tên_file>"` (hoặc `-Mode PASS_WITH_LIMITATIONS` nếu dùng Static Fallback, hoặc `gate.ps1 waive 1 -Reason "Không có AVD"` nếu người dùng miễn trừ).
+   - Cập nhật `current_step = "02_REFERENCE_BASELINE"`.
    - Đồng bộ checklist trong `docs/PROGRESS.md`.
 
 ### BÁO CÁO CHO NGƯỜI DÙNG:

@@ -2,9 +2,9 @@
 ## Khung Chuẩn 6 Stage · 14 Bước & 6 Cổng Kiểm Soát Chất Lượng (Quality Gates)
 
 > [!IMPORTANT]
-> **Tách Bạch Hệ Thống Phân Loại (Taxonomy Decoupling)**:
-> - **Lộ trình Phát triển Kho (Repo Development Roadmap — P00 đến P05)**: Theo dõi tiến độ xây dựng công cụ, kiến trúc và kỹ năng của bản thân kho REA-kit-agy (P00 đã hoàn tất, P01 đang thực hiện).
-> - **Quy trình Điều phối Ca Phân tích (End-User Case Workflow — STAGE_00 đến STAGE_05)**: 6 giai đoạn chuẩn hóa (`STAGE_00_BOOTSTRAP` đến `STAGE_05_VALIDATION`), 14 bước nguyên tử và 6 cổng kiểm soát chất lượng dưới đây, do AI Agent thực hiện trên từng ứng dụng mục tiêu (`active_case.json`).
+> **Tách Bạch Hệ Thống Phân Loại (Taxonomy Decoupling) & Kiến Trúc Điều Phối RWO v2**:
+> - **Lộ trình Phát triển Kho (Repo Development Roadmap — P00 đến P05)**: Theo dõi tiến độ xây dựng công cụ, kiến trúc và kỹ năng của bản thân kho REA-kit-agy.
+> - **Quy trình Điều phối Động RWO v2 (Conditional DAG Orchestration)**: 6 giai đoạn (`STAGE_00` đến `STAGE_05`) và 14 bước không chạy cố định một đường thẳng. Coordinator dùng `prompts/00-WORKFLOW-ROUTER.md` để phân loại 6 luồng (`NEW_CASE`, `RESUME`, `CHANGE_REQUEST`, `BUGFIX`, `ANALYSIS_ONLY`, `PLAN_ONLY`) và áp dụng đồ thị phụ thuộc tại [WORKFLOW_DEPENDENCIES.md](WORKFLOW_DEPENDENCIES.md) cùng quyết định [ADR-0007](adrs/0007-conditional-workflow-orchestration.md).
 
 Tài liệu này là đặc tả chuẩn hóa kiến trúc điều phối ca phân tích của **REA-kit-agy**. Mọi AI Agent (Antigravity, Claude Code, Cursor) và con người tham gia dự án đều phải tuân thủ nghiêm ngặt từng bước và các cổng kiểm soát (Gates) dưới đây.
 

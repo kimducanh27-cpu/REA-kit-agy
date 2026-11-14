@@ -96,3 +96,17 @@ Thực hiện tại Bước 10 sau khi triển khai mã nguồn tại `05_MA_NGU
 - **Process 08 (Mechanical Validation & Traceability)**: Đánh giá cơ học tính toàn vẹn của chuỗi tài liệu từ đầu đến cuối:
   $$\text{Target Binary / Baseline} \longrightarrow \text{Evidence} \longrightarrow \text{Feature} \longrightarrow \text{Spec} \longrightarrow \text{Composition} \longrightarrow \text{Code} \longrightarrow \text{Test Evidence}$$
   Kiểm tra khớp mã băm SHA-256, không thiếu sót màn hình hay trạng thái nào, và chứng minh mọi tuyên bố đều có bằng chứng ghi nhận.
+
+---
+
+## 5. PHÂN LOẠI 4 HÌNH THÁI KIỂM CHỨNG TẠI HARD VERIFY (CỔNG 05)
+
+Không ép mọi ca làm việc phải có đối chiếu ảnh chụp pixel 1-1. Tùy thuộc vào môi trường và mục tiêu ca làm việc, Reviewer phân loại kiểm chứng theo 4 hình thái:
+
+| Hình Thái Nghiệm Thu | Ý Nghĩa & Yêu Cầu Bằng Chứng | Điều Kiện Áp Dụng | Trạng Thái Cổng 05 |
+| :--- | :--- | :--- | :--- |
+| **`VISUAL_PARITY`** | Đối chiếu trực quan 1-1 với Baseline Runtime (`screen_*.png`). | Có thiết bị AVD / điện thoại thật (WF01). | `PASS` |
+| **`BEHAVIOR_PARITY`** | Đối chiếu luồng tương tác, xử lý form, chuyển đổi màn hình. | Có sản phẩm chạy được (Web hoặc Android). | `PASS` |
+| **`SPEC_ACCEPTANCE`** | Nghiệm thu theo đúng tiêu chí chức năng trong Đặc tả đã chốt. | Khi không có thiết bị thật (WF02) hoặc Web Zero-Install. | `PASS_WITH_LIMITATIONS` |
+| **`REGRESSION_TEST`** | Kiểm thử hồi quy bảo đảm tính năng cũ không bị phá vỡ sau thay đổi. | Bắt buộc khi chạy Change Request (WF06/WF07) hoặc Bugfix. | `PASS` |
+

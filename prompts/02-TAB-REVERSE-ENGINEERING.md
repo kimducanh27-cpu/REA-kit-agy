@@ -14,7 +14,7 @@ Read and follow `AGENTS.md`, `REVIEW.md`, `.agents/state/MEMORY.md`, and `docs/W
 - Optional Host Plugins (Nếu máy có cài đặt): `android-cli`
 
 ## Điều kiện tiên quyết:
-Đọc `.agents/state/active_case.json`. Nếu `gates.gate_01_baseline_verified` là `false`, dừng lại và yêu cầu hoàn thành Tab 01 trước.
+Đọc `.agents/state/active_case.json` hoặc chạy `powershell -File .agents/scripts/gate.ps1 status`. Bắt buộc Cổng 01 đã thông qua (`PASS`, `PASS_WITH_LIMITATIONS`, hoặc `WAIVED`) mới được tiếp tục.
 
 You are executing **STAGE_02 · REVERSE ENGINEERING**:
 
@@ -39,8 +39,8 @@ You are executing **STAGE_02 · REVERSE ENGINEERING**:
 2. Kiểm tra mọi kết luận trong `bao-cao-hien-trang.md` đều có Evidence ID hợp lệ và không còn sót chuỗi secret thô.
 3. Tính toán tỷ lệ bao phủ bằng chứng (`Coverage Score`) và xuất Sổ theo dõi điểm mù theo `templates/06-UNKNOWNS-AND-COVERAGE-TEMPLATE.md` vào:
    👉 `03_KET_QUA_KIEM_TRA/UNKNOWNS_AND_COVERAGE.md`.
-4. **MỞ CỔNG 02 (`gate_02_audit_passed = true`)**:
-   - Cập nhật `active_case.json`: `gates.gate_02_audit_passed = true`, `current_gate_status = "GATE_02_PASSED"`, `metrics.coverage_score`, `metrics.unknowns_count`.
+4. **MỞ CỔNG 02 (`gate_02_audit_passed`)**:
+   - Chạy lệnh: `powershell -File .agents/scripts/gate.ps1 open 2 -Evidence "03_KET_QUA_KIEM_TRA/bao-cao-hien-trang.md"` (hoặc `gate.ps1 skip 2 -Reason "Source repo mode"` nếu bỏ qua REA scan theo chính sách RWO).
    - Đồng bộ checklist trong `docs/PROGRESS.md`.
 
 ### BÁO CÁO CHO NGƯỜI DÙNG:

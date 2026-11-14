@@ -10,58 +10,103 @@
   "current_phase": "STAGE_00_BOOTSTRAP",
   "current_step": "00_PROJECT_BOOTSTRAP",
   "current_gate_status": "GATE_00_READY",
-  "next_prompt_guide": "Dán 'prompts/01-TAB-DISCOVERY.md' để bắt đầu tiếp nhận app và đo kiểm baseline.",
+  "next_prompt_guide": "Dán 'prompts/00-WORKFLOW-ROUTER.md' để phân loại luồng yêu cầu (Router) hoặc 'prompts/01-TAB-DISCOVERY.md' để bắt đầu tiếp nhận app.",
   "revision": 1,
   "backup_verified": false,
+  "workflow": {
+    "mode": "NEW_CASE",
+    "parent_case_id": null,
+    "change_request_id": null,
+    "run_id": "RUN-001",
+    "target_fingerprint": null,
+    "execution_plan": {
+      "path": "HAPPY_PATH_FULL",
+      "steps_mandatory": [
+        "01_APP_INTAKE",
+        "02_BASELINE_MEASUREMENT",
+        "05_REA_AUDIT",
+        "08_IMPLEMENTATION_PLAN",
+        "09_REA_BUILD",
+        "10_BUILD_QA",
+        "11_SMOKE_TEST",
+        "13_RELEASE_AND_HANDOFF"
+      ],
+      "steps_conditional": [
+        "03_REA_SCAN",
+        "04_DEEP_INVESTIGATION",
+        "06_REA_INTERVIEW",
+        "07_UI_SPEC",
+        "12_HARD_VERIFY"
+      ],
+      "steps_skipped": [],
+      "steps_waived": []
+    },
+    "step_records": {},
+    "skip_records": [],
+    "invalidation_history": [],
+    "reused_artifacts": []
+  },
   "gates": {
     "gate_01_baseline_verified": {
-      "state": "NOT_RUN",
+      "state": "NOT_STARTED",
       "baseline_type": null,
       "evidence": [],
       "evidence_sha256": null,
       "approved_by": null,
       "approved_at": null,
-      "revoked_reason": null
+      "revoked_reason": null,
+      "waived_reason": null,
+      "skip_reason": null
     },
     "gate_02_audit_passed": {
-      "state": "NOT_RUN",
+      "state": "NOT_STARTED",
       "evidence": [],
       "evidence_sha256": null,
       "approved_by": null,
       "approved_at": null,
-      "revoked_reason": null
+      "revoked_reason": null,
+      "waived_reason": null,
+      "skip_reason": null
     },
     "gate_03_spec_frozen": {
-      "state": "NOT_RUN",
+      "state": "NOT_STARTED",
       "evidence": [],
       "evidence_sha256": null,
       "approved_by": null,
       "approved_at": null,
-      "revoked_reason": null
+      "revoked_reason": null,
+      "waived_reason": null,
+      "skip_reason": null
     },
     "gate_04_build_qa_passed": {
-      "state": "NOT_RUN",
+      "state": "NOT_STARTED",
       "evidence": [],
       "evidence_sha256": null,
       "approved_by": null,
       "approved_at": null,
-      "revoked_reason": null
+      "revoked_reason": null,
+      "waived_reason": null,
+      "skip_reason": null
     },
     "gate_05_hard_verify_passed": {
-      "state": "NOT_RUN",
+      "state": "NOT_STARTED",
       "evidence": [],
       "evidence_sha256": null,
       "approved_by": null,
       "approved_at": null,
-      "revoked_reason": null
+      "revoked_reason": null,
+      "waived_reason": null,
+      "skip_reason": null
     },
     "gate_06_handoff_signed": {
-      "state": "NOT_RUN",
+      "state": "NOT_STARTED",
       "evidence": [],
       "evidence_sha256": null,
       "approved_by": null,
       "approved_at": null,
-      "revoked_reason": null
+      "revoked_reason": null,
+      "waived_reason": null,
+      "skip_reason": null
     }
   },
   "artifacts": {
@@ -84,6 +129,29 @@
     "max_convergence_rounds": 2
   },
   "gate_invalidation_map": {
+    "REJECT_GATE_01": {
+      "revert_to_phase": "STAGE_01_INGESTION_AND_DISCOVERY",
+      "revert_to_step": "01_APP_INTAKE",
+      "revoke_gates": [
+        "gate_01_baseline_verified",
+        "gate_02_audit_passed",
+        "gate_03_spec_frozen",
+        "gate_04_build_qa_passed",
+        "gate_05_hard_verify_passed",
+        "gate_06_handoff_signed"
+      ]
+    },
+    "REJECT_GATE_02": {
+      "revert_to_phase": "STAGE_02_ANALYSIS_AND_AUDIT",
+      "revert_to_step": "03_REA_SCAN",
+      "revoke_gates": [
+        "gate_02_audit_passed",
+        "gate_03_spec_frozen",
+        "gate_04_build_qa_passed",
+        "gate_05_hard_verify_passed",
+        "gate_06_handoff_signed"
+      ]
+    },
     "REJECT_GATE_03": {
       "revert_to_phase": "STAGE_03_PRODUCT_DEFINITION",
       "revert_to_step": "06_REA_INTERVIEW",
@@ -111,8 +179,15 @@
         "gate_05_hard_verify_passed",
         "gate_06_handoff_signed"
       ]
+    },
+    "REJECT_GATE_06": {
+      "revert_to_phase": "STAGE_05_VALIDATION",
+      "revert_to_step": "12_HARD_VERIFY",
+      "revoke_gates": [
+        "gate_06_handoff_signed"
+      ]
     }
   },
-  "last_updated": "2026-11-14T09:00:00+07:00",
-  "notes": "Hệ thống máy trạng thái 6 Giai đoạn STAGE_00_BOOTSTRAP .. STAGE_05_VALIDATION · 14 Bước (Target: ANDROID_APK)"
+  "last_updated": "2026-11-14T09:45:00+07:00",
+  "notes": "Hệ thống máy trạng thái RWO v2 (Conditional DAG, 6 Giai đoạn, 14 Bước, 11 Trạng thái Gate, Dynamic Lineage)"
 }

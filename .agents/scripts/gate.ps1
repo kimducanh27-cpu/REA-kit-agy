@@ -1,8 +1,8 @@
-﻿# Script Quản Trị Cổng Kiểm Soát & Máy Trạng Thái (Deterministic Gate & State Machine Engine v1.1)
-# Bắt buộc tuân thủ nguyên tắc Single Authoritative Coordinator và bảo toàn Gate Invalidation Invariant.
+﻿# Script Quản Trị Cổng Kiểm Soát & Máy Trạng Thái (Deterministic Gate & State Machine Engine v2.0 - RWO)
+# Tuân thủ nguyên tắc Single Authoritative Coordinator, Conditional DAG, Cascade Invalidation, và Optimistic Concurrency.
 param(
     [Parameter(Position=0)]
-    [ValidateSet("status", "validate", "open", "reject", "event")]
+    [ValidateSet("status", "validate", "open", "waive", "skip", "reject", "event")]
     [string]$Action = "status",
 
     [Parameter(Position=1)]
@@ -11,7 +11,9 @@ param(
     [string]$Evidence,
     [string]$ApprovedBy,
     [string]$Reason,
-    [string]$Details
+    [string]$Details,
+    [ValidateSet("PASS", "PASS_WITH_LIMITATIONS", "SKIPPED", "NOT_APPLICABLE")]
+    [string]$Mode = "PASS"
 )
 
 $ErrorActionPreference = "Stop"
@@ -37,6 +39,7 @@ if (-not $repoRoot) {
 
 $stateFile = Join-Path $repoRoot ".agents/state/active_case.json"
 $eventsFile = Join-Path $repoRoot ".agents/state/events.jsonl"
+$casesDir = Join-Path $repoRoot ".agents/state/cases"
 
 if (-not (Test-Path -LiteralPath $stateFile)) {
     Write-Host "[FAIL] Không tìm thấy active_case.json tại: $stateFile" -ForegroundColor Red
@@ -47,11 +50,35 @@ function Get-CaseState {
     return (Get-Content -LiteralPath $stateFile -Raw -Encoding UTF8 | ConvertFrom-Json)
 }
 
-function Save-CaseState {
+function Save-CaseStateAtomic {
     param([object]$State)
     $State.last_updated = (Get-Date).ToString("yyyy-MM-ddTHH:mm:sszzz")
-    $json = $State | ConvertTo-Json -Depth 10
-    Set-Content -LiteralPath $stateFile -Value $json -Encoding UTF8
+    $currentRev = if ($State.revision) { [int]$State.revision } else { 1 }
+    $State.revision = $currentRev + 1
+
+    $json = $State | ConvertTo-Json -Depth 15
+    $tmpFile = "$stateFile.tmp.$([System.Guid]::NewGuid().ToString('N'))"
+    Set-Content -LiteralPath $tmpFile -Value $json -Encoding UTF8
+
+    # Atomic swap
+    Move-Item -LiteralPath $tmpFile -Destination $stateFile -Force
+
+    # Snapshot lineage lưu trữ
+    $caseId = if ($State.case_id) { $State.case_id } else { "CASE-UNKNOWN" }
+    $caseFolder = Join-Path $casesDir $caseId
+    if (-not (Test-Path -LiteralPath $caseFolder)) {
+        New-Item -ItemType Directory -Path $caseFolder -Force | Out-Null
+    }
+    $caseManifest = Join-Path $caseFolder "manifest.json"
+    Set-Content -LiteralPath $caseManifest -Value $json -Encoding UTF8
+
+    $runsFolder = Join-Path $caseFolder "runs"
+    if (-not (Test-Path -LiteralPath $runsFolder)) {
+        New-Item -ItemType Directory -Path $runsFolder -Force | Out-Null
+    }
+    $runId = if ($State.workflow -and $State.workflow.run_id) { $State.workflow.run_id } else { "RUN-$($State.revision)" }
+    $runSnapshot = Join-Path $runsFolder "$runId.json"
+    Set-Content -LiteralPath $runSnapshot -Value $json -Encoding UTF8
 }
 
 function Append-Event {
@@ -107,37 +134,104 @@ $gateOrder = @(
     "gate_06_handoff_signed"
 )
 
+# 11 trạng thái hợp lệ
+$validGateStates = @(
+    "NOT_STARTED",
+    "IN_PROGRESS",
+    "PASS",
+    "PASS_WITH_LIMITATIONS",
+    "SKIPPED",
+    "NOT_APPLICABLE",
+    "WAIVED",
+    "BLOCKED",
+    "FAILED",
+    "INVALIDATED",
+    "REUSED_VALIDATED"
+)
+
+# Trạng thái được coi là "đã thông qua điều kiện tiên quyết" để bước tiếp
+$clearedStates = @("PASS", "PASS_WITH_LIMITATIONS", "SKIPPED", "NOT_APPLICABLE", "WAIVED", "REUSED_VALIDATED")
+
+# Bản đồ thu hồi thác đổ (Cascade Invalidation Map) toàn diện
+$cascadeMap = @{
+    "gate_01_baseline_verified" = @{
+        "revoke_gates" = @("gate_01_baseline_verified", "gate_02_audit_passed", "gate_03_spec_frozen", "gate_04_build_qa_passed", "gate_05_hard_verify_passed", "gate_06_handoff_signed")
+        "revert_phase" = "STAGE_01_INGESTION_AND_DISCOVERY"
+        "revert_step"  = "01_APP_INTAKE"
+    }
+    "gate_02_audit_passed" = @{
+        "revoke_gates" = @("gate_02_audit_passed", "gate_03_spec_frozen", "gate_04_build_qa_passed", "gate_05_hard_verify_passed", "gate_06_handoff_signed")
+        "revert_phase" = "STAGE_02_ANALYSIS_AND_AUDIT"
+        "revert_step"  = "03_REA_SCAN"
+    }
+    "gate_03_spec_frozen" = @{
+        "revoke_gates" = @("gate_03_spec_frozen", "gate_04_build_qa_passed", "gate_05_hard_verify_passed", "gate_06_handoff_signed")
+        "revert_phase" = "STAGE_03_PRODUCT_DEFINITION"
+        "revert_step"  = "06_REA_INTERVIEW"
+    }
+    "gate_04_build_qa_passed" = @{
+        "revoke_gates" = @("gate_04_build_qa_passed", "gate_05_hard_verify_passed", "gate_06_handoff_signed")
+        "revert_phase" = "STAGE_04_IMPLEMENTATION"
+        "revert_step"  = "09_REA_BUILD"
+    }
+    "gate_05_hard_verify_passed" = @{
+        "revoke_gates" = @("gate_05_hard_verify_passed", "gate_06_handoff_signed")
+        "revert_phase" = "STAGE_04_IMPLEMENTATION"
+        "revert_step"  = "09_REA_BUILD"
+    }
+    "gate_06_handoff_signed" = @{
+        "revoke_gates" = @("gate_06_handoff_signed")
+        "revert_phase" = "STAGE_05_VALIDATION"
+        "revert_step"  = "12_HARD_VERIFY"
+    }
+}
+
 switch ($Action) {
     "status" {
         $state = Get-CaseState
         Write-Host "================================================================================" -ForegroundColor Cyan
-        Write-Host "   BẢNG TRẠNG THÁI 6 CỔNG KIỂM SOÁT (CASE: $($state.case_id) | REV: $($state.revision)) " -ForegroundColor Cyan
-        Write-Host "   Phase: $($state.current_phase) | Step: $($state.current_step) | Risk: $($state.metrics.risk_level)" -ForegroundColor DarkCyan
+        Write-Host "   BẢNG TRẠNG THÁI CỔNG KIỂM SOÁT RWO v2 (CASE: $($state.case_id) | REV: $($state.revision)) " -ForegroundColor Cyan
+        $wfMode = if ($state.workflow -and $state.workflow.mode) { $state.workflow.mode } else { "STANDARD" }
+        Write-Host "   Phase: $($state.current_phase) | Step: $($state.current_step) | Mode: $wfMode | Risk: $($state.metrics.risk_level)" -ForegroundColor DarkCyan
         Write-Host "================================================================================" -ForegroundColor Cyan
-        Write-Host ("{0,-28} | {1,-10} | {2,-12} | {3,-15} | {4}" -f "CỔNG KIỂM SOÁT", "TRẠNG THÁI", "NGƯỜI DUYỆT", "NGÀY DUYỆT", "GHI CHÚ / BẰNG CHỨNG") -ForegroundColor Gray
+        Write-Host ("{0,-28} | {1,-22} | {2,-12} | {3}" -f "CỔNG KIỂM SOÁT", "TRẠNG THÁI", "NGƯỜI DUYỆT", "GHI CHÚ / BẰNG CHỨNG") -ForegroundColor Gray
         Write-Host ("-" * 80) -ForegroundColor Gray
 
         foreach ($g in $gateOrder) {
             $gateObj = $state.gates.$g
-            $gState = if ($gateObj.state) { $gateObj.state } elseif ($gateObj -eq $true) { "PASS" } else { "NOT_RUN" }
+            $gState = if ($gateObj.state) { $gateObj.state } elseif ($gateObj -eq $true) { "PASS" } else { "NOT_STARTED" }
             $approver = if ($gateObj.approved_by) { $gateObj.approved_by } else { "-" }
-            $approvedDate = if ($gateObj.approved_at) { $gateObj.approved_at.Substring(0, 10) } else { "-" }
-            $note = if ($gateObj.revoked_reason) { "[REVOKED]: " + $gateObj.revoked_reason } elseif ($gateObj.evidence_sha256) { "SHA: " + $gateObj.evidence_sha256.Substring(0, 8) + "..." } else { "-" }
+            $note = if ($gateObj.revoked_reason) {
+                "[REVOKED]: " + $gateObj.revoked_reason
+            } elseif ($gateObj.waived_reason) {
+                "[WAIVED]: " + $gateObj.waived_reason
+            } elseif ($gateObj.skip_reason) {
+                "[SKIPPED]: " + $gateObj.skip_reason
+            } elseif ($gateObj.evidence_sha256) {
+                "SHA: " + $gateObj.evidence_sha256.Substring(0, [Math]::Min(12, $gateObj.evidence_sha256.Length)) + "..."
+            } else { "-" }
 
             $stateColor = switch ($gState) {
-                "PASS"    { [ConsoleColor]::Green }
-                "FAIL"    { [ConsoleColor]::Red }
-                "REVOKED" { [ConsoleColor]::Yellow }
-                "BLOCKED" { [ConsoleColor]::DarkYellow }
-                default   { [ConsoleColor]::Gray }
+                "PASS"                   { [ConsoleColor]::Green }
+                "PASS_WITH_LIMITATIONS"  { [ConsoleColor]::Yellow }
+                "REUSED_VALIDATED"       { [ConsoleColor]::Cyan }
+                "WAIVED"                 { [ConsoleColor]::DarkYellow }
+                "SKIPPED"                { [ConsoleColor]::DarkGray }
+                "NOT_APPLICABLE"         { [ConsoleColor]::DarkGray }
+                "FAILED"                 { [ConsoleColor]::Red }
+                "INVALIDATED"            { [ConsoleColor]::DarkRed }
+                "REVOKED"                { [ConsoleColor]::DarkRed }
+                "BLOCKED"                { [ConsoleColor]::Magenta }
+                "IN_PROGRESS"            { [ConsoleColor]::Blue }
+                default                  { [ConsoleColor]::Gray }
             }
 
             Write-Host ("{0,-28} | " -f $g) -NoNewline -ForegroundColor White
-            Write-Host ("{0,-10} | " -f $gState) -NoNewline -ForegroundColor $stateColor
-            Write-Host ("{0,-12} | {1,-15} | {2}" -f $approver, $approvedDate, $note) -ForegroundColor White
+            Write-Host ("{0,-22} | " -f $gState) -NoNewline -ForegroundColor $stateColor
+            Write-Host ("{0,-12} | {1}" -f $approver, $note) -ForegroundColor White
         }
         Write-Host ("-" * 80) -ForegroundColor Gray
-        Write-Host "Gợi ý: Dùng 'gate.ps1 open <gate_id> -Evidence <path>' hoặc 'gate.ps1 reject <gate_id> -Reason <lý_do>'" -ForegroundColor DarkGray
+        Write-Host "Lệnh hỗ trợ: open | waive | skip | reject | status | validate" -ForegroundColor DarkGray
         exit 0
     }
 
@@ -150,7 +244,7 @@ switch ($Action) {
         $hasError = $false
 
         # 1. Kiểm tra trường bắt buộc
-        $requiredFields = @("schema_version", "case_id", "target_class", "current_phase", "current_step", "gates", "metrics")
+        $requiredFields = @("schema_version", "case_id", "target_class", "current_phase", "current_step", "gates", "metrics", "workflow")
         foreach ($rf in $requiredFields) {
             if (-not $state.$rf) {
                 Write-Host " [FAIL] Thiếu trường bắt buộc trong active_case.json: $rf" -ForegroundColor Red
@@ -167,7 +261,7 @@ switch ($Action) {
             Write-Host " [PASS] metrics.risk_level hợp lệ: $($state.metrics.risk_level)" -ForegroundColor Green
         }
 
-        # 3. Kiểm tra tính toàn vẹn 6 cổng
+        # 3. Kiểm tra tính toàn vẹn 6 cổng và bằng chứng
         foreach ($g in $gateOrder) {
             $gateObj = $state.gates.$g
             if (-not $gateObj) {
@@ -175,18 +269,42 @@ switch ($Action) {
                 $hasError = $true
                 continue
             }
-            $gState = if ($gateObj.state) { $gateObj.state } elseif ($gateObj -eq $true) { "PASS" } else { "NOT_RUN" }
-            if ($gState -eq "PASS") {
-                if ($gateObj.evidence) {
+            $gState = if ($gateObj.state) { $gateObj.state } elseif ($gateObj -eq $true) { "PASS" } else { "NOT_STARTED" }
+            
+            if ($validGateStates -notcontains $gState -and $gState -ne "NOT_RUN" -and $gState -ne "REVOKED") {
+                Write-Host " [FAIL] Cổng $g có trạng thái không hợp lệ: '$gState'" -ForegroundColor Red
+                $hasError = $true
+                continue
+            }
+
+            if ($gState -eq "PASS" -or $gState -eq "PASS_WITH_LIMITATIONS" -or $gState -eq "REUSED_VALIDATED") {
+                if (-not $gateObj.evidence -or $gateObj.evidence.Count -eq 0) {
+                    Write-Host " [FAIL] Cổng $g đạt trạng thái $gState nhưng danh sách evidence bị rỗng!" -ForegroundColor Red
+                    $hasError = $true
+                } else {
                     foreach ($ev in $gateObj.evidence) {
                         $evPath = if ([System.IO.Path]::IsPathRooted($ev)) { $ev } else { Join-Path $repoRoot $ev }
                         if (-not (Test-Path -LiteralPath $evPath)) {
-                            Write-Host " [FAIL] Cổng $g đã PASS nhưng không tìm thấy file bằng chứng: $ev" -ForegroundColor Red
+                            Write-Host " [FAIL] Cổng $g đã $gState nhưng không tìm thấy file bằng chứng: $ev" -ForegroundColor Red
                             $hasError = $true
                         }
                     }
                 }
-                Write-Host " [PASS] Cổng ${g}: Trạng thái PASS hợp lệ." -ForegroundColor Green
+                if (-not $gateObj.evidence_sha256) {
+                    Write-Host " [FAIL] Cổng $g đạt $gState nhưng thiếu evidence_sha256!" -ForegroundColor Red
+                    $hasError = $true
+                } else {
+                    Write-Host " [PASS] Cổng ${g}: Trạng thái $gState và SHA-256 hợp lệ." -ForegroundColor Green
+                }
+            } elseif ($gState -eq "WAIVED") {
+                if (-not $gateObj.waived_reason) {
+                    Write-Host " [FAIL] Cổng $g là WAIVED nhưng thiếu lý do waived_reason!" -ForegroundColor Red
+                    $hasError = $true
+                } else {
+                    Write-Host " [WARN] Cổng ${g}: Miễn trừ (WAIVED) - Lý do: $($gateObj.waived_reason)" -ForegroundColor DarkYellow
+                }
+            } elseif ($gState -eq "SKIPPED" -or $gState -eq "NOT_APPLICABLE") {
+                Write-Host " [INFO] Cổng ${g}: Bỏ qua ($gState) - Lý do: $($gateObj.skip_reason)" -ForegroundColor Gray
             } else {
                 Write-Host " [INFO] Cổng ${g}: Trạng thái $gState." -ForegroundColor Gray
             }
@@ -197,7 +315,7 @@ switch ($Action) {
             Write-Host "[FAIL] Máy trạng thái active_case.json chưa đạt chuẩn hợp đồng!" -ForegroundColor Red
             exit 1
         } else {
-            Write-Host "[OK] Máy trạng thái và hợp đồng bằng chứng đạt chuẩn 100%." -ForegroundColor Green
+            Write-Host "[OK] Máy trạng thái và hợp đồng bằng chứng đạt chuẩn RWO v2 100%." -ForegroundColor Green
             exit 0
         }
     }
@@ -216,62 +334,147 @@ switch ($Action) {
             exit 1
         }
 
-        # Kiểm tra thứ tự tuần tự của các cổng
+        # 1. Kiểm tra DAG phụ thuộc cổng liền trước
         if ($gateIdx -gt 0) {
             $prevGate = $gateOrder[$gateIdx - 1]
-            $prevState = if ($state.gates.$prevGate.state) { $state.gates.$prevGate.state } elseif ($state.gates.$prevGate -eq $true) { "PASS" } else { "NOT_RUN" }
-            if ($prevState -ne "PASS") {
-                Write-Host "[FAIL] Không thể mở $resolvedGate vì cổng liền trước ($prevGate) chưa PASS (hiện tại: $prevState)!" -ForegroundColor Red
+            $prevObj = $state.gates.$prevGate
+            $prevState = if ($prevObj.state) { $prevObj.state } elseif ($prevObj -eq $true) { "PASS" } else { "NOT_STARTED" }
+            if ($clearedStates -notcontains $prevState) {
+                Write-Host "[FAIL] Không thể mở $resolvedGate vì cổng phụ thuộc liền trước ($prevGate) chưa hoàn tất hợp lệ (hiện tại: $prevState)!" -ForegroundColor Red
                 exit 1
             }
         }
 
-        # Tính toán SHA-256 bằng chứng nếu có
-        $sha = $null
-        $evList = @()
-        if ($Evidence) {
-            $evPath = if ([System.IO.Path]::IsPathRooted($Evidence)) { $Evidence } else { Join-Path $repoRoot $Evidence }
-            if (-not (Test-Path -LiteralPath $evPath)) {
-                Write-Host "[FAIL] Không tìm thấy file bằng chứng: $Evidence" -ForegroundColor Red
-                exit 1
-            }
-            $sha = (Get-FileHash -LiteralPath $evPath -Algorithm SHA256).Hash
-            $relPath = if ($evPath.StartsWith($repoRoot)) { $evPath.Substring($repoRoot.Length).TrimStart('\', '/') } else { $Evidence }
-            $evList += $relPath
+        # 2. Bắt buộc tệp bằng chứng tồn tại trên đĩa
+        if (-not $Evidence) {
+            Write-Host "[FAIL] Lệnh open bắt buộc phải có tham số -Evidence <đường_dẫn_tệp_bằng_chứng>!" -ForegroundColor Red
+            exit 1
         }
+        $evPath = if ([System.IO.Path]::IsPathRooted($Evidence)) { $Evidence } else { Join-Path $repoRoot $Evidence }
+        if (-not (Test-Path -LiteralPath $evPath)) {
+            Write-Host "[FAIL] Không tìm thấy file bằng chứng trên ổ đĩa: $Evidence" -ForegroundColor Red
+            exit 1
+        }
+
+        $sha = (Get-FileHash -LiteralPath $evPath -Algorithm SHA256).Hash
+        $relPath = if ($evPath.StartsWith($repoRoot)) { $evPath.Substring($repoRoot.Length).TrimStart('\', '/') } else { $Evidence }
+        $evList = @($relPath)
 
         $approver = if ($ApprovedBy) { $ApprovedBy } else { "coordinator" }
         $now = (Get-Date).ToString("yyyy-MM-ddTHH:mm:sszzz")
+        $finalState = if ($Mode -eq "PASS_WITH_LIMITATIONS") { "PASS_WITH_LIMITATIONS" } else { "PASS" }
 
-        # Cập nhật đối tượng cổng
+        # Cập nhật cổng
         $state.gates.$resolvedGate = [ordered]@{
-            state = "PASS"
+            state = $finalState
             evidence = $evList
             evidence_sha256 = $sha
             approved_by = $approver
             approved_at = $now
             revoked_reason = $null
+            waived_reason = $null
+            skip_reason = $null
         }
-        $state.current_gate_status = "${resolvedGate}_PASSED".ToUpper()
+        $state.current_gate_status = "${resolvedGate}_${finalState}".ToUpper()
 
-        Save-CaseState -State $state
+        Save-CaseStateAtomic -State $state
 
-        # Ghi nhật ký sự kiện
-        Append-Event -ActionName "GATE_OPEN" -Actor $approver -Phase $state.current_phase -Step $state.current_step -EventDetails "Mở thành công cổng $resolvedGate" -EvidenceSha $sha
+        Append-Event -ActionName "GATE_OPEN" -Actor $approver -Phase $state.current_phase -Step $state.current_step -EventDetails "Mở thành công $resolvedGate (Trạng thái: $finalState)" -EvidenceSha $sha
 
         Write-Host "================================================================================" -ForegroundColor Cyan
-        Write-Host "[OK] ĐÃ MỞ CỔNG THÀNH CÔNG: $resolvedGate (PASS)" -ForegroundColor Green
-        Write-Host "     Người phê duyệt: $approver" -ForegroundColor White
-        Write-Host "     Thời gian duyệt: $now" -ForegroundColor White
-        if ($sha) { Write-Host "     Evidence SHA256: $sha" -ForegroundColor Gray }
+        Write-Host "[OK] ĐÃ MỞ CỔNG THÀNH CÔNG: $resolvedGate ($finalState)" -ForegroundColor Green
+        Write-Host "     Người phê duyệt : $approver" -ForegroundColor White
+        Write-Host "     Thời gian duyệt : $now" -ForegroundColor White
+        Write-Host "     Tệp bằng chứng  : $relPath" -ForegroundColor White
+        Write-Host "     Evidence SHA256 : $sha" -ForegroundColor Gray
         Write-Host "================================================================================" -ForegroundColor Cyan
+        exit 0
+    }
+
+    "waive" {
+        $resolvedGate = Resolve-GateName $Gate
+        if (-not $resolvedGate) {
+            Write-Host "[!] Vui lòng chỉ định cổng cần miễn trừ (ví dụ: gate.ps1 waive 1 -Reason 'Không có thiết bị AVD')" -ForegroundColor Yellow
+            exit 1
+        }
+        if (-not $Reason) {
+            Write-Host "[FAIL] Miễn trừ cổng bắt buộc phải có lý do và đánh giá rủi ro (-Reason)!" -ForegroundColor Red
+            exit 1
+        }
+
+        $state = Get-CaseState
+        $approver = if ($ApprovedBy) { $ApprovedBy } else { "human_owner" }
+        $now = (Get-Date).ToString("yyyy-MM-ddTHH:mm:sszzz")
+
+        $state.gates.$resolvedGate = [ordered]@{
+            state = "WAIVED"
+            evidence = @()
+            evidence_sha256 = $null
+            approved_by = $approver
+            approved_at = $now
+            revoked_reason = $null
+            waived_reason = $Reason
+            skip_reason = $null
+        }
+        $state.current_gate_status = "${resolvedGate}_WAIVED".ToUpper()
+
+        Save-CaseStateAtomic -State $state
+
+        Append-Event -ActionName "GATE_WAIVED" -Actor $approver -Phase $state.current_phase -Step $state.current_step -EventDetails "Miễn trừ $resolvedGate. Lý do: $Reason" -EvidenceSha $null
+
+        Write-Host "================================================================================" -ForegroundColor Yellow
+        Write-Host "[WARN] ĐÃ MIỄN TRỪ CỔNG (GATE WAIVED): $resolvedGate" -ForegroundColor Yellow
+        Write-Host "       Người quyết định: $approver" -ForegroundColor White
+        Write-Host "       Lý do miễn trừ  : $Reason" -ForegroundColor White
+        Write-Host "       CẢNH BÁO: Miễn trừ không đồng nghĩa với PASS toàn phần. Rủi ro được lưu trữ." -ForegroundColor DarkYellow
+        Write-Host "================================================================================" -ForegroundColor Yellow
+        exit 0
+    }
+
+    "skip" {
+        $resolvedGate = Resolve-GateName $Gate
+        if (-not $resolvedGate) {
+            Write-Host "[!] Vui lòng chỉ định cổng cần bỏ qua (ví dụ: gate.ps1 skip 4 -Reason 'Analysis-only mode')" -ForegroundColor Yellow
+            exit 1
+        }
+        if (-not $Reason) {
+            Write-Host "[FAIL] Bỏ qua cổng bắt buộc phải có lý do (-Reason)!" -ForegroundColor Red
+            exit 1
+        }
+
+        $state = Get-CaseState
+        $approver = if ($ApprovedBy) { $ApprovedBy } else { "coordinator" }
+        $now = (Get-Date).ToString("yyyy-MM-ddTHH:mm:sszzz")
+        $targetState = if ($Mode -eq "NOT_APPLICABLE") { "NOT_APPLICABLE" } else { "SKIPPED" }
+
+        $state.gates.$resolvedGate = [ordered]@{
+            state = $targetState
+            evidence = @()
+            evidence_sha256 = $null
+            approved_by = $approver
+            approved_at = $now
+            revoked_reason = $null
+            waived_reason = $null
+            skip_reason = $Reason
+        }
+        $state.current_gate_status = "${resolvedGate}_${targetState}".ToUpper()
+
+        Save-CaseStateAtomic -State $state
+
+        Append-Event -ActionName "GATE_SKIPPED" -Actor $approver -Phase $state.current_phase -Step $state.current_step -EventDetails "Bỏ qua $resolvedGate ($targetState). Lý do: $Reason" -EvidenceSha $null
+
+        Write-Host "================================================================================" -ForegroundColor DarkGray
+        Write-Host "[INFO] ĐÃ BỎ QUA CỔNG: $resolvedGate ($targetState)" -ForegroundColor DarkGray
+        Write-Host "       Người thực hiện : $approver" -ForegroundColor White
+        Write-Host "       Lý do           : $Reason" -ForegroundColor White
+        Write-Host "================================================================================" -ForegroundColor DarkGray
         exit 0
     }
 
     "reject" {
         $resolvedGate = Resolve-GateName $Gate
         if (-not $resolvedGate) {
-            Write-Host "[!] Vui lòng chỉ định cổng bị reject (ví dụ: gate.ps1 reject 3 hoặc gate.ps1 reject gate_05_hard_verify_passed)" -ForegroundColor Yellow
+            Write-Host "[!] Vui lòng chỉ định cổng bị reject (ví dụ: gate.ps1 reject 3 hoặc gate.ps1 reject gate_01_baseline_verified)" -ForegroundColor Yellow
             exit 1
         }
 
@@ -279,48 +482,46 @@ switch ($Action) {
         $rejectReason = if ($Reason) { $Reason } else { "Người dùng hoặc kiểm toán độc lập yêu cầu chỉnh sửa lại (Reject Loop)." }
         $approver = if ($ApprovedBy) { $ApprovedBy } else { "coordinator" }
 
-        # Xử lý theo gate_invalidation_map
-        $mapKey = switch ($resolvedGate) {
-            "gate_03_spec_frozen"        { "REJECT_GATE_03" }
-            "gate_04_build_qa_passed"    { "REJECT_GATE_04" }
-            "gate_05_hard_verify_passed" { "REJECT_GATE_05" }
-            default { "REJECT_GENERIC" }
+        # Thu hồi thác đổ dựa trên cascadeMap
+        if (-not $cascadeMap.ContainsKey($resolvedGate)) {
+            Write-Host "[FAIL] Không tìm thấy quy tắc thác đổ cho cổng: $resolvedGate" -ForegroundColor Red
+            exit 1
         }
 
-        $gatesToRevoke = @($resolvedGate)
-        if ($mapKey -eq "REJECT_GATE_03") {
-            $gatesToRevoke = @("gate_03_spec_frozen", "gate_04_build_qa_passed", "gate_05_hard_verify_passed", "gate_06_handoff_signed")
-            $state.current_phase = "STAGE_03_PRODUCT_DEFINITION"
-            $state.current_step = "06_REA_INTERVIEW"
-            $state.revision = [int]$state.revision + 1
-        } elseif ($mapKey -eq "REJECT_GATE_04" -or $mapKey -eq "REJECT_GATE_05") {
-            $gatesToRevoke = @("gate_04_build_qa_passed", "gate_05_hard_verify_passed", "gate_06_handoff_signed")
-            $state.current_phase = "STAGE_04_IMPLEMENTATION"
-            $state.current_step = "09_REA_BUILD"
-        }
+        $rule = $cascadeMap[$resolvedGate]
+        $gatesToRevoke = $rule.revoke_gates
+        $revertPhase = $rule.revert_phase
+        $revertStep = $rule.revert_step
+
+        $now = (Get-Date).ToString("yyyy-MM-ddTHH:mm:sszzz")
 
         foreach ($rg in $gatesToRevoke) {
             $state.gates.$rg = [ordered]@{
-                state = "REVOKED"
+                state = "INVALIDATED"
                 evidence = @()
                 evidence_sha256 = $null
                 approved_by = $approver
-                approved_at = (Get-Date).ToString("yyyy-MM-ddTHH:mm:sszzz")
-                revoked_reason = $rejectReason
+                approved_at = $now
+                revoked_reason = "Cascade Invalidation từ việc reject cổng ${resolvedGate}: $rejectReason"
+                waived_reason = $null
+                skip_reason = $null
             }
         }
 
-        $state.current_gate_status = "${resolvedGate}_REVOKED".ToUpper()
-        Save-CaseState -State $state
+        $state.current_phase = $revertPhase
+        $state.current_step = $revertStep
+        $state.current_gate_status = "${resolvedGate}_INVALIDATED".ToUpper()
 
-        Append-Event -ActionName "GATE_REJECT" -Actor $approver -Phase $state.current_phase -Step $state.current_step -EventDetails "Reject $resolvedGate. Thu hồi các cổng: $($gatesToRevoke -join ', '). Lý do: $rejectReason" -EvidenceSha $null
+        Save-CaseStateAtomic -State $state
 
-        Write-Host "================================================================================" -ForegroundColor Cyan
-        Write-Host "[!] ĐÃ THU HỒI CỔNG THÀNH CÔNG (GATE REVOKED): $resolvedGate" -ForegroundColor Yellow
-        Write-Host "    Các cổng bị thu hồi tự động: $($gatesToRevoke -join ', ')" -ForegroundColor Yellow
-        Write-Host "    Trở về: Phase=$($state.current_phase), Step=$($state.current_step)" -ForegroundColor White
-        Write-Host "    Lý do thu hồi: $rejectReason" -ForegroundColor Gray
-        Write-Host "================================================================================" -ForegroundColor Cyan
+        Append-Event -ActionName "GATE_CASCADE_REJECT" -Actor $approver -Phase $revertPhase -Step $revertStep -EventDetails "Reject $resolvedGate. Thu hồi toàn bộ hạ nguồn: $($gatesToRevoke -join ', '). Lý do: $rejectReason" -EvidenceSha $null
+
+        Write-Host "================================================================================" -ForegroundColor DarkRed
+        Write-Host "[!] THU HỒI THÁC ĐỔ THÀNH CÔNG (CASCADE INVALIDATION): $resolvedGate" -ForegroundColor Red
+        Write-Host "    Các cổng bị vô hiệu hóa : $($gatesToRevoke -join ', ')" -ForegroundColor Yellow
+        Write-Host "    Trở về điểm an toàn     : Phase=$revertPhase | Step=$revertStep" -ForegroundColor White
+        Write-Host "    Lý do thu hồi           : $rejectReason" -ForegroundColor Gray
+        Write-Host "================================================================================" -ForegroundColor DarkRed
         exit 0
     }
 

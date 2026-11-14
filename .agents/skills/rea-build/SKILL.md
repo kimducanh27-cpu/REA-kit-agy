@@ -12,7 +12,7 @@ Kỹ năng chuyên biệt cho **STAGE_04 (Implementation)** và **STAGE_05 (Vali
 ## 1. STAGE_04 · IMPLEMENTATION (Bước 09 & Bước 10)
 
 ### Bước 09: REA Build (Phát Triển Mã Nguồn Theo Lát Cắt)
-1. **Kiểm tra điều kiện tiên quyết**: Đọc `.agents/state/active_case.json`. Bắt buộc `gates.gate_03_spec_frozen == true` mới được thực thi. Cập nhật `current_phase = "STAGE_04_IMPLEMENTATION"`, `current_step = "09_REA_BUILD"`.
+1. **Kiểm tra điều kiện tiên quyết**: Đọc `.agents/state/active_case.json`. Bắt buộc Cổng 03 đã đóng băng (`state == "PASS"` hoặc `"REUSED_VALIDATED"`) qua lệnh `gate.ps1 status` mới được thực thi. Cập nhật `current_phase = "STAGE_04_IMPLEMENTATION"`, `current_step = "09_REA_BUILD"`.
 2. **Tạo Snapshot Hoàn Tác Tự Động**:
    - Chạy lệnh: `powershell -NoProfile -ExecutionPolicy Bypass -File .\.agents\scripts\rollback.ps1 -Snapshot`
    - *(Script tự động bỏ qua nếu thư mục phát triển đang trống để không tạo snapshot rỗng)*.
@@ -32,8 +32,8 @@ Kỹ năng chuyên biệt cho **STAGE_04 (Implementation)** và **STAGE_05 (Vali
    - Script kiểm tra cả file `.js` rời lẫn khối `<script>` inline trong `.html`, quét rò rỉ secret trên cả `05_MA_NGUON_PHAT_TRIEN/` và `03_KET_QUA_KIEM_TRA/`, và kiểm tra cấu trúc Android (`AndroidManifest.xml`, `build.gradle*`).
 4. **Khống chế vòng lặp tự sửa (Review Convergence Cap = 2 vòng)**:
    - Mỗi lần `verify_code.ps1` báo lỗi (`Exit Code 1`), tăng `metrics.review_convergence_rounds += 1` trong `active_case.json` và sửa lỗi.
-   - Nếu `review_convergence_rounds > 2` mà vẫn lỗi, **dừng lại ngay lập tức**, giữ `gate_04_build_qa_passed = false` và báo cáo điểm nghẽn cho người dùng.
-5. **MỞ CỔNG 04 (`gate_04_build_qa_passed = true`)**:
+   - Nếu `review_convergence_rounds > 2` mà vẫn lỗi, **dừng lại ngay lập tức**, chạy `powershell -File .\.agents\scripts\gate.ps1 reject 4 -Reason "Hội tụ thất bại sau 2 vòng tự sửa"` và báo cáo điểm nghẽn cho người dùng.
+5. **MỞ CỔNG 04 (`gate_04_build_qa_passed`)**:
    - Khi `verify_code.ps1` đạt `Exit Code 0` và Independent Review PASS:
    - Xuất báo cáo vào `03_KET_QUA_KIEM_TRA/KET_QUA_KIEM_THU.md` theo `templates/04-TEST-RESULT-TEMPLATE.md`.
    - Chạy lệnh mở cổng:
@@ -46,7 +46,7 @@ Kỹ năng chuyên biệt cho **STAGE_04 (Implementation)** và **STAGE_05 (Vali
 ## 2. STAGE_05 · VALIDATION (Bước 11, 12 & 13)
 
 ### Bước 11: Run App / Smoke Test
-1. Kiểm tra `gates.gate_04_build_qa_passed == true`. Cập nhật `current_phase = "STAGE_05_VALIDATION"`, `current_step = "11_SMOKE_TEST"`.
+1. Kiểm tra Cổng 04 đã `PASS` qua `gate.ps1 status`. Cập nhật `current_phase = "STAGE_05_VALIDATION"`, `current_step = "11_SMOKE_TEST"`.
 2. **Với Route A (Web)**: Hướng dẫn mở `05_MA_NGUON_PHAT_TRIEN/index.html` trên trình duyệt.
 3. **Với Route B/C (Android)**: Triển khai và chạy lên AVD/thiết bị qua lệnh Android CLI `android run` hoặc `./gradlew installDebug` kết hợp REA MCP `start_adb_app` (`serial`, `package`).
 
@@ -71,7 +71,7 @@ Kỹ năng chuyên biệt cho **STAGE_04 (Implementation)** và **STAGE_05 (Vali
 1. Cập nhật `active_case.json`: `current_step = "13_RELEASE_AND_HANDOFF"`.
 2. Xuất gói bàn giao kèm Plain-Language Explainer và hướng dẫn `HOAN_TAC.bat` theo `templates/09-HANDOFF-BUNDLE-TEMPLATE.md` vào:
    👉 `05_MA_NGUON_PHAT_TRIEN/BAN_GIAO_SAN_PHAM.md`.
-3. **MỞ CỔNG 06 (`gate_06_handoff_signed = true`)**:
+3. **MỞ CỔNG 06 (`gate_06_handoff_signed`)**:
    - Khi người dùng ký nhận bàn giao:
      `powershell -NoProfile -ExecutionPolicy Bypass -File .\.agents\scripts\gate.ps1 open 6 -Evidence 05_MA_NGUON_PHAT_TRIEN/BAN_GIAO_SAN_PHAM.md -ApprovedBy "user"`
    - Đồng bộ `docs/PROGRESS.md` và `docs/HANDOFF.md`.

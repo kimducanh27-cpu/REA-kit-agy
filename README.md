@@ -91,14 +91,17 @@ REA-kit-agy/
 ├── KIEM_TRA.bat                   # 1-click kiểm tra sức khỏe workspace & tự động cô lập JADX TEMP
 ├── HOAN_TAC.bat                   # 1-click hoàn tác về bản chạy tốt gần nhất (Rollback an toàn ReparsePoint)
 ├── .gitignore                     # Bảo vệ bản quyền và chống rò rỉ dữ liệu cá nhân
-├── prompts/                       # Bộ câu lệnh dán theo từng Phase (00 đến 06)
+├── prompts/                       # Bộ câu lệnh dán theo từng Phase & Điều phối DAG
+│   ├── 00-WORKFLOW-ROUTER.md      # Định tuyến luồng điều phối (RWO v2) & Lập Execution Plan
 │   ├── 00-SESSION-CONTINUITY.md   # Phục hồi phiên & Auto-Resume
 │   ├── 01-TAB-DISCOVERY.md        # Phase 01: Intake & Baseline
 │   ├── 02-TAB-REVERSE-ENGINEERING.md # Phase 02: Scan & Audit
-│   ├── 03-TAB-PRODUCT-DEFINITION.md  # Phase 03: Interview, Spec & Plan
+│   ├── 03-TAB-PRODUCT-DEFINITION.md  # Phase 03: Interview, Spec & Plan (Anti-Slop Core)
 │   ├── 04-TAB-IMPLEMENTATION.md   # Phase 04: Build & Build QA / Review
 │   ├── 05-TAB-VALIDATION.md       # Phase 05: Smoke Test, Hard Verify & Handoff
 │   ├── 06-CONSOLIDATION-AND-MEMORY.md # Tầng Dreaming: Tổng hợp bộ nhớ đa phiên
+│   ├── 07-CHANGE-REQUEST.md       # Quản trị yêu cầu thay đổi, Impact Analysis & Rejoin
+│   ├── 08-SKIP-WAIVER-POLICY.md   # Chính sách Skip, Waiver & Công bố rủi ro
 │   └── BOOTSTRAP_KIT.md           # Siêu lệnh nhân bản bộ kit
 ├── templates/                     # Khung mẫu tài liệu hợp đồng chuẩn (01 đến 13)
 │   ├── 01-REPORT-TEMPLATE.md      # Báo cáo hiện trạng
@@ -110,22 +113,24 @@ REA-kit-agy/
 │   ├── 07-IMPLEMENTATION-PLAN-TEMPLATE.md   # Kế hoạch chia task nguyên tử
 │   ├── 08-HARD-VERIFY-TEMPLATE.md # Bảng đối chiếu 1-1 với app gốc (Test Env Contract)
 │   ├── 09-HANDOFF-BUNDLE-TEMPLATE.md # Biên bản bàn giao sản phẩm
-│   ├── 10-CASE-MANIFEST-TEMPLATE.json # Canonical schema cho active_case.json v2
+│   ├── 10-CASE-MANIFEST-TEMPLATE.json # Canonical schema cho active_case.json v2 (11 states & workflow)
 │   ├── 11-HANDOFF-CONTRACT-TEMPLATE.json # Hợp đồng bàn giao pha kèm SHA-256
 │   ├── 12-ART-DIRECTION-TEMPLATE.md # Định hướng nghệ thuật & 3 Concept cấu trúc khác biệt
 │   └── 13-COPY-DECK-TEMPLATE.md   # Hồ sơ nội dung văn bản thực tế (cấm placeholder slop)
 ├── docs/                          # Hệ thống quản lý ngữ cảnh đa phiên (Context Docs)
 │   ├── WORKFLOW_LIFECYCLE.md      # Đặc tả chuẩn hóa 6 Phase · 14 Bước
+│   ├── WORKFLOW_DEPENDENCIES.md   # Đồ thị phụ thuộc DAG & Ma trận thu hồi thác đổ (12 test cases)
 │   ├── PROGRESS.md                # Bảng tiến độ 14 bước tự động đồng bộ
 │   ├── HANDOFF.md                 # Hồ sơ bàn giao dự án
 │   ├── ARCHITECTURE.md            # Kiến trúc hệ thống & Traceability 1-1
-│   ├── adrs/                      # 6 Bản ghi quyết định kiến trúc chuẩn MADR
+│   ├── adrs/                      # 7 Bản ghi quyết định kiến trúc chuẩn MADR
 │   │   ├── 0001-multi-target-architecture.md
 │   │   ├── 0002-skill-first-delivery.md
 │   │   ├── 0003-hybrid-memory-architecture.md
 │   │   ├── 0004-single-coordinator-agent-model.md
 │   │   ├── 0005-android-apk-first-target-via-android-cli.md
-│   │   └── 0006-cli-adr-management.md
+│   │   ├── 0006-cli-adr-management.md
+│   │   └── 0007-conditional-workflow-orchestration.md
 │   └── PRD.md, RULES.md, PLAN.md, TASKS.md, SOURCE_AUDIT.md...
 └── .agents/                       # Khu vực kỹ thuật (ẩn trên Windows)
     ├── mcp_config.json            # Cấu hình MCP phạm vi workspace (pin rea-agents@6.9.0)
@@ -208,12 +213,13 @@ Muốn nhân bản toàn bộ bộ kit này sang một thư mục rỗng bất k
 
 ---
 
-## 8. Điểm Nổi Bật Của Bản Nâng Cấp v1.1 (Release Highlights)
+## 8. Điểm Nổi Bật Của Bản Nâng Cấp v2.0 (Release Highlights)
 
-- 🚀 **Upstream REA v62**: Cập nhật phiên bản mới nhất từ `morluto/rea`, bổ sung hướng dẫn `desktop-build.md` và chuẩn hóa tên tham số MCP (`output_directory`).
-- 🛡️ **Khắc phục lỗi quyền JADX Windows x64 (Issue #5237)**: Tự động cô lập biến `TEMP`/`TMP` ngay trong `KIEM_TRA.bat`.
-- ⏪ **Lá chắn hoàn tác an toàn cao (ReparsePoint Safe Rollback)**: Bổ sung cơ chế chống xóa xuyên qua Symlink/Junction và xoay vòng tự động 10 bản sao lưu gần nhất.
-- 🧩 **Bộ 6 Local Skills độc quyền**: Tách bạch rõ vai trò của Investigator (`rea-scan`), Auditor (`rea-audit`), Planner (`rea-plan`), Builder (`rea-build`) và Memory Manager (`memory-consolidation`).
-- 🧠 **Cơ chế Anthropic Dreaming**: Lưu trữ tri thức bền vững vào `MEMORY.md`, đối chiếu nguồn gốc thực tế và tinh gọn ngữ cảnh nạp vào đầu phiên.
+- 🧭 **Kiến Trúc Điều Phối RWO v2 (Conditional DAG Orchestrator)**: Chuyển đổi từ mô hình tuyến tính sang Đồ thị Phụ thuộc (DAG) có điều kiện, hỗ trợ 6 chế độ yêu cầu (`NEW_CASE`, `RESUME`, `CHANGE_REQUEST`, `BUGFIX`, `ANALYSIS_ONLY`, `PLAN_ONLY`), ma trận phân loại bước 4 cấp độ và xử lý trọn vẹn 12 tình huống thực tế (WF01–WF12).
+- 🔄 **Thu Hồi Thác Đổ (Cascade Invalidation) & Hợp Đồng Bằng Chứng**: `gate.ps1` mở rộng 11 trạng thái (`PASS`, `PASS_WITH_LIMITATIONS`, `SKIPPED`, `WAIVED`, `INVALIDATED`...), tự động thu hồi có chọn lọc theo Invalidation Closure, bắt buộc tệp bằng chứng tồn tại trên đĩa và khóa hash SHA-256.
+- 🎨 **Anti-Slop End-to-End Core**: Quy trình thiết kế giao diện chống rập khuôn với Art Direction, 3 Concept cấu trúc khác biệt, 4 trạng thái UI bắt buộc (Loading Skeleton, Empty CTA, Success, Error Recovery bảo toàn form `RULE-INIT-001`), Copy Deck thực tế cấm placeholder và 2 cổng phê duyệt người dùng.
+- 🛡️ **Quản Trị Change Request & Rejoin**: Cho phép quay lại thượng nguồn lấy bằng chứng bổ sung rồi Rejoin mà không chạy lại toàn bộ hoặc ghi đè lịch sử bản phát hành cũ.
+- 🚀 **Upstream REA v62 & JADX Windows x64 Fix**: Tự động cô lập biến `TEMP`/`TMP` trong `KIEM_TRA.bat` (morluto/rea Issue #5237).
+- ⏪ **Hoàn Tác Nguyên Tử 2 Giai Đoạn (Atomic Rollback)**: Bổ sung cơ chế bảo vệ ReparsePoint (Symlink/Junction), manifest SHA-256 và xoay vòng snapshot an toàn.
 
 

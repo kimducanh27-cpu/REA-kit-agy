@@ -16,6 +16,7 @@
     "gates",
     "artifacts",
     "metrics",
+    "workflow",
     "last_updated"
   ],
   "properties": {
@@ -26,6 +27,33 @@
     "case_id": {
       "type": "string",
       "example": "APP-001"
+    },
+    "workflow": {
+      "type": "object",
+      "required": ["mode", "run_id"],
+      "properties": {
+        "mode": {
+          "type": "string",
+          "enum": [
+            "NEW_CASE",
+            "RESUME_CASE",
+            "CHANGE_REQUEST",
+            "BUGFIX",
+            "ANALYSIS_ONLY",
+            "PLAN_ONLY",
+            "WORKFLOW_REJOIN"
+          ]
+        },
+        "parent_case_id": { "type": ["string", "null"] },
+        "change_request_id": { "type": ["string", "null"] },
+        "run_id": { "type": "string" },
+        "target_fingerprint": { "type": ["string", "null"] },
+        "execution_plan": { "type": "object" },
+        "step_records": { "type": "object" },
+        "skip_records": { "type": "array" },
+        "invalidation_history": { "type": "array" },
+        "reused_artifacts": { "type": "array" }
+      }
     },
     "target_name": {
       "type": [
@@ -154,65 +182,78 @@
       ],
       "patternProperties": {
         "^gate_0[1-6]": {
-          "oneOf": [
-            {
-              "type": "boolean"
+          "type": "object",
+          "required": [
+            "state"
+          ],
+          "properties": {
+            "state": {
+              "type": "string",
+              "enum": [
+                "NOT_STARTED",
+                "IN_PROGRESS",
+                "PASS",
+                "PASS_WITH_LIMITATIONS",
+                "SKIPPED",
+                "NOT_APPLICABLE",
+                "WAIVED",
+                "BLOCKED",
+                "FAILED",
+                "INVALIDATED",
+                "REUSED_VALIDATED",
+                "NOT_RUN",
+                "REVOKED"
+              ]
             },
-            {
-              "type": "object",
-              "required": [
-                "state"
-              ],
-              "properties": {
-                "state": {
-                  "type": "string",
-                  "enum": [
-                    "NOT_RUN",
-                    "BLOCKED",
-                    "PASS",
-                    "FAIL",
-                    "REVOKED"
-                  ]
-                },
-                "baseline_type": {
-                  "type": [
-                    "string",
-                    "null"
-                  ]
-                },
-                "evidence": {
-                  "type": "array",
-                  "items": {
-                    "type": "string"
-                  }
-                },
-                "evidence_sha256": {
-                  "type": [
-                    "string",
-                    "null"
-                  ]
-                },
-                "approved_by": {
-                  "type": [
-                    "string",
-                    "null"
-                  ]
-                },
-                "approved_at": {
-                  "type": [
-                    "string",
-                    "null"
-                  ]
-                },
-                "revoked_reason": {
-                  "type": [
-                    "string",
-                    "null"
-                  ]
-                }
+            "baseline_type": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "evidence": {
+              "type": "array",
+              "items": {
+                "type": "string"
               }
+            },
+            "evidence_sha256": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "approved_by": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "approved_at": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "revoked_reason": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "waived_reason": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "skip_reason": {
+              "type": [
+                "string",
+                "null"
+              ]
             }
-          ]
+          }
         }
       }
     },

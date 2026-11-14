@@ -14,7 +14,7 @@ Read and follow `AGENTS.md`, `REVIEW.md`, `.agents/state/MEMORY.md`, and `docs/W
 - Optional Host Plugins (Nếu máy có cài đặt): `android-cli`
 
 ## Điều kiện tiên quyết:
-Đọc `.agents/state/active_case.json`. Nếu `gates.gate_03_spec_frozen` là `false`, dừng lại và yêu cầu hoàn thành Tab 03 trước.
+Đọc `.agents/state/active_case.json` hoặc chạy `powershell -File .agents/scripts/gate.ps1 status`. Bắt buộc Cổng 03 đã ở trạng thái `PASS` hoặc `REUSED_VALIDATED` (Đặc tả đã đóng băng) mới được phép viết mã nguồn.
 
 You are executing **STAGE_04 · IMPLEMENTATION**:
 
@@ -38,8 +38,8 @@ You are executing **STAGE_04 · IMPLEMENTATION**:
    - Mỗi lần sửa lỗi, tăng `metrics.review_convergence_rounds += 1` trong `active_case.json`. Quá 2 vòng vẫn lỗi thì dừng ngay và báo cáo người dùng.
 5. Xuất báo cáo kiểm thử theo `templates/04-TEST-RESULT-TEMPLATE.md` vào:
    👉 `03_KET_QUA_KIEM_TRA/KET_QUA_KIEM_THU.md`.
-6. **MỞ CỔNG 04 (`gate_04_build_qa_passed = true`)**:
-   - Khi `verify_code.ps1` đạt `Exit Code 0`: Cập nhật `active_case.json` (`gates.gate_04_build_qa_passed = true`, `current_gate_status = "GATE_04_PASSED"`) và đồng bộ `docs/PROGRESS.md`.
+6. **MỞ CỔNG 04 (`gate_04_build_qa_passed`)**:
+   - Khi `verify_code.ps1` đạt `Exit Code 0`: Chạy lệnh `powershell -File .agents/scripts/gate.ps1 open 4 -Evidence "03_KET_QUA_KIEM_TRA/KET_QUA_KIEM_THU.md"` và đồng bộ `docs/PROGRESS.md`.
 
 ### BÁO CÁO CHO NGƯỜI DÙNG:
 - Kết quả `verify_code.ps1` và cấp độ rủi ro (`LOW` / `MEDIUM` / `HIGH`).
