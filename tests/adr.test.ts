@@ -10,6 +10,7 @@ import {
   validateAdrs,
   getAdrStatus,
   newAdr,
+  transitionAdr,
   getAdrHelp,
   runAdrAction,
 } from "../src/core/adr.js";
@@ -174,6 +175,15 @@ Context...
     expect(show2.record.id).toBe("0001");
     expect(show2.content).toBe(show1.content);
 
+    // Show using 'ADR-0001' or 'adr-1' with prefix stripping
+    const show3 = await showAdr("ADR-0001", adrDir);
+    expect(show3.record.id).toBe("0001");
+    expect(show3.content).toBe(show1.content);
+
+    const show4 = await showAdr("adr-1", adrDir);
+    expect(show4.record.id).toBe("0001");
+    expect(show4.content).toBe(show1.content);
+
     // Non-existent ID throws error
     await expect(showAdr("9999", adrDir)).rejects.toThrow(/Không tìm thấy ADR/);
   });
@@ -211,6 +221,54 @@ Context...
     const statusRes = await runAdrAction("status", { repoRoot: testDir });
     expect(statusRes.total).toBe(1);
 
+    const transRes = await runAdrAction("transition", {
+      id: "ADR-0001",
+      status: "accepted",
+      repoRoot: testDir,
+    });
+    expect(transRes.newStatus).toBe("accepted");
+
     await expect(runAdrAction("unknown-action", { repoRoot: testDir })).rejects.toThrow(/Unknown ADR action/);
+  });
+
+  it("07 - prefix stripping in newAdr: Strips ADR- prefix when explicit ID is passed", async () => {
+    const customAdr = await newAdr("ADR-0010", "Custom Architecture Plan", adrDir);
+    expect(customAdr.id).toBe("0010");
+    expect(customAdr.fileName).toBe("0010-custom-architecture-plan.md");
+  });
+
+  it("08 - transitionAdr: Supports MADR status transitions and records superseding links", async () => {
+    const adr1 = await newAdr("Initial Database Selection", undefined, adrDir);
+    const adr2 = await newAdr("Migrate to Distributed Database", undefined, adrDir);
+
+    expect(adr1.id).toBe("0001");
+    expect(adr2.id).toBe("0002");
+
+    // Transition 0001 from proposed to accepted
+    const t1 = await transitionAdr("0001", "ACCEPTED", { targetAdrDir: adrDir });
+    expect(t1.oldStatus.toLowerCase()).toBe("proposed");
+    expect(t1.newStatus).toBe("accepted");
+
+    const showAfterT1 = await showAdr("0001", adrDir);
+    expect(showAfterT1.record.status.toLowerCase()).toBe("accepted");
+
+    // Transition 0001 from accepted to superseded by 0002
+    const t2 = await transitionAdr("ADR-0001", "SUPERSEDED", {
+      supersededBy: "ADR-0002",
+      reason: "Distributed database scaling requirements",
+      targetAdrDir: adrDir,
+    });
+    expect(t2.oldStatus.toLowerCase()).toBe("accepted");
+    expect(t2.newStatus).toBe("superseded");
+
+    const showAfterT2 = await showAdr("0001", adrDir);
+    expect(showAfterT2.record.status.toLowerCase()).toBe("superseded");
+    expect(showAfterT2.content).toContain("* Superseded by [ADR-0002]");
+    expect(showAfterT2.content).toContain("* Reason for transition: Distributed database scaling requirements");
+
+    // Both ADRs must remain compliant with MADR validation
+    const valRes = await validateAdrs(adrDir);
+    expect(valRes.valid).toBe(true);
+    expect(valRes.score).toBe(2);
   });
 });

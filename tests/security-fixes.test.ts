@@ -19,9 +19,18 @@ import {
   createSnapshot,
   restoreSnapshot,
   computeFileSha256,
+  safeMove,
+  isPathTraversal,
+  rotateSnapshots,
 } from "../src/core/rollback.js";
-import { withFileLock, writeUtf8NoBomAtomic } from "../src/core/state-lock.js";
+import {
+  withFileLock,
+  writeUtf8NoBomAtomic,
+  MAX_LOCK_RETRIES,
+  STALE_LOCK_TIMEOUT_MS,
+} from "../src/core/state-lock.js";
 import { initWorkspace } from "../src/core/init.js";
+import { runHealthCheck } from "../src/core/health-check.js";
 
 describe("Work Stream 2: Security Boundaries, WCAG Leaf Collision, Gate & Rollback Hardening", () => {
   let tmpDir: string;
@@ -440,6 +449,88 @@ describe("Work Stream 2: Security Boundaries, WCAG Leaf Collision, Gate & Rollba
       const dirs = entries.filter((e) => !e.startsWith("."));
       expect(dirs.length).toBe(1);
     });
+
+    it("should prevent path traversal in manifest entries (reject .., /, C:\\)", async () => {
+      const srcDir = path.join(tmpDir, "05_MA_NGUON_PHAT_TRIEN");
+      const backupDir = path.join(tmpDir, "04_SAO_LUU_AN_TOAN");
+      await fs.mkdir(srcDir, { recursive: true });
+      await fs.mkdir(backupDir, { recursive: true });
+
+      const snapId = "20261114_120000_000";
+      const snapDir = path.join(backupDir, snapId);
+      await fs.mkdir(snapDir, { recursive: true });
+      await fs.writeFile(path.join(snapDir, "legit.txt"), "hello", "utf8");
+
+      expect(isPathTraversal("../secret.txt")).toBe(true);
+      expect(isPathTraversal("/etc/passwd")).toBe(true);
+      expect(isPathTraversal("C:\\Windows\\System32")).toBe(true);
+      expect(isPathTraversal("sub/../../traversal.txt")).toBe(true);
+      expect(isPathTraversal("normal/file.txt")).toBe(false);
+
+      // Write malicious manifest containing path traversal
+      await fs.writeFile(
+        path.join(snapDir, "manifest.json"),
+        JSON.stringify({
+          timestamp: new Date().toISOString(),
+          snapshot_id: snapId,
+          files: [{ path: "../escape.txt", sha256: "DUMMY", bytes: 10 }],
+        }),
+        "utf8"
+      );
+
+      await expect(
+        restoreSnapshot({ repoRoot: tmpDir, backupDir, buildDir: srcDir })
+      ).rejects.toThrow(/path traversal/i);
+    });
+
+    it("should strictly filter snapshots by regex and require manifest.json during rotation", async () => {
+      const backupDir = path.join(tmpDir, "04_SAO_LUU_AN_TOAN");
+      await fs.mkdir(backupDir, { recursive: true });
+
+      // Non-matching directory name (e.g. custom-folder, temp_backup)
+      const invalidDir = path.join(backupDir, "custom_backup_dir");
+      await fs.mkdir(invalidDir, { recursive: true });
+      await fs.writeFile(path.join(invalidDir, "manifest.json"), "{}", "utf8");
+
+      // Matching timestamp name but missing manifest.json
+      const noManifestDir = path.join(backupDir, "20261114_010000_001");
+      await fs.mkdir(noManifestDir, { recursive: true });
+      await fs.writeFile(path.join(noManifestDir, "app.js"), "code", "utf8");
+
+      // Valid snapshots with matching timestamp and manifest.json
+      for (const id of ["20261114_010000_002", "20261114_010000_003"]) {
+        const d = path.join(backupDir, id);
+        await fs.mkdir(d, { recursive: true });
+        await fs.writeFile(path.join(d, "manifest.json"), "{}", "utf8");
+      }
+
+      // Rotate with maxSnapshots = 1 -> should keep newest valid (003), remove older valid (002),
+      // and NOT touch invalidDir or noManifestDir
+      await rotateSnapshots(backupDir, 1);
+
+      expect(fsSync.existsSync(invalidDir)).toBe(true);
+      expect(fsSync.existsSync(noManifestDir)).toBe(true);
+      expect(fsSync.existsSync(path.join(backupDir, "20261114_010000_003"))).toBe(true);
+      expect(fsSync.existsSync(path.join(backupDir, "20261114_010000_002"))).toBe(false);
+    });
+
+    it("should safely move files even when destination directory or file already exists (safeMove Windows EPERM resilience)", async () => {
+      const srcFolder = path.join(tmpDir, "src_folder");
+      const destFolder = path.join(tmpDir, "dest_folder");
+
+      await fs.mkdir(srcFolder, { recursive: true });
+      await fs.writeFile(path.join(srcFolder, "file.txt"), "from src", "utf8");
+
+      await fs.mkdir(destFolder, { recursive: true });
+      await fs.writeFile(path.join(destFolder, "old.txt"), "old content", "utf8");
+
+      // Move directory over existing directory
+      await safeMove(srcFolder, destFolder);
+
+      expect(fsSync.existsSync(path.join(destFolder, "file.txt"))).toBe(true);
+      expect(fsSync.existsSync(path.join(destFolder, "old.txt"))).toBe(false);
+      expect(fsSync.existsSync(srcFolder)).toBe(false);
+    });
   });
 
   describe("Task 4: State Lock Compare-and-Delete & PID Liveness", () => {
@@ -508,6 +599,88 @@ describe("Work Stream 2: Security Boundaries, WCAG Leaf Collision, Gate & Rollba
 
       expect(executed).toBe(true);
       expect(fsSync.existsSync(lockFile)).toBe(false);
+    });
+
+    it("should clear stale lock when age > STALE_LOCK_TIMEOUT_MS even if process PID is alive (deadlock fix)", async () => {
+      const targetFile = path.join(tmpDir, "stale-livepid-resource.json");
+      const lockFile = `${targetFile}.lock`;
+
+      // Plant a stale lock with the CURRENT process PID (alive!) but older than STALE_LOCK_TIMEOUT_MS
+      const livePid = process.pid;
+      const oldTimestamp = Date.now() - (STALE_LOCK_TIMEOUT_MS + 5_000);
+      await fs.writeFile(
+        lockFile,
+        `OLD-TOKEN\n${livePid}\n${oldTimestamp}\n`,
+        "utf8"
+      );
+
+      // Set old mtime on lockfile so stat.mtimeMs also registers as stale (>10s)
+      const oldDate = new Date(Date.now() - (STALE_LOCK_TIMEOUT_MS + 5_000));
+      await fs.utimes(lockFile, oldDate, oldDate);
+
+      let executed = false;
+      await withFileLock(targetFile, async () => {
+        executed = true;
+      });
+
+      expect(executed).toBe(true);
+      expect(fsSync.existsSync(lockFile)).toBe(false);
+    });
+
+    it("should configure 50 lock retries and 10s timeout budget", () => {
+      expect(MAX_LOCK_RETRIES).toBe(50);
+      expect(STALE_LOCK_TIMEOUT_MS).toBe(10_000);
+    });
+
+    it("should write files atomically without BOM using writeUtf8NoBomAtomic", async () => {
+      const targetFile = path.join(tmpDir, "atomic-test.txt");
+      await writeUtf8NoBomAtomic(targetFile, "Hello Windows World!");
+
+      const buffer = await fs.readFile(targetFile);
+      expect(buffer[0] !== 0xef || buffer[1] !== 0xbb || buffer[2] !== 0xbf).toBe(true);
+      expect(buffer.toString("utf8")).toBe("Hello Windows World!");
+    });
+  });
+
+  describe("Task 5: Health Check & Workspace Init Hardening", () => {
+    it("should match fingerprint with normalized CRLF hashing in runHealthCheck", async () => {
+      await initWorkspace({ dir: tmpDir });
+
+      const inputDir = path.join(tmpDir, "01_THA_APP_VAO_DAY");
+      const targetFile = path.join(inputDir, "app-flow.md");
+
+      // Write CRLF content
+      const crlfContent = "# Flow\r\nStep 1\r\nStep 2\r\n";
+      await fs.writeFile(targetFile, crlfContent, "utf8");
+
+      // Compute normalized hash (LF normalized)
+      const expectedSha = await getNormalizedFileHash(targetFile);
+
+      // Update active_case.json with expectedSha
+      const activeCasePath = path.join(tmpDir, ".agents", "state", "active_case.json");
+      const activeCase = JSON.parse(await fs.readFile(activeCasePath, "utf8"));
+      activeCase.workflow.target_fingerprint = expectedSha;
+      await fs.writeFile(activeCasePath, JSON.stringify(activeCase, null, 2), "utf8");
+
+      const res = await runHealthCheck({ repoRoot: tmpDir, checkExternalTools: false });
+      expect(res.appInput).toBeDefined();
+      expect(res.appInput?.matchedFingerprint).toBe(true);
+      expect(res.appInput?.sha256).toBe(expectedSha);
+    });
+
+    it("should generate dynamic ISO timestamp in events.jsonl on initWorkspace", async () => {
+      const beforeTime = Date.now() - 2000;
+      await initWorkspace({ dir: tmpDir });
+      const afterTime = Date.now() + 2000;
+
+      const eventsPath = path.join(tmpDir, ".agents", "state", "events.jsonl");
+      const content = await fs.readFile(eventsPath, "utf8");
+      const firstLine = JSON.parse(content.trim().split("\n")[0]);
+
+      expect(firstLine.timestamp).not.toBe("2026-11-14T08:00:00+07:00");
+      const parsedTime = new Date(firstLine.timestamp).getTime();
+      expect(parsedTime).toBeGreaterThanOrEqual(beforeTime);
+      expect(parsedTime).toBeLessThanOrEqual(afterTime);
     });
   });
 });

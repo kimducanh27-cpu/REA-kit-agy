@@ -6,10 +6,19 @@ import {
   compileTokens,
   extractDtcgValue,
   resolveTokenRef,
+  resolveAlias,
   toComposeColorHex,
   toXmlColorHex,
   toAndroidDp,
+  toAndroidSp,
 } from "../src/core/compile-tokens.js";
+import {
+  hasEsmSyntax,
+  verifyCode,
+  convertHexToRgb,
+  getRelativeLuminance,
+  getWcagContrastRatio,
+} from "../src/core/verify-code.js";
 import { isNodeVersionCompliant, runHealthCheck } from "../src/core/health-check.js";
 
 describe("Work Stream 1: W3C DTCG 2025.10 & Package/MCP/Health Compliance", () => {
@@ -336,6 +345,362 @@ describe("Work Stream 1: W3C DTCG 2025.10 & Package/MCP/Health Compliance", () =
       expect(config.mcpServers["rea-kit"].cwd).toBe("${workspaceFolder}");
       expect(config.mcpServers["rea-kit"].args[0]).toBe("${workspaceFolder}/dist/mcp.js");
       expect(config.mcpServers["rea-kit"].description).toBeUndefined();
+    });
+
+    it("should verify templates/16-TOKENS-TEMPLATE.json line-height-base is numeric", async () => {
+      const templatePath = path.resolve(__dirname, "..", "templates", "16-TOKENS-TEMPLATE.json");
+      const content = await fs.readFile(templatePath, "utf8");
+      const tokens = JSON.parse(content);
+
+      expect(typeof tokens.global.font["line-height-base"].$value).toBe("number");
+      expect(tokens.global.font["line-height-base"].$value).toBe(1.5);
+    });
+  });
+
+  describe("Android Hex Color Ordering (AARRGGBB Alpha-First)", () => {
+    it("should reorder 8-character hex from #RRGGBBAA to Compose 0xAARRGGBB and XML #AARRGGBB", () => {
+      // Input: #RRGGBBAA where RR=25, GG=63, BB=eb, AA=80
+      const hex8 = "#2563eb80";
+      expect(toComposeColorHex(hex8)).toBe("0x802563EB");
+      expect(toXmlColorHex(hex8)).toBe("#802563EB");
+
+      // Fully opaque 8-char hex
+      const hex8Opaque = "#112233FF";
+      expect(toComposeColorHex(hex8Opaque)).toBe("0xFF112233");
+      expect(toXmlColorHex(hex8Opaque)).toBe("#FF112233");
+
+      // 6-char hex should retain 0xFF prefix in Compose and #RRGGBB in XML
+      const hex6 = "#2563eb";
+      expect(toComposeColorHex(hex6)).toBe("0xFF2563EB");
+      expect(toXmlColorHex(hex6)).toBe("#2563EB");
+
+      // 3-char hex shorthand expansion
+      const hex3 = "#123";
+      expect(toComposeColorHex(hex3)).toBe("0xFF112233");
+      expect(toXmlColorHex(hex3)).toBe("#112233");
+    });
+  });
+
+  describe("W3C DTCG 2025.10 Color Objects with components array", () => {
+    it("should convert 0..1 sRGB components array to hex string", () => {
+      // 3 components [r, g, b]
+      const color3 = {
+        colorSpace: "srgb",
+        components: [0.2, 0.4, 0.6],
+      };
+      // 0.2*255=51 (0x33), 0.4*255=102 (0x66), 0.6*255=153 (0x99)
+      expect(extractDtcgValue(color3)).toBe("#336699");
+
+      // 4 components [r, g, b, a]
+      const color4 = {
+        colorSpace: "srgb",
+        components: [0.2, 0.4, 0.6, 0.8],
+      };
+      // 0.8*255=204 (0xcc)
+      expect(extractDtcgValue(color4)).toBe("#336699cc");
+
+      // Extremes: pure black and pure white
+      expect(extractDtcgValue({ colorSpace: "srgb", components: [0, 0, 0] })).toBe("#000000");
+      expect(extractDtcgValue({ colorSpace: "srgb", components: [1, 1, 1] })).toBe("#ffffff");
+
+      // Components with separate alpha property
+      const colorWithAlphaProp = {
+        colorSpace: "srgb",
+        components: [1, 0, 0],
+        alpha: 0.5,
+      };
+      // 0.5*255=128 (0x80)
+      expect(extractDtcgValue(colorWithAlphaProp)).toBe("#ff000080");
+    });
+
+    it("should resolve token references that point to DTCG components object", () => {
+      const rootTokens = {
+        global: {
+          color: {
+            brand: {
+              $value: { colorSpace: "srgb", components: [0.2, 0.4, 0.6] },
+              $type: "color",
+            },
+          },
+        },
+        semantic: {
+          color: {
+            primary: {
+              $value: "{global.color.brand}",
+              $type: "color",
+            },
+          },
+        },
+      };
+
+      expect(resolveTokenRef("{semantic.color.primary}", rootTokens)).toBe("#336699");
+    });
+  });
+
+  describe("Dimensions & Typography Rem Conversions", () => {
+    it("should convert rem to dp (1rem = 16dp) in toAndroidDp", () => {
+      expect(toAndroidDp("1.5rem")).toBe("24dp");
+      expect(toAndroidDp("1rem")).toBe("16dp");
+      expect(toAndroidDp("2rem")).toBe("32dp");
+      expect(toAndroidDp("0.5rem")).toBe("8dp");
+      expect(toAndroidDp("16px")).toBe("16dp");
+      expect(toAndroidDp("24dp")).toBe("24dp");
+      expect(toAndroidDp("12")).toBe("12dp");
+    });
+
+    it("should convert rem to sp (1rem = 16sp) in toAndroidSp", () => {
+      expect(toAndroidSp("1.5rem")).toBe("24");
+      expect(toAndroidSp("1rem")).toBe("16");
+      expect(toAndroidSp("0.875rem")).toBe("14");
+      expect(toAndroidSp("16px")).toBe("16");
+      expect(toAndroidSp("20")).toBe("20");
+    });
+
+    it("should compile tokens with rem dimensions and typography properly into Android outputs", async () => {
+      const customTokens = {
+        $schema: "https://design-tokens.github.io/community-group/format/",
+        name: "Rem Test Tokens",
+        version: "1.0.0",
+        global: {
+          color: {
+            brand: { $value: "#2563eb", $type: "color" },
+          },
+          dimension: {
+            "radius-sm": { $value: "0.5rem", $type: "dimension" },
+            "radius-md": { $value: "1rem", $type: "dimension" },
+            "radius-lg": { $value: "1.5rem", $type: "dimension" },
+            "target-min": { $value: "3rem", $type: "dimension" },
+          },
+          font: {
+            "family-main": { $value: "sans-serif", $type: "fontFamily" },
+            "size-sm": { $value: "0.875rem", $type: "dimension" },
+            "size-base": { $value: "1rem", $type: "dimension" },
+            "size-lg": { $value: "1.25rem", $type: "dimension" },
+            "size-xl": { $value: "1.5rem", $type: "dimension" },
+            "line-height-base": { $value: 1.5, $type: "number" },
+          },
+        },
+      };
+
+      const tokensFile = path.join(tmpDir, "rem-tokens.json");
+      const outputDir = path.join(tmpDir, "rem-compiled");
+      await fs.writeFile(tokensFile, JSON.stringify(customTokens, null, 2), "utf8");
+
+      const res = await compileTokens({
+        tokensFile,
+        outputDir,
+        repoRoot: tmpDir,
+      });
+
+      expect(res.success).toBe(true);
+
+      // Verify Shape.kt uses converted dp
+      const shapeKtContent = await fs.readFile(path.join(outputDir, "Shape.kt"), "utf8");
+      expect(shapeKtContent).toContain("small = RoundedCornerShape(8dp)");
+      expect(shapeKtContent).toContain("medium = RoundedCornerShape(16dp)");
+      expect(shapeKtContent).toContain("large = RoundedCornerShape(24dp)");
+
+      // Verify dimens.xml uses converted dp
+      const dimensXmlContent = await fs.readFile(path.join(outputDir, "dimens.xml"), "utf8");
+      expect(dimensXmlContent).toContain('<dimen name="radius_sm">8dp</dimen>');
+      expect(dimensXmlContent).toContain('<dimen name="radius_md">16dp</dimen>');
+      expect(dimensXmlContent).toContain('<dimen name="radius_lg">24dp</dimen>');
+      expect(dimensXmlContent).toContain('<dimen name="touch_target_min">48dp</dimen>');
+
+      // Verify Type.kt uses converted sp (1rem = 16sp, 1.5rem = 24sp, 0.875rem = 14sp, 1.25rem = 20sp)
+      const typeKtContent = await fs.readFile(path.join(outputDir, "Type.kt"), "utf8");
+      expect(typeKtContent).toContain("fontSize = 14.sp");
+      expect(typeKtContent).toContain("fontSize = 16.sp");
+      expect(typeKtContent).toContain("fontSize = 20.sp");
+      expect(typeKtContent).toContain("fontSize = 24.sp");
+    });
+  });
+
+  describe("Circular Token Dependency Detection", () => {
+    it("should throw an error on direct self-referencing tokens", () => {
+      const rootTokens = {
+        global: {
+          color: {
+            self: { $value: "{global.color.self}" },
+          },
+        },
+      };
+
+      expect(() => resolveTokenRef("{global.color.self}", rootTokens)).toThrow(
+        /Circular token dependency detected/
+      );
+    });
+
+    it("should throw an error on indirect 2-hop circular dependency", () => {
+      const rootTokens = {
+        global: {
+          color: {
+            alpha: { $value: "{global.color.beta}" },
+            beta: { $value: "{global.color.alpha}" },
+          },
+        },
+      };
+
+      expect(() => resolveTokenRef("{global.color.alpha}", rootTokens)).toThrow(
+        /Circular token dependency detected/
+      );
+      expect(() => resolveAlias("{global.color.beta}", rootTokens)).toThrow(
+        /Circular token dependency detected/
+      );
+    });
+
+    it("should throw an error on 3-hop circular dependency cycle", () => {
+      const rootTokens = {
+        global: {
+          color: {
+            a: { $value: "{global.color.b}" },
+            b: { $value: "{global.color.c}" },
+            c: { $value: "{global.color.a}" },
+          },
+        },
+      };
+
+      expect(() => resolveTokenRef("{global.color.a}", rootTokens)).toThrow(
+        /Circular token dependency detected:.*a.*b.*c/
+      );
+    });
+
+    it("should resolve valid non-circular multi-hop alias chains", () => {
+      const rootTokens = {
+        global: {
+          color: {
+            a: { $value: "{global.color.b}" },
+            b: { $value: "{global.color.c}" },
+            c: { $value: "#4f46e5" },
+          },
+        },
+      };
+
+      expect(resolveTokenRef("{global.color.a}", rootTokens)).toBe("#4f46e5");
+    });
+  });
+
+  describe("Code Verifier: ESM Syntax Detection", () => {
+    it("should detect top-level await in hasEsmSyntax", () => {
+      expect(hasEsmSyntax("const res = await fetch('/api/data');")).toBe(true);
+      expect(hasEsmSyntax("let config = await loadConfig();")).toBe(true);
+      expect(hasEsmSyntax("var item = await getItem();")).toBe(true);
+    });
+
+    it("should detect import.meta in hasEsmSyntax", () => {
+      expect(hasEsmSyntax("const currentDir = import.meta.url;")).toBe(true);
+      expect(hasEsmSyntax("if (import.meta.env) { console.log('env'); }")).toBe(true);
+    });
+
+    it("should detect dynamic import() in hasEsmSyntax", () => {
+      expect(hasEsmSyntax("const module = await import('./module.js');")).toBe(true);
+      expect(hasEsmSyntax("import('./utils.js').then(u => u.run());")).toBe(true);
+    });
+
+    it("should return false for standard non-ESM CommonJS", () => {
+      expect(hasEsmSyntax("const fs = require('fs'); module.exports = { fs };")).toBe(false);
+    });
+  });
+
+  describe("Code Verifier: Secret Scanning Hardening", () => {
+    it("should strip Data URIs and sourcemaps without false positive leaks", async () => {
+      const srcDir = path.join(tmpDir, "05_MA_NGUON_PHAT_TRIEN");
+      await fs.mkdir(srcDir, { recursive: true });
+
+      // HTML with Data URI font and inline sourceMappingURL comment
+      const smComment = "//" + "# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbXX0=";
+      const htmlWithDataUri = `<!DOCTYPE html>
+<html>
+<head>
+  <title>Data URI Test</title>
+  <style>
+    @font-face {
+      font-family: 'TestFont';
+      src: url(data:font/woff2;base64,d09GMgABAAAAAA...d09GMgABAAAAAA==) format('woff2');
+    }
+  </style>
+</head>
+<body>
+  <h1>Safe App</h1>
+  <script>
+    console.log("Clean code");
+    ${smComment}
+  </script>
+</body>
+</html>`;
+
+      await fs.writeFile(path.join(srcDir, "index.html"), htmlWithDataUri, "utf8");
+
+      const res = await verifyCode({ repoRoot: tmpDir, targetDir: "05_MA_NGUON_PHAT_TRIEN" });
+      const secretErrors = res.errors.filter((e) => e.includes("Secret leak"));
+      expect(secretErrors).toEqual([]);
+    });
+  });
+
+  describe("Code Verifier: Route A Offline Check", () => {
+    it("should block fonts.gstatic.com in Route A offline check", async () => {
+      const srcDir = path.join(tmpDir, "05_MA_NGUON_PHAT_TRIEN");
+      await fs.mkdir(srcDir, { recursive: true });
+
+      const htmlWithGstatic = `<!DOCTYPE html>
+<html>
+<head>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+</head>
+<body><p>Offline violation</p></body>
+</html>`;
+      await fs.writeFile(path.join(srcDir, "index.html"), htmlWithGstatic, "utf8");
+
+      const res = await verifyCode({ repoRoot: tmpDir, targetDir: "05_MA_NGUON_PHAT_TRIEN" });
+      expect(res.success).toBe(false);
+      expect(res.errors.some((e) => e.includes("Route A offline violation"))).toBe(true);
+    });
+
+    it("should block CSS @import url('https://...') in Route A offline check", async () => {
+      const srcDir = path.join(tmpDir, "05_MA_NGUON_PHAT_TRIEN");
+      await fs.mkdir(srcDir, { recursive: true });
+
+      await fs.writeFile(
+        path.join(srcDir, "index.html"),
+        `<!DOCTYPE html><html><head><link rel="stylesheet" href="style.css"></head><body><h1>Hi</h1></body></html>`,
+        "utf8"
+      );
+
+      const cssWithImport = `@import url("https://fonts.googleapis.com/css2?family=Roboto");\nbody { font-family: Roboto; }`;
+      await fs.writeFile(path.join(srcDir, "style.css"), cssWithImport, "utf8");
+
+      const res = await verifyCode({ repoRoot: tmpDir, targetDir: "05_MA_NGUON_PHAT_TRIEN" });
+      expect(res.success).toBe(false);
+      expect(res.errors.some((e) => e.includes("Route A offline violation"))).toBe(true);
+    });
+  });
+
+  describe("Code Verifier: Relative Luminance & Contrast Calculation", () => {
+    it("should calculate relative luminance using IEC 61966-2-1 0.04045 threshold", () => {
+      // Near black rgb
+      const darkRgb = { r: 5, g: 5, b: 5 };
+      const lum = getRelativeLuminance(darkRgb);
+      expect(lum).toBeGreaterThan(0);
+      expect(Number.isNaN(lum)).toBe(false);
+
+      // Pure white
+      const whiteRgb = { r: 255, g: 255, b: 255 };
+      expect(getRelativeLuminance(whiteRgb)).toBeCloseTo(1.0, 4);
+
+      // Pure black
+      const blackRgb = { r: 0, g: 0, b: 0 };
+      expect(getRelativeLuminance(blackRgb)).toBe(0);
+    });
+
+    it("should validate hex input to prevent NaN in convertHexToRgb and getWcagContrastRatio", () => {
+      expect(convertHexToRgb("invalid")).toBeNull();
+      expect(convertHexToRgb("#XYZ123")).toBeNull();
+      expect(convertHexToRgb("#12")).toBeNull();
+      expect(convertHexToRgb("")).toBeNull();
+
+      expect(getWcagContrastRatio("invalid", "#ffffff")).toBe(0.0);
+      expect(getWcagContrastRatio("#000000", "not-a-color")).toBe(0.0);
+      expect(Number.isNaN(getWcagContrastRatio("xyz", "abc"))).toBe(false);
     });
   });
 });

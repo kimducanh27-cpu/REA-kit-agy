@@ -136,13 +136,14 @@ export async function showAdr(
   if (!id) {
     throw new Error("[!] Vui lòng cung cấp ID của ADR. Ví dụ: rea-kit adr show 0001");
   }
+  const cleanId = id.trim().replace(/^ADR-/i, "");
   const adrDir = targetAdrDir || findAdrDir();
-  const paddedId = /^\d+$/.test(id) ? String(parseInt(id, 10)).padStart(4, "0") : id;
+  const paddedId = /^\d+$/.test(cleanId) ? String(parseInt(cleanId, 10)).padStart(4, "0") : cleanId;
 
   const files = await fs.readdir(adrDir);
   const mdFiles = files.filter((f) => f.endsWith(".md")).sort();
 
-  const idPattern = new RegExp(`^(${paddedId}|${id})(-.*)?\\.md$`, "i");
+  const idPattern = new RegExp(`^(${paddedId}|${cleanId})(-.*)?\\.md$`, "i");
   const targetFile = mdFiles.find((f) => idPattern.test(f));
 
   if (!targetFile) {
@@ -351,14 +352,16 @@ export async function newAdr(
   let newNum = maxNum + 1;
   let titleText = "New Architectural Decision";
 
+  const cleanTitleOrId = titleOrId ? titleOrId.trim().replace(/^ADR-/i, "") : undefined;
+
   if (titleParam) {
     titleText = titleParam;
-    if (titleOrId && /^\d+$/.test(titleOrId)) {
-      newNum = parseInt(titleOrId, 10);
+    if (cleanTitleOrId && /^\d+$/.test(cleanTitleOrId)) {
+      newNum = parseInt(cleanTitleOrId, 10);
     }
   } else if (titleOrId) {
-    if (/^\d+$/.test(titleOrId)) {
-      newNum = parseInt(titleOrId, 10);
+    if (cleanTitleOrId && /^\d+$/.test(cleanTitleOrId)) {
+      newNum = parseInt(cleanTitleOrId, 10);
     } else {
       titleText = titleOrId;
     }
@@ -451,13 +454,107 @@ Chosen option: "[Lựa chọn được chọn]", because [lý do lựa chọn].
   return { id: formattedId, fileName, filePath, title: titleText, text };
 }
 
+export interface TransitionAdrOptions {
+  supersededBy?: string;
+  reason?: string;
+  repoRoot?: string;
+  targetAdrDir?: string;
+}
+
+/**
+ * Transitions the MADR status of an ADR (e.g. PROPOSED -> ACCEPTED, ACCEPTED -> SUPERSEDED).
+ */
+export async function transitionAdr(
+  id: string,
+  targetStatus: string,
+  options: TransitionAdrOptions = {}
+): Promise<{ id: string; oldStatus: string; newStatus: string; filePath: string; text: string }> {
+  if (!id) {
+    throw new Error("[!] Vui lòng cung cấp ID của ADR. Ví dụ: rea-kit adr transition 0001 accepted");
+  }
+  if (!targetStatus) {
+    throw new Error("[!] Vui lòng cung cấp trạng thái đích (targetStatus). Ví dụ: accepted, superseded.");
+  }
+
+  const normalizedTarget = targetStatus.trim().toUpperCase();
+  const validStatuses = ["PROPOSED", "ACCEPTED", "REJECTED", "DEPRECATED", "SUPERSEDED"];
+  const baseTarget = normalizedTarget.split(/\s+/)[0];
+  if (!validStatuses.includes(baseTarget)) {
+    throw new Error(
+      `[!] Trạng thái không hợp lệ: '${targetStatus}'. Hợp lệ: ${validStatuses.join(", ")}`
+    );
+  }
+
+  const cleanId = id.trim().replace(/^ADR-/i, "");
+  const adrDir =
+    options.targetAdrDir ||
+    (options.repoRoot ? path.join(path.resolve(options.repoRoot), "docs", "adrs") : findAdrDir());
+  const paddedId = /^\d+$/.test(cleanId) ? String(parseInt(cleanId, 10)).padStart(4, "0") : cleanId;
+
+  const files = await fs.readdir(adrDir);
+  const mdFiles = files.filter((f) => f.endsWith(".md")).sort();
+
+  const idPattern = new RegExp(`^(${paddedId}|${cleanId})(-.*)?\\.md$`, "i");
+  const targetFile = mdFiles.find((f) => idPattern.test(f));
+
+  if (!targetFile) {
+    throw new Error(`[!] Không tìm thấy ADR nào khớp với ID hoặc tên: '${id}'`);
+  }
+
+  const fullPath = path.join(adrDir, targetFile);
+  const raw = await fs.readFile(fullPath, "utf8");
+  let content = raw.charCodeAt(0) === 0xfeff ? raw.slice(1) : raw;
+
+  const statusMatch = content.match(/^-\s*Status:\s*(.+)$/im);
+  const oldStatus = statusMatch ? statusMatch[1].trim() : "unknown";
+
+  const newStatusLower = baseTarget.toLowerCase();
+  if (statusMatch) {
+    content = content.replace(/^-\s*Status:\s*.+$/im, `- Status: ${newStatusLower}`);
+  } else {
+    content = content.replace(/^(#\s+.*)$/m, `$1\n\n- Status: ${newStatusLower}`);
+  }
+
+  if (options.supersededBy) {
+    const cleanSup = options.supersededBy.trim().replace(/^ADR-/i, "");
+    const paddedSup = /^\d+$/.test(cleanSup) ? cleanSup.padStart(4, "0") : cleanSup;
+    const linkNote = `* Superseded by [ADR-${paddedSup}](.)`;
+    if (/## Links/i.test(content)) {
+      content = content.replace(/(## Links\s*)/i, `$1\n${linkNote}\n`);
+    } else {
+      content += `\n\n## Links\n\n${linkNote}\n`;
+    }
+  }
+
+  if (options.reason) {
+    const reasonNote = `* Reason for transition: ${options.reason}`;
+    if (/## Links/i.test(content)) {
+      content = content.replace(/(## Links\s*)/i, `$1\n${reasonNote}\n`);
+    }
+  }
+
+  await writeUtf8NoBomAtomic(fullPath, content);
+
+  const text = `================================================================================
+   CHUYỂN ĐỔI TRẠNG THÁI ADR: ${targetFile}
+================================================================================
+ ID           : ${paddedId}
+ File         : ${targetFile}
+ Trạng thái cũ: ${oldStatus}
+ Trạng thái mới: ${newStatusLower}
+================================================================================`;
+
+  return { id: paddedId, oldStatus, newStatus: newStatusLower, filePath: fullPath, text };
+}
+
 export function getAdrHelp(): string {
-  return `SỬ DỤNG: rea-kit adr [action] [id/title] [title]
+  return `SỬ DỤNG: rea-kit adr [action] [id/title] [title/status]
   list                  : Liệt kê toàn bộ các bản ghi ADR và trạng thái (mặc định).
   show <id>             : Xem nội dung đầy đủ của một bản ghi ADR theo mã số hoặc tên.
   validate              : Kiểm tra tính tuân thủ cấu trúc chuẩn MADR cho tất cả ADR.
   status                : Thống kê số lượng ADR theo trạng thái (accepted, proposed,...).
   new [title]           : Tạo bản ghi ADR mới tiếp theo theo mẫu chuẩn MADR.
+  transition <id> <st>  : Chuyển đổi trạng thái ADR (accepted, superseded,...).
   help                  : Hiển thị hướng dẫn này.`;
 }
 
@@ -466,7 +563,15 @@ export function getAdrHelp(): string {
  */
 export async function runAdrAction(
   action: string = "list",
-  args: { id?: string; title?: string; repoRoot?: string } = {}
+  args: {
+    id?: string;
+    title?: string;
+    status?: string;
+    targetStatus?: string;
+    supersededBy?: string;
+    reason?: string;
+    repoRoot?: string;
+  } = {}
 ): Promise<any> {
   const targetDir = args.repoRoot ? path.join(path.resolve(args.repoRoot), "docs", "adrs") : findAdrDir();
   switch ((action || "list").toLowerCase()) {
@@ -480,9 +585,19 @@ export async function runAdrAction(
       return await getAdrStatus(targetDir);
     case "new":
       return await newAdr(args.id, args.title, targetDir);
+    case "transition":
+      return await transitionAdr(
+        args.id || "",
+        args.status || args.targetStatus || args.title || "",
+        {
+          supersededBy: args.supersededBy,
+          reason: args.reason,
+          targetAdrDir: targetDir,
+        }
+      );
     case "help":
       return { text: getAdrHelp() };
     default:
-      throw new Error(`Unknown ADR action: '${action}'. Valid actions: list, show, validate, status, new, help.`);
+      throw new Error(`Unknown ADR action: '${action}'. Valid actions: list, show, validate, status, new, transition, help.`);
   }
 }

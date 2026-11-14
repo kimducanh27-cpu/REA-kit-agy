@@ -389,8 +389,14 @@ export async function planContext(options: PlanOptions): Promise<Record<string, 
     }
 
     if (profileData.forbidden_contexts) {
+      const normalizedDocPath = doc.path.replace(/\\/g, "/");
       for (const forbid of profileData.forbidden_contexts) {
-        if (doc.path.startsWith(forbid) || doc.id === forbid) {
+        const normalizedForbid = forbid.replace(/\\/g, "/");
+        if (
+          normalizedDocPath.startsWith(normalizedForbid) ||
+          doc.id === forbid ||
+          doc.id === normalizedForbid
+        ) {
           shouldInclude = false;
         }
       }
@@ -641,7 +647,7 @@ export async function packContext(options: PackOptions): Promise<Record<string, 
     packet_id: packId,
     plan_id: plan.plan_id,
     created_at: new Date().toISOString(),
-    generator: "context.ts pack v2.0.1",
+    generator: "context.ts pack v2.0.2",
     layer_order: "L0->L3->L2->L1->L4->L5",
   };
 
@@ -731,11 +737,12 @@ export async function verifyPacket(
       if (it.content) {
         totalChars += it.content.length;
 
+        const normalizedItPath = (it.path || "").replace(/\\/g, "/");
         // Check raw binary bloat (>30k characters in 01_ or 04_)
         if (
           it.content.length > 30000 &&
-          (it.path?.startsWith("01_THA_APP_VAO_DAY") ||
-            it.path?.startsWith("04_SAO_LUU_AN_TOAN"))
+          (normalizedItPath.startsWith("01_THA_APP_VAO_DAY") ||
+            normalizedItPath.startsWith("04_SAO_LUU_AN_TOAN"))
         ) {
           noRawBinaryBloat = false;
         }

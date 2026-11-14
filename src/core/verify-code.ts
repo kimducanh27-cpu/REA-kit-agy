@@ -56,7 +56,19 @@ export function hasEsmSyntax(code: string): boolean {
   if (/(?:^|[;\n])\s*export\s+(?:default\b|\*|\{|\b(?:const|let|var|function|class|async)\b)/m.test(clean)) {
     return true;
   }
-  if (/(?:^|[;\n])\s*await\s+[\w$([{]/m.test(clean)) {
+  // Top-level await
+  if (
+    /(?:^|\n)\s*(?:const|let|var)\s+[\w$]+\s*=\s*await\s+/.test(clean) ||
+    /(?:^|[;\n])\s*await\s+[\w$([{]/m.test(clean)
+  ) {
+    return true;
+  }
+  // import.meta
+  if (/\bimport\.meta\b/.test(clean)) {
+    return true;
+  }
+  // Dynamic import()
+  if (/\bimport\s*\(/.test(clean)) {
     return true;
   }
   return false;
@@ -82,15 +94,21 @@ export function convertHexToRgb(
 ): { r: number; g: number; b: number } | null {
   if (!hex || typeof hex !== "string") return null;
   const clean = hex.trim().replace(/^#/, "");
+  // Validate hex characters and valid lengths (3, 6, 8)
+  if (!/^[0-9a-fA-F]{3}$|^[0-9a-fA-F]{6}$|^[0-9a-fA-F]{8}$/.test(clean)) {
+    return null;
+  }
   if (clean.length === 3) {
     const r = parseInt(clean[0] + clean[0], 16);
     const g = parseInt(clean[1] + clean[1], 16);
     const b = parseInt(clean[2] + clean[2], 16);
+    if (isNaN(r) || isNaN(g) || isNaN(b)) return null;
     return { r, g, b };
   } else if (clean.length >= 6) {
     const r = parseInt(clean.substring(0, 2), 16);
     const g = parseInt(clean.substring(2, 4), 16);
     const b = parseInt(clean.substring(4, 6), 16);
+    if (isNaN(r) || isNaN(g) || isNaN(b)) return null;
     return { r, g, b };
   }
   return null;
@@ -101,12 +119,17 @@ export function getRelativeLuminance(rgb: {
   g: number;
   b: number;
 }): number {
+  if (!rgb || isNaN(rgb.r) || isNaN(rgb.g) || isNaN(rgb.b)) {
+    return 0;
+  }
   const channels = [rgb.r, rgb.g, rgb.b];
   const linear = channels.map((c) => {
-    const s = c / 255.0;
-    return s <= 0.03928 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4);
+    const s = Math.max(0, Math.min(255, c)) / 255.0;
+    // IEC 61966-2-1 / WCAG 2.1 Errata threshold update: 0.04045
+    return s <= 0.04045 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4);
   });
-  return 0.2126 * linear[0] + 0.7152 * linear[1] + 0.0722 * linear[2];
+  const lum = 0.2126 * linear[0] + 0.7152 * linear[1] + 0.0722 * linear[2];
+  return isNaN(lum) ? 0 : lum;
 }
 
 export function getWcagContrastRatio(hex1: string, hex2: string): number {
@@ -115,9 +138,11 @@ export function getWcagContrastRatio(hex1: string, hex2: string): number {
   if (!rgb1 || !rgb2) return 0.0;
   const l1 = getRelativeLuminance(rgb1);
   const l2 = getRelativeLuminance(rgb2);
+  if (isNaN(l1) || isNaN(l2)) return 0.0;
   const lighter = Math.max(l1, l2);
   const darker = Math.min(l1, l2);
-  return Math.round(((lighter + 0.05) / (darker + 0.05)) * 100) / 100;
+  const ratio = Math.round(((lighter + 0.05) / (darker + 0.05)) * 100) / 100;
+  return isNaN(ratio) ? 0.0 : ratio;
 }
 
 async function getAllFiles(
@@ -365,6 +390,11 @@ export async function verifyCode(
     }
     if (!text) continue;
 
+    // Strip all Data URIs and sourceMappingURL comments before scanning to eliminate sourcemap false positives
+    text = text.replace(/data:[a-zA-Z0-9+.-]+\/[a-zA-Z0-9+.-]+;base64,[A-Za-z0-9+/=]+/gi, "");
+    text = text.replace(/\/\/#\s*sourceMappingURL=[^\r\n]+/g, "");
+    if (!text.trim()) continue;
+
     // 4.1 Raw regex pattern matches
     for (const pat of leakPatterns) {
       if (pat.test(text)) {
@@ -374,10 +404,8 @@ export async function verifyCode(
       }
     }
 
-    // 4.2 Base64-encoded secrets
-    // Skip data:image/ URIs and limit candidate length to 24..512 chars
-    const textWithoutImages = text.replace(/data:image\/[a-zA-Z0-9+.-]+;base64,[A-Za-z0-9+/=]+/gi, "");
-    const base64Candidates = textWithoutImages.match(/\b[A-Za-z0-9+/]{24,512}={0,2}\b/g) || [];
+    // 4.2 Base64-encoded secrets (limit candidate length to 24..512 chars)
+    const base64Candidates = text.match(/\b[A-Za-z0-9+/]{24,512}={0,2}\b/g) || [];
     for (const cand of base64Candidates) {
       if (cand.length < 24 || cand.length > 512) continue;
       try {
@@ -550,8 +578,9 @@ export async function verifyCode(
     // 7.1 Check Route A external CDNs
     if (htmlFiles.length > 0 && [".html", ".css", ".js"].includes(ext)) {
       const cdnPatterns = [
-        /https?:\/\/(?:cdn\.|cdnjs\.|unpkg\.|cdn\.jsdelivr\.net|maxcdn\.|stackpath\.|fonts\.googleapis\.com|cdn\.tailwindcss\.com)/i,
+        /https?:\/\/(?:cdn\.|cdnjs\.|unpkg\.|cdn\.jsdelivr\.net|maxcdn\.|stackpath\.|fonts\.googleapis\.com|fonts\.gstatic\.com|cdn\.tailwindcss\.com)/i,
         /<(?:script|link)\b[^>]*(?:src|href)\s*=\s*["']https?:\/\//i,
+        /@import\s+(?:url\s*\(\s*["']?https?:\/\/|["']https?:\/\/)/i,
       ];
       for (const cp of cdnPatterns) {
         if (cp.test(clean)) {
@@ -634,9 +663,28 @@ export async function verifyCode(
       if (typeof val === "string") {
         out[currentPath] = val;
         return out;
-      } else if (val && typeof val === "object" && typeof val.hex === "string") {
-        out[currentPath] = val.hex;
-        return out;
+      } else if (val && typeof val === "object") {
+        if (typeof val.hex === "string") {
+          out[currentPath] = val.hex;
+          return out;
+        }
+        if (Array.isArray(val.components) && val.components.length >= 3) {
+          const toHex = (n: number) => {
+            const clamped = Math.max(0, Math.min(255, Math.round(Number(n) * 255)));
+            return clamped.toString(16).padStart(2, "0");
+          };
+          const r = toHex(val.components[0]);
+          const g = toHex(val.components[1]);
+          const b = toHex(val.components[2]);
+          if (val.components.length >= 4 && val.components[3] !== undefined) {
+            out[currentPath] = `#${r}${g}${b}${toHex(val.components[3])}`;
+          } else if (val.alpha !== undefined && val.alpha !== null) {
+            out[currentPath] = `#${r}${g}${b}${toHex(val.alpha)}`;
+          } else {
+            out[currentPath] = `#${r}${g}${b}`;
+          }
+          return out;
+        }
       }
     }
 

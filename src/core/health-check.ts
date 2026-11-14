@@ -4,6 +4,7 @@ import crypto from "node:crypto";
 import { exec } from "node:child_process";
 import { promisify } from "node:util";
 import { findRepoRoot } from "./workspace.js";
+import { getNormalizedFileHash } from "./gate.js";
 
 const execAsync = promisify(exec);
 
@@ -53,7 +54,7 @@ async function fileExists(p: string): Promise<boolean> {
 
 async function checkCommand(cmd: string): Promise<{ ok: boolean; output: string }> {
   try {
-    const { stdout, stderr } = await execAsync(cmd, { timeout: 4000 });
+    const { stdout, stderr } = await execAsync(cmd, { timeout: 8000 });
     return { ok: true, output: (stdout || stderr || "").trim() };
   } catch (err: any) {
     return { ok: false, output: (err.stdout || err.stderr || err.message || "").trim() };
@@ -430,12 +431,7 @@ export async function runHealthCheck(
       if (appFiles.length > 0) {
         const targetFile = appFiles[0];
         const filePath = path.join(inputDir, targetFile);
-        const buf = await fs.readFile(filePath);
-        const sha256 = crypto
-          .createHash("sha256")
-          .update(buf)
-          .digest("hex")
-          .toUpperCase();
+        const sha256 = (await getNormalizedFileHash(filePath)).toUpperCase();
         const matched =
           activeCase?.workflow?.target_fingerprint?.toUpperCase() === sha256;
         appInput = {

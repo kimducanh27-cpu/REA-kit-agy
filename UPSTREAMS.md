@@ -7,9 +7,9 @@ Checked: **2026-11-13**. Primary upstream source is pinned to the exact commit S
 ## 1. Upstream Engine: morluto/rea
 
 - **Repository**: https://github.com/morluto/rea
-- **Release Tag**: `rea-agents-6.9.0` (tương thích các bản phát hành `rea-agents@6.9.0` / `rea-agents@6.10.0`)
+- **Release Tag**: `rea-agents-6.9.0` (npm published package chính thức: `rea-agents@6.9.0`)
 - **Pinned Commit**: `5cddc69c51a0fb18d021417199046314581ba9c2`
-- **Package name**: `rea-agents@6.9.0` / `rea-agents@6.10.0` (published 2026-11-12)
+- **Package name**: `rea-agents@6.9.0` (bản phát hành npm chính thức: `rea-agents@6.9.0`, published 2026-11-12)
 - **Declared License**: MIT
 - **Primary Source Skill**: `.agents/skills/reverse-engineer-anything/SKILL.md` (Upstream Skill Version: `v62`, kèm 8 references đầy đủ gồm `desktop-build.md`)
 - **Key References**:
@@ -37,7 +37,7 @@ Checked: **2026-11-13**. Primary upstream source is pinned to the exact commit S
 
 3. **Kiểm tra tương thích Runtime & Ranh giới Riêng tư (Scoped Privacy Statement)**:
    * **Môi trường thực thi & Yêu cầu Runtime Upstream REA 6.9.0 / 6.10.0**:
-     - **Node.js Runtime**: Node.js >= 18.0.0 (khuyến nghị LTS 20.x hoặc 22.x) hỗ trợ module ESM và Stdio MCP Transport.
+     - **Node.js Runtime**: Yêu cầu `^22.23.4 || ^24.22.1 || >=26.12.1` hỗ trợ module ESM và Stdio MCP Transport.
      - **Java Development Kit**: Java JDK >= 17 (OpenJDK 17/21) cho JADX (>= 1.5.0) và Apktool (>= 2.9.0) dịch ngược bytecode Dalvik/ART.
      - **Android SDK Build-Tools**: `zipalign`, `apksigner` cho khâu đóng gói và kiểm chứng chữ ký số APK.
      - **Local Execution Boundary**: Toàn bộ engine phân tích và dịch ngược chạy hoàn toàn cục bộ (100% offline local), không gửi file nhị phân ra internet.

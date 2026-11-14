@@ -35,8 +35,8 @@ const program = new Command();
 
 program
   .name("rea-kit")
-  .description("REA-kit-agy v2.0.1 CLI - Reverse Engineering & App Reconstruction Toolkit")
-  .version("2.0.1");
+  .description("REA-kit-agy v2.0.2 CLI - Reverse Engineering & App Reconstruction Toolkit")
+  .version("2.0.2");
 
 program
   .command("init")
@@ -46,7 +46,7 @@ program
   .action(async (options) => {
     try {
       console.log("==========================================================");
-      console.log("   INITIALIZING REA-KIT WORKSPACE v2.0.1");
+      console.log("   INITIALIZING REA-KIT WORKSPACE v2.0.2");
       console.log("==========================================================");
 
       const res = await initWorkspace({
@@ -78,7 +78,7 @@ program
   .action(async (options) => {
     try {
       console.log("==========================================================");
-      console.log("   REA-KIT HEALTH CHECK v2.0.1");
+      console.log("   REA-KIT HEALTH CHECK v2.0.2");
       console.log("==========================================================");
 
       const result = await runHealthCheck({
@@ -153,7 +153,7 @@ program
   .action(async (options) => {
     try {
       console.log("==========================================================");
-      console.log("   DETERMINISTIC VERIFICATION & RISK CLASSIFIER v2.0.1");
+      console.log("   DETERMINISTIC VERIFICATION & RISK CLASSIFIER v2.0.2");
       console.log("==========================================================");
 
       const result = await verifyCode({
@@ -251,6 +251,9 @@ program
         mode: options.mode,
       });
       console.log(JSON.stringify(res, null, 2));
+      if (action === "validate" && res && !res.valid) {
+        process.exit(1);
+      }
       process.exit(0);
     } catch (err: any) {
       console.error(`[FAIL] Gate action '${action}' failed: ${err.message}`);

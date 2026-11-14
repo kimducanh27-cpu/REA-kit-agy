@@ -245,13 +245,32 @@ export async function createSnapshot(
 
 /**
  * Safely moves a file or directory, handling cross-device / EXDEV errors
- * by falling back to copyDirClean / copyFile + removeSafeItem.
+ * and Windows EPERM / EEXIST errors on existing destination directories
+ * by cleaning the destination first or falling back to copyDirClean / copyFile + removeSafeItem.
  */
-async function safeMove(src: string, dest: string): Promise<void> {
+export async function safeMove(src: string, dest: string): Promise<void> {
+  // Ensure parent directory of destination exists
+  await fs.mkdir(path.dirname(dest), { recursive: true });
+
+  // If destination already exists on Windows, remove it first to avoid rename EPERM/EEXIST
+  if (fsSync.existsSync(dest)) {
+    await removeSafeItem(dest);
+  }
+
   try {
     await fs.rename(src, dest);
   } catch (err: any) {
-    if (err.code === "EXDEV") {
+    if (
+      err.code === "EXDEV" ||
+      err.code === "EPERM" ||
+      err.code === "EEXIST" ||
+      err.code === "EBUSY" ||
+      err.code === "ENOTEMPTY" ||
+      err.code === "EACCES"
+    ) {
+      if (fsSync.existsSync(dest)) {
+        await removeSafeItem(dest);
+      }
       const stat = await fs.lstat(src);
       if (stat.isDirectory()) {
         await copyDirClean(src, dest, new Set());
@@ -268,18 +287,49 @@ async function safeMove(src: string, dest: string): Promise<void> {
 }
 
 /**
- * Enforces maximum snapshot retention limit by pruning older snapshots.
+ * Checks if a relative file path contains path traversal attempts.
  */
-async function rotateSnapshots(backupDir: string, maxSnapshots: number): Promise<void> {
+export function isPathTraversal(filePath: string): boolean {
+  if (!filePath || typeof filePath !== "string") return true;
+  const norm = filePath.replace(/\\/g, "/").trim();
+  // Reject absolute paths: starting with / or drive letters like C:/
+  if (norm.startsWith("/") || /^[a-zA-Z]:/.test(norm) || path.isAbsolute(filePath)) {
+    return true;
+  }
+  // Reject relative traversal: starting with .., containing /../, or ending with /..
+  if (norm === ".." || norm.startsWith("../") || norm.includes("/../") || norm.endsWith("/..")) {
+    return true;
+  }
+  // Normalized path should not traverse outside root
+  const resolved = path.normalize(filePath);
+  if (resolved.startsWith("..") || path.isAbsolute(resolved)) {
+    return true;
+  }
+  return false;
+}
+
+/**
+ * Enforces maximum snapshot retention limit by pruning older snapshots.
+ * Strictly filters with /^\d{8}_\d{6}_\d{3}$/ and ensures manifest.json exists.
+ */
+export async function rotateSnapshots(backupDir: string, maxSnapshots: number): Promise<void> {
   if (!fsSync.existsSync(backupDir)) return;
 
   const limit = Math.max(1, maxSnapshots);
   const entries = await fs.readdir(backupDir, { withFileTypes: true });
-  const snapshotDirs = entries
-    .filter((e) => e.isDirectory() && !e.name.startsWith("."))
-    .map((e) => e.name)
-    .sort()
-    .reverse(); // Newest first
+  const snapshotPattern = /^\d{8}_\d{6}_\d{3}$/;
+
+  const snapshotDirs: string[] = [];
+  for (const e of entries) {
+    if (e.isDirectory() && snapshotPattern.test(e.name)) {
+      const manifestPath = path.join(backupDir, e.name, "manifest.json");
+      if (fsSync.existsSync(manifestPath)) {
+        snapshotDirs.push(e.name);
+      }
+    }
+  }
+
+  snapshotDirs.sort().reverse(); // Newest first
 
   if (snapshotDirs.length > limit) {
     const toRemove = snapshotDirs.slice(limit);
@@ -385,6 +435,15 @@ export async function restoreSnapshot(
     throw new Error(`Invalid manifest.json in snapshot ${snapshotId}: ${err.message}`);
   }
 
+  // Prevent path traversal in manifest entries (reject entries starting with .. or / or C:\)
+  for (const mf of manifest.files) {
+    if (!mf || typeof mf.path !== "string" || isPathTraversal(mf.path)) {
+      throw new Error(
+        `Security violation: path traversal detected in manifest entry: ${mf?.path}`
+      );
+    }
+  }
+
   // PHASE 1: Prepare staging directory
   const stagingUid = crypto.randomUUID().replace(/-/g, "");
   const stagingDir = path.join(activeBackupRoot, `.staging_${stagingUid}`);
@@ -392,6 +451,7 @@ export async function restoreSnapshot(
 
   const safetyUid = crypto.randomUUID().replace(/-/g, "");
   const safetyDir = path.join(activeBackupRoot, `.safety_${safetyUid}`);
+  const stagedItemsMoved: string[] = [];
 
   try {
     // Copy snapshot contents to staging directory (excluding manifest.json)
@@ -462,6 +522,7 @@ export async function restoreSnapshot(
       const srcPath = path.join(stagingDir, entry.name);
       const destPath = path.join(buildDir, entry.name);
       await safeMove(srcPath, destPath);
+      stagedItemsMoved.push(destPath);
     }
 
     // Clean up temporary safety and staging directories
@@ -480,9 +541,20 @@ export async function restoreSnapshot(
       fileCount: count,
     };
   } catch (err: any) {
+    let rollbackRecoveryFailed = false;
+
     // Rollback atomic swap if safetyDir exists
     if (fsSync.existsSync(safetyDir)) {
       try {
+        // Clean up any partially copied stagedItems in buildDir before moving files back from safetyDir
+        for (const movedPath of stagedItemsMoved) {
+          try {
+            await removeSafeItem(movedPath);
+          } catch {
+            // Ignore failure to remove staged item in buildDir
+          }
+        }
+
         const savedEntries = await fs.readdir(safetyDir, { withFileTypes: true });
         for (const s of savedEntries) {
           const savedPath = path.join(safetyDir, s.name);
@@ -490,12 +562,20 @@ export async function restoreSnapshot(
           try {
             await safeMove(savedPath, restorePath);
           } catch {
-            // Ignore error during recovery move
+            rollbackRecoveryFailed = true;
           }
         }
-        await removeSafeItem(safetyDir);
+
+        // DO NOT delete safetyDir if recovery failed (preserve user's original source code!)
+        if (!rollbackRecoveryFailed) {
+          await removeSafeItem(safetyDir);
+        } else {
+          console.error(
+            `[CRITICAL] Rollback recovery failed! User source code preserved at: ${safetyDir}`
+          );
+        }
       } catch {
-        // Best-effort cleanup
+        rollbackRecoveryFailed = true;
       }
     }
 

@@ -292,19 +292,26 @@ export async function saveCaseStateAtomic(
   const casesDir = path.join(root, ".agents", "state", "cases");
 
   return await withFileLock(stateFile, async () => {
-    if (!force && expectedRevision > 0 && fsSync.existsSync(stateFile)) {
-      const diskRaw = await fs.readFile(stateFile, "utf8");
-      const diskState = JSON.parse(diskRaw);
-      if (diskState.revision && Number(diskState.revision) !== expectedRevision) {
-        throw new ConcurrencyConflictError(
-          `[ConcurrencyConflictException] active_case.json was modified by another process (Disk Rev: ${diskState.revision}, Expected Rev: ${expectedRevision}). Operation aborted to prevent data loss!`
-        );
+    let diskState: any = null;
+    if (fsSync.existsSync(stateFile)) {
+      try {
+        const diskRaw = await fs.readFile(stateFile, "utf8");
+        diskState = JSON.parse(diskRaw);
+        if (!force && expectedRevision > 0) {
+          if (diskState.revision && Number(diskState.revision) !== expectedRevision) {
+            throw new ConcurrencyConflictError(
+              `[ConcurrencyConflictException] active_case.json was modified by another process (Disk Rev: ${diskState.revision}, Expected Rev: ${expectedRevision}). Operation aborted to prevent data loss!`
+            );
+          }
+        }
+      } catch (err) {
+        if (err instanceof ConcurrencyConflictError) throw err;
       }
     }
 
     state.last_updated = new Date().toISOString();
     const currentRev = typeof state.revision === "number" ? state.revision : 1;
-    state.revision = currentRev + 1;
+    state.revision = Math.max(Number(diskState?.revision || 0), currentRev) + 1;
 
     const json = JSON.stringify(state, null, 2);
 
@@ -437,23 +444,27 @@ export async function getTargetAppInfo(
     const firstDir = subDirs[0];
     const fullDirPath = path.join(inputDir, firstDir.name);
 
-    // Recursively collect all files
-    const subFiles: Array<{ name: string; size: number }> = [];
+    // Recursively collect all files { relPath, sha256 }
+    const subFiles: Array<{ relPath: string; sha256: string }> = [];
     async function collect(dir: string): Promise<void> {
       const items = await fs.readdir(dir, { withFileTypes: true });
       for (const item of items) {
+        if (item.name.startsWith(".")) continue;
         const itemPath = path.join(dir, item.name);
         if (item.isDirectory()) {
           await collect(itemPath);
         } else if (item.isFile()) {
-          const s = await fs.stat(itemPath);
-          subFiles.push({ name: item.name, size: s.size });
+          if (item.name.toLowerCase() === "thumbs.db") continue;
+          const relPath = path.relative(fullDirPath, itemPath).replace(/\\/g, "/");
+          const sha = await getNormalizedFileHash(itemPath);
+          subFiles.push({ relPath, sha256: sha });
         }
       }
     }
     await collect(fullDirPath);
 
-    const combined = subFiles.map((f) => `${f.name}:${f.size}`).join(";");
+    subFiles.sort((a, b) => a.relPath.localeCompare(b.relPath));
+    const combined = subFiles.map((f) => `${f.relPath}:${f.sha256}`).join("\n");
     const hash = crypto
       .createHash("sha256")
       .update(Buffer.from(combined, "utf8"))
@@ -495,16 +506,75 @@ export async function archiveCurrentCaseAndReset(
   const caseManifest = path.join(caseFolder, "manifest.json");
   await writeUtf8NoBomAtomic(caseManifest, json);
 
+  // Initialize new case ID
+  const pad = (n: number) => String(n).padStart(2, "0");
+  const d = new Date();
+  const tsStr = `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}-${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}`;
+  const hexSuffix = crypto.randomBytes(2).toString("hex");
+  const newCaseId = `CASE-${tsStr}-${hexSuffix}`;
+
   const interviewStatePath = path.join(
     root,
     ".agents",
     "state",
     "interview_state.json"
   );
-  if (fsSync.existsSync(interviewStatePath)) {
-    const destInterview = path.join(caseFolder, "interview_state.json");
-    await fs.copyFile(interviewStatePath, destInterview);
-  }
+
+  // Wrap the copy and reset of interview_state.json with withFileLock(interviewStatePath)
+  await withFileLock(interviewStatePath, async () => {
+    if (fsSync.existsSync(interviewStatePath)) {
+      const destInterview = path.join(caseFolder, "interview_state.json");
+      await fs.copyFile(interviewStatePath, destInterview);
+    }
+
+    const nowIso = new Date().toISOString();
+    const cleanInterviewState = {
+      schema_version: 1,
+      case_id: newCaseId,
+      session: {
+        session_id: `INT-SESSION-${newCaseId}`,
+        status: "NOT_STARTED",
+        current_goal: null,
+        current_stage: "STAGE_03_PRODUCT_DEFINITION",
+        active_domain: null,
+        design_mode: null,
+        max_clarification_per_goal: 2,
+        max_total_questions: 15,
+        created_at: nowIso,
+        updated_at: nowIso,
+      },
+      goals: [],
+      questions: [],
+      answers: [],
+      decisions: [],
+      assumptions: [],
+      conflicts: [],
+      unknowns: [],
+      scope_changes: [],
+      sufficiency_evaluation: {
+        verdict: "NEEDS_INPUT",
+        evaluated_at: nowIso,
+        goal_evaluations: [],
+        blocking_reasons: [
+          "No goals have been recorded in the interview state.",
+        ],
+        deferred_decisions: [],
+        assumptions_summary: {
+          total: 0,
+          benign: 0,
+          critical: 0,
+          pending_approval: 0,
+        },
+        summary:
+          "Chưa có mục tiêu nào được ghi nhận. Hãy bắt đầu bằng cách nạp hồ sơ và phân tích mục tiêu.",
+      },
+      last_updated: nowIso,
+    };
+    await writeUtf8NoBomAtomic(
+      interviewStatePath,
+      JSON.stringify(cleanInterviewState, null, 2)
+    );
+  });
 
   const archiveInfo = {
     archived_at: new Date().toISOString(),
@@ -527,13 +597,6 @@ export async function archiveCurrentCaseAndReset(
     details: `Archived case ${oldCaseId} to cases/${oldCaseId}/. Reason: ${reason}`,
     evidence_sha256: newFingerprint,
   });
-
-  // Initialize new case
-  const pad = (n: number) => String(n).padStart(2, "0");
-  const d = new Date();
-  const tsStr = `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}-${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}`;
-  const hexSuffix = crypto.randomBytes(2).toString("hex");
-  const newCaseId = `CASE-${tsStr}-${hexSuffix}`;
 
   state.case_id = newCaseId;
   state.target_name = targetApp.name;
@@ -570,55 +633,6 @@ export async function archiveCurrentCaseAndReset(
 
   await saveCaseStateAtomic(root, state, -1, true);
 
-  // Write a FRESH, clean interview_state.json with newCaseId, status: "NOT_STARTED", and empty arrays into .agents/state/interview_state.json
-  const nowIso = new Date().toISOString();
-  const cleanInterviewState = {
-    schema_version: 1,
-    case_id: newCaseId,
-    session: {
-      session_id: `INT-SESSION-${newCaseId}`,
-      status: "NOT_STARTED",
-      current_goal: null,
-      current_stage: "STAGE_03_PRODUCT_DEFINITION",
-      active_domain: null,
-      design_mode: null,
-      max_clarification_per_goal: 2,
-      max_total_questions: 15,
-      created_at: nowIso,
-      updated_at: nowIso,
-    },
-    goals: [],
-    questions: [],
-    answers: [],
-    decisions: [],
-    assumptions: [],
-    conflicts: [],
-    unknowns: [],
-    scope_changes: [],
-    sufficiency_evaluation: {
-      verdict: "NEEDS_INPUT",
-      evaluated_at: nowIso,
-      goal_evaluations: [],
-      blocking_reasons: [
-        "No goals have been recorded in the interview state.",
-      ],
-      deferred_decisions: [],
-      assumptions_summary: {
-        total: 0,
-        benign: 0,
-        critical: 0,
-        pending_approval: 0,
-      },
-      summary:
-        "Chưa có mục tiêu nào được ghi nhận. Hãy bắt đầu bằng cách nạp hồ sơ và phân tích mục tiêu.",
-    },
-    last_updated: nowIso,
-  };
-  await writeUtf8NoBomAtomic(
-    interviewStatePath,
-    JSON.stringify(cleanInterviewState, null, 2)
-  );
-
   await appendEventAtomic(root, {
     action: "CASE_INITIALIZED",
     actor: "coordinator",
@@ -629,6 +643,76 @@ export async function archiveCurrentCaseAndReset(
   });
 
   return state;
+}
+
+/**
+ * Invalidates subsequent gates according to CASCADE_MAP.
+ * Only gates that are COMPLETED (or in CLEARED_STATES) or IN_PROGRESS are invalidated.
+ * Gates that are NOT_STARTED are left untouched.
+ */
+export function invalidateSubsequentGates(
+  state: ActiveCaseState,
+  fromGate: string,
+  reason: string = "Cascade Invalidation",
+  approver: string = "coordinator"
+): string[] {
+  const resolvedGate = resolveGateName(fromGate) || fromGate;
+  const rule = CASCADE_MAP[resolvedGate];
+  if (!rule) {
+    throw new Error(
+      `No cascade invalidation rule found for gate: ${resolvedGate}`
+    );
+  }
+
+  const now = new Date().toISOString();
+  const invalidatedGates: string[] = [];
+
+  for (const rg of rule.revoke_gates) {
+    const currentGateObj = state.gates[rg];
+    const currentState =
+      typeof currentGateObj?.state === "string"
+        ? currentGateObj.state
+        : currentGateObj === true
+          ? "PASS"
+          : "NOT_STARTED";
+
+    // Only invalidate gates that are COMPLETED (or in CLEARED_STATES) or IN_PROGRESS
+    const isCompletedOrInProgress =
+      currentState === "IN_PROGRESS" ||
+      currentState === "COMPLETED" ||
+      CLEARED_STATES.has(currentState);
+
+    // The gate being rejected itself is always invalidated, while subsequent gates
+    // are only invalidated if they are COMPLETED or IN_PROGRESS.
+    if (rg === resolvedGate || (isCompletedOrInProgress && currentState !== "NOT_STARTED")) {
+      state.gates[rg] = {
+        state: "INVALIDATED",
+        evidence: [],
+        evidence_sha256: null,
+        approved_by: approver,
+        approved_at: now,
+        revoked_reason: `Cascade Invalidation from rejecting gate ${resolvedGate}: ${reason}`,
+        waived_reason: null,
+        skip_reason: null,
+      };
+      invalidatedGates.push(rg);
+    }
+  }
+
+  if (state.workflow) {
+    if (!Array.isArray(state.workflow.invalidation_history)) {
+      state.workflow.invalidation_history = [];
+    }
+    state.workflow.invalidation_history.push({
+      timestamp: now,
+      triggered_by_gate: resolvedGate,
+      reason,
+      approver,
+      invalidated_gates: invalidatedGates,
+    });
+  }
+
+  return invalidatedGates;
 }
 
 /**
@@ -774,17 +858,18 @@ export async function runGateAction(
 
           if (gateObj.evidence_hashes && typeof gateObj.evidence_hashes === "object") {
             for (const [evRel, expectedHash] of Object.entries(gateObj.evidence_hashes)) {
-              const evFilePath = path.isAbsolute(evRel) ? evRel : path.join(repoRoot, evRel);
+              const normEvRel = evRel.replace(/\\/g, "/");
+              const evFilePath = path.isAbsolute(normEvRel) ? normEvRel : path.join(repoRoot, normEvRel);
               if (fsSync.existsSync(evFilePath)) {
                 const actualHash = await getNormalizedFileHash(evFilePath);
                 if (actualHash !== expectedHash) {
                   errors.push(
-                    `Gate ${g} evidence SHA-256 mismatch for ${evRel}! Expected: ${expectedHash}, Actual: ${actualHash}`
+                    `Gate ${g} evidence SHA-256 mismatch for ${normEvRel}! Expected: ${expectedHash}, Actual: ${actualHash}`
                   );
                 }
               } else {
                 errors.push(
-                  `Gate ${g} evidence file not found for hash verification: ${evRel}`
+                  `Gate ${g} evidence file not found for hash verification: ${normEvRel}`
                 );
               }
             }
@@ -792,8 +877,29 @@ export async function runGateAction(
 
           // Special check for gate_02: APP_FLOW_SPEC.md & Evidence Anchors
           if (g === "gate_02_audit_passed") {
-            const appFlowRel = "03_KET_QUA_KIEM_TRA/APP_FLOW_SPEC.md";
-            const appFlowPath = path.join(repoRoot, appFlowRel);
+            let appFlowRel = "03_KET_QUA_KIEM_TRA/APP_FLOW_SPEC.md";
+            if (gateObj.evidence && Array.isArray(gateObj.evidence) && gateObj.evidence.length > 0) {
+              const customRel =
+                gateObj.evidence.find(
+                  (ev: string) =>
+                    ev.toLowerCase().includes("flow") ||
+                    ev.toLowerCase().includes("spec")
+                ) ||
+                (fsSync.existsSync(path.join(repoRoot, "03_KET_QUA_KIEM_TRA", "APP_FLOW_SPEC.md"))
+                  ? "03_KET_QUA_KIEM_TRA/APP_FLOW_SPEC.md"
+                  : gateObj.evidence[0]);
+              if (customRel) {
+                appFlowRel = customRel.replace(/\\/g, "/");
+              }
+            } else if (typeof gateObj.flow_spec === "string" && gateObj.flow_spec) {
+              appFlowRel = gateObj.flow_spec.replace(/\\/g, "/");
+            } else if (typeof gateObj.evidence_path === "string" && gateObj.evidence_path) {
+              appFlowRel = gateObj.evidence_path.replace(/\\/g, "/");
+            }
+
+            const appFlowPath = path.isAbsolute(appFlowRel)
+              ? appFlowRel
+              : path.join(repoRoot, appFlowRel);
             if (!fsSync.existsSync(appFlowPath)) {
               errors.push(
                 `Gate gate_02_audit_passed: Missing flow spec file: ${appFlowRel}`
@@ -945,9 +1051,10 @@ export async function runGateAction(
 
       const evidenceHashes: Record<string, string> = {};
       for (const item of evList) {
+        const itemNorm = item.replace(/\\/g, "/");
         const itemPath = path.isAbsolute(item) ? item : path.join(repoRoot, item);
         if (fsSync.existsSync(itemPath)) {
-          evidenceHashes[item] = await getNormalizedFileHash(itemPath);
+          evidenceHashes[itemNorm] = await getNormalizedFileHash(itemPath);
         }
       }
 
@@ -1171,19 +1278,12 @@ export async function runGateAction(
         );
       }
 
-      const now = new Date().toISOString();
-      for (const rg of rule.revoke_gates) {
-        state.gates[rg] = {
-          state: "INVALIDATED",
-          evidence: [],
-          evidence_sha256: null,
-          approved_by: approver,
-          approved_at: now,
-          revoked_reason: `Cascade Invalidation from rejecting gate ${resolvedGate}: ${rejectReason}`,
-          waived_reason: null,
-          skip_reason: null,
-        };
-      }
+      const revokedGates = invalidateSubsequentGates(
+        state,
+        resolvedGate,
+        rejectReason,
+        approver
+      );
 
       state.current_phase = rule.revert_phase;
       state.current_step = rule.revert_step;
@@ -1196,7 +1296,7 @@ export async function runGateAction(
         actor: approver,
         phase: rule.revert_phase,
         step: rule.revert_step,
-        details: `Rejected ${resolvedGate} (Round ${currentRounds}/${maxRounds}). Revoked: ${rule.revoke_gates.join(", ")}. Reason: ${rejectReason}`,
+        details: `Rejected ${resolvedGate} (Round ${currentRounds}/${maxRounds}). Revoked: ${revokedGates.join(", ")}. Reason: ${rejectReason}`,
         evidence_sha256: null,
       });
 

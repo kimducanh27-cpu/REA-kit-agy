@@ -13,6 +13,7 @@ import {
   recordAssumption,
   evaluateSufficiency,
   matchesGoalId,
+  normalizePriority,
   escapeRegExp,
 } from "../src/core/interview.js";
 
@@ -56,9 +57,11 @@ describe("Work Stream 3: Interview Engine Hardening Fixes", () => {
     expect(matchesGoalId("Resolves G-10 requirement", "G-1")).toBe(false);
     expect(matchesGoalId("Resolves G-11 requirement", "G-1")).toBe(false);
     expect(matchesGoalId("Resolves G-100 requirement", "G-1")).toBe(false);
+    expect(matchesGoalId("Resolves G-1-FE requirement", "G-1")).toBe(false);
+    expect(matchesGoalId("Prefix-G-1", "G-1")).toBe(false);
+    expect(matchesGoalId("PrefixAG-1", "G-1")).toBe(false);
     expect(matchesGoalId("Resolves G-1 and G-2", "G-1")).toBe(true);
     expect(matchesGoalId("G-1: Implement login", "G-1")).toBe(true);
-    expect(matchesGoalId("PrefixAG-1", "G-1")).toBe(false);
 
     // Record two goals: G-1 and G-10
     await recordGoal({
@@ -319,5 +322,103 @@ describe("Work Stream 3: Interview Engine Hardening Fixes", () => {
     const state = await getInterviewState(testDir);
     const goalIds = state.goals.map((g) => g.goal_id).sort();
     expect(goalIds).toEqual(["G-A", "G-B", "G-C", "G-D", "G-E"]);
+  });
+
+  it("05 - normalizePriority: Normalizes CRITICAL, HIGH, MEDIUM, LOW to P0_CRITICAL, etc.", () => {
+    expect(normalizePriority("CRITICAL")).toBe("P0_CRITICAL");
+    expect(normalizePriority("critical")).toBe("P0_CRITICAL");
+    expect(normalizePriority("P0")).toBe("P0_CRITICAL");
+    expect(normalizePriority("P0_CRITICAL")).toBe("P0_CRITICAL");
+
+    expect(normalizePriority("HIGH")).toBe("P1_HIGH");
+    expect(normalizePriority("high")).toBe("P1_HIGH");
+    expect(normalizePriority("P1")).toBe("P1_HIGH");
+    expect(normalizePriority("P1_HIGH")).toBe("P1_HIGH");
+
+    expect(normalizePriority("MEDIUM")).toBe("P2_MEDIUM");
+    expect(normalizePriority("medium")).toBe("P2_MEDIUM");
+    expect(normalizePriority("P2")).toBe("P2_MEDIUM");
+    expect(normalizePriority("P2_MEDIUM")).toBe("P2_MEDIUM");
+
+    expect(normalizePriority("LOW")).toBe("P3_LOW");
+    expect(normalizePriority("low")).toBe("P3_LOW");
+    expect(normalizePriority("P3")).toBe("P3_LOW");
+    expect(normalizePriority("P3_LOW")).toBe("P3_LOW");
+    expect(normalizePriority("BENIGN")).toBe("P3_LOW");
+  });
+
+  it("06 - evaluateSufficiency: Approved explicit decisions take precedence over rejected auto-delegate assumptions", async () => {
+    await initInterview({ repoRoot: testDir, force: true });
+
+    await recordGoal({
+      repoRoot: testDir,
+      goalId: "G-1",
+      description: "Database Engine Selection",
+      priority: "P1_HIGH",
+    });
+
+    // Create a rejected auto-delegate assumption for G-1
+    await recordAssumption({
+      repoRoot: testDir,
+      assumptionId: "ASM-AUTODELEGATE-G-1",
+      description: "Auto-delegate assumption for G-1",
+      rationale: "Default tech choice",
+      approvalStatus: "REJECTED",
+      downstreamDeps: ["G-1"],
+    });
+
+    // Without explicit approved decision, G-1 is blocked
+    const evalBlocked = await evaluateSufficiency(testDir);
+    const evalG1Before = evalBlocked.goal_evaluations.find((g) => g.goal_id === "G-1");
+    expect(evalG1Before?.status).toBe("BLOCKED");
+
+    // Now record an APPROVED explicit decision for G-1
+    await recordDecision({
+      repoRoot: testDir,
+      decisionId: "DEC-DB-01",
+      description: "Use SQLite Room DB for G-1",
+      selectedOption: "Room",
+      approvalStatus: "APPROVED",
+      relatedRequirements: ["G-1"],
+    });
+
+    // Approved explicit decision MUST take precedence and resolve the goal
+    const evalApproved = await evaluateSufficiency(testDir);
+    const evalG1After = evalApproved.goal_evaluations.find((g) => g.goal_id === "G-1");
+    expect(evalG1After?.status).toBe("RESOLVED");
+    expect(evalG1After?.decision_ids).toContain("DEC-DB-01");
+  });
+
+  it("07 - evaluateSufficiency: Deferred decision on P0_CRITICAL / One-Way Door goal sets goal to BLOCKED", async () => {
+    await initInterview({ repoRoot: testDir, force: true });
+
+    // Record P0_CRITICAL goal
+    await recordGoal({
+      repoRoot: testDir,
+      goalId: "G-AUTH",
+      description: "Core Auth Security Architecture",
+      priority: "CRITICAL", // normalizes to P0_CRITICAL
+    });
+
+    // Record a DEFERRED decision for this critical goal
+    await recordDecision({
+      repoRoot: testDir,
+      decisionId: "DEC-AUTH-01",
+      description: "OAuth2 vs Passkey for G-AUTH",
+      selectedOption: "None",
+      approvalStatus: "DEFERRED",
+      relatedRequirements: ["G-AUTH"],
+    });
+
+    const evalResult = await evaluateSufficiency(testDir);
+    const evalGoal = evalResult.goal_evaluations.find((g) => g.goal_id === "G-AUTH");
+
+    expect(evalGoal?.status).toBe("BLOCKED");
+    expect(evalResult.verdict).toBe("BLOCKED");
+    expect(
+      evalGoal?.blocking_reasons.some(
+        (r) => r.includes("P0_CRITICAL") && r.includes("DEFERRED")
+      )
+    ).toBe(true);
   });
 });

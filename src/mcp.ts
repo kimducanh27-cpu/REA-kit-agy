@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import {
@@ -19,17 +20,30 @@ import {
   verifyPacket,
 } from "./core/context.js";
 import { runInterviewAction } from "./core/interview.js";
+import { runAdrAction } from "./core/adr.js";
 
-const wsIndex = process.argv.indexOf("--workspace");
-const defaultWorkspaceRoot =
-  wsIndex !== -1 && process.argv[wsIndex + 1]
-    ? path.resolve(process.argv[wsIndex + 1])
-    : undefined;
+function parseWorkspaceArg(): string | undefined {
+  for (let i = 0; i < process.argv.length; i++) {
+    const arg = process.argv[i];
+    if (arg === "-w" || arg === "--workspace") {
+      if (i + 1 < process.argv.length && !process.argv[i + 1].startsWith("-")) {
+        return path.resolve(process.argv[i + 1]);
+      }
+    } else if (arg.startsWith("--workspace=")) {
+      return path.resolve(arg.slice("--workspace=".length));
+    } else if (arg.startsWith("-w=")) {
+      return path.resolve(arg.slice("-w=".length));
+    }
+  }
+  return undefined;
+}
+
+const defaultWorkspaceRoot = parseWorkspaceArg();
 
 const server = new Server(
   {
     name: "rea-kit-agy",
-    version: "2.0.0",
+    version: "2.0.2",
   },
   {
     capabilities: {
@@ -107,6 +121,25 @@ const interviewInputSchema = {
     supersede: { type: "boolean", description: "Allow superseding question / topic" },
     allowRepeat: { type: "boolean", description: "Allow repeating identical question" },
     spontaneous: { type: "boolean", description: "Record unsolicited spontaneous answer" },
+    repoRoot: { type: "string", description: "Repository root directory (optional)" },
+  },
+  required: ["action"],
+};
+
+const adrInputSchema = {
+  type: "object" as const,
+  properties: {
+    action: {
+      type: "string",
+      enum: ["list", "show", "validate", "status", "new", "transition", "help"],
+      description: "ADR action to execute",
+    },
+    id: { type: "string", description: "ADR ID or title parameter" },
+    title: { type: "string", description: "ADR title (for new action)" },
+    status: { type: "string", description: "Target status (for transition action)" },
+    targetStatus: { type: "string", description: "Alias for status in transition action" },
+    supersededBy: { type: "string", description: "Superseding ADR ID" },
+    reason: { type: "string", description: "Transition reason" },
     repoRoot: { type: "string", description: "Repository root directory (optional)" },
   },
   required: ["action"],
@@ -335,9 +368,68 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
         },
       },
       {
+        name: "kit_context_inspect",
+        description: "Inspect a generated context plan and breakdown layers",
+        inputSchema: {
+          type: "object",
+          properties: {
+            planId: {
+              type: "string",
+              description: "Plan ID to inspect",
+            },
+            repoRoot: {
+              type: "string",
+              description: "Repository root directory (optional)",
+            },
+          },
+          required: ["planId"],
+        },
+      },
+      {
+        name: "kit_context_pack",
+        description: "Pack context into L0-L5 layers with prefix cache alignment",
+        inputSchema: {
+          type: "object",
+          properties: {
+            planId: {
+              type: "string",
+              description: "Plan ID to pack",
+            },
+            repoRoot: {
+              type: "string",
+              description: "Repository root directory (optional)",
+            },
+          },
+          required: ["planId"],
+        },
+      },
+      {
+        name: "kit_context_verify",
+        description: "Verify context packet compliance and issue receipt",
+        inputSchema: {
+          type: "object",
+          properties: {
+            packId: {
+              type: "string",
+              description: "Packet ID to verify",
+            },
+            repoRoot: {
+              type: "string",
+              description: "Repository root directory (optional)",
+            },
+          },
+          required: ["packId"],
+        },
+      },
+      {
         name: "kit_interview",
         description: "Adaptive Interview Engine for Requirements Elicitation & Domain Intelligence",
         inputSchema: interviewInputSchema,
+      },
+      {
+        name: "kit_adr",
+        description: "Architecture Decision Record (ADR) manager complying with MADR standard",
+        inputSchema: adrInputSchema,
       },
       // Backwards compatibility tools
       {
@@ -457,6 +549,21 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
         },
       },
       {
+        name: "context_inspect",
+        description: "Alias for kit_context_inspect - Inspect a generated context plan",
+        inputSchema: {
+          type: "object",
+          properties: {
+            planId: { type: "string" },
+            repoRoot: {
+              type: "string",
+              description: "Repository root directory (optional)",
+            },
+          },
+          required: ["planId"],
+        },
+      },
+      {
         name: "context_pack",
         description: "Pack context into L0-L5 layers with prefix cache alignment",
         inputSchema: {
@@ -490,6 +597,11 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
         name: "interview_action",
         description: "Alias for kit_interview",
         inputSchema: interviewInputSchema,
+      },
+      {
+        name: "adr_action",
+        description: "Alias for kit_adr - Architecture Decision Record (ADR) manager",
+        inputSchema: adrInputSchema,
       },
     ],
   };
@@ -663,6 +775,23 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         };
       }
 
+      case "kit_context_inspect":
+      case "context_inspect": {
+        const result = await inspectPlan({
+          ...(args as any),
+          repoRoot: (args as any)?.repoRoot || defaultWorkspaceRoot,
+        });
+        return {
+          content: [
+            {
+              type: "text",
+              text: JSON.stringify(result, null, 2),
+            },
+          ],
+        };
+      }
+
+      case "kit_context_pack":
       case "context_pack": {
         const result = await packContext({
           ...(args as any),
@@ -678,6 +807,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         };
       }
 
+      case "kit_context_verify":
       case "context_verify": {
         const result = await verifyPacket({
           ...(args as any),
@@ -709,6 +839,23 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         };
       }
 
+      case "kit_adr":
+      case "adr_action": {
+        const action = (args as any)?.action || "list";
+        const result = await runAdrAction(action, {
+          ...(args as any),
+          repoRoot: (args as any)?.repoRoot || defaultWorkspaceRoot,
+        });
+        return {
+          content: [
+            {
+              type: "text",
+              text: typeof result === "string" ? result : JSON.stringify(result, null, 2),
+            },
+          ],
+        };
+      }
+
       default:
         throw new Error(`Unknown tool name: ${name}`);
     }
@@ -726,6 +873,10 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 });
 
 export async function startMcpServer() {
+  console.log = (...args: any[]) => console.error(...args);
+  console.info = (...args: any[]) => console.error(...args);
+  console.debug = (...args: any[]) => console.error(...args);
+
   const transport = new StdioServerTransport();
   await server.connect(transport);
 }

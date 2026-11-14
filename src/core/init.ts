@@ -270,7 +270,7 @@ export async function initWorkspace(options: InitWorkspaceOptions = {}): Promise
   // 3. Initialize events.jsonl with exactly 1 line (EVT-0000, WORKSPACE_INIT)
   const initialEvent = {
     event_id: "EVT-0000",
-    timestamp: "2026-11-14T08:00:00+07:00",
+    timestamp: new Date().toISOString(),
     case_id: "CASE-INITIAL",
     actor: "system",
     action: "WORKSPACE_INIT",

@@ -2,12 +2,12 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import crypto from "node:crypto";
 
-const STALE_LOCK_TIMEOUT_MS = 10_000;
-const MAX_LOCK_RETRIES = 5;
+export const STALE_LOCK_TIMEOUT_MS = 10_000;
+export const MAX_LOCK_RETRIES = 50;
 
 /**
  * Executes an async function while holding an exclusive file lock.
- * Employs retry backoff (5 retries, 50-200ms) and automatically clears stale locks (>10s).
+ * Employs retry backoff (50 retries, 100-200ms) and automatically clears stale locks (>10s).
  */
 export async function withFileLock<T>(
   filePath: string,
@@ -63,12 +63,10 @@ export async function withFileLock<T>(
         // Check PID liveness before clearing stale lock
         const isStale = !isPidAlive || age > STALE_LOCK_TIMEOUT_MS;
         if (isStale) {
-          if (!isPidAlive || lockPid === null) {
-            try {
-              await fs.unlink(lockPath);
-            } catch {
-              // Unlink may race with another process; ignore error
-            }
+          try {
+            await fs.unlink(lockPath);
+          } catch {
+            // Unlink may race with another process; ignore error
           }
         }
       } catch {
@@ -81,8 +79,8 @@ export async function withFileLock<T>(
         );
       }
 
-      // Backoff jitter between 50ms and 200ms
-      const delay = Math.floor(50 + Math.random() * 150);
+      // Backoff jitter between 100ms and 200ms
+      const delay = Math.floor(100 + Math.random() * 100);
       await new Promise((resolve) => setTimeout(resolve, delay));
     }
   }
@@ -110,6 +108,7 @@ export async function withFileLock<T>(
 
 /**
  * Writes content to targetPath atomically via a temporary file without UTF-8 BOM.
+ * Includes 5 retries with 30ms backoff on EBUSY / EPERM for Windows indexer resilience.
  */
 export async function writeUtf8NoBomAtomic(
   targetPath: string,
@@ -125,7 +124,21 @@ export async function writeUtf8NoBomAtomic(
   try {
     // Write buffer without BOM explicitly
     await fs.writeFile(tempPath, Buffer.from(cleanContent, "utf8"));
-    await fs.rename(tempPath, targetPath);
+
+    const MAX_RENAME_RETRIES = 5;
+    for (let attempt = 0; attempt <= MAX_RENAME_RETRIES; attempt++) {
+      try {
+        await fs.rename(tempPath, targetPath);
+        break;
+      } catch (rErr: any) {
+        const isLockError = rErr.code === "EBUSY" || rErr.code === "EPERM";
+        if (isLockError && attempt < MAX_RENAME_RETRIES) {
+          await new Promise((resolve) => setTimeout(resolve, 30));
+        } else {
+          throw rErr;
+        }
+      }
+    }
   } catch (err) {
     try {
       await fs.unlink(tempPath);

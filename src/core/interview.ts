@@ -269,8 +269,34 @@ export function escapeRegExp(str: string): string {
 
 export function matchesGoalId(text: string | undefined | null, gId: string): boolean {
   if (!text) return false;
-  const regex = new RegExp(`\\b${escapeRegExp(gId)}\\b`);
+  const regex = new RegExp(`(?<![a-zA-Z0-9_-])${escapeRegExp(gId)}(?![a-zA-Z0-9_-])`);
   return regex.test(text);
+}
+
+export function normalizePriority(p?: string | null): string {
+  if (!p) return "P1_HIGH";
+  const up = p.trim().toUpperCase();
+  switch (up) {
+    case "CRITICAL":
+    case "P0":
+    case "P0_CRITICAL":
+      return "P0_CRITICAL";
+    case "HIGH":
+    case "P1":
+    case "P1_HIGH":
+      return "P1_HIGH";
+    case "MEDIUM":
+    case "P2":
+    case "P2_MEDIUM":
+      return "P2_MEDIUM";
+    case "LOW":
+    case "P3":
+    case "P3_LOW":
+    case "BENIGN":
+      return "P3_LOW";
+    default:
+      return up;
+  }
 }
 
 export async function getInterviewState(repoRoot: string = findRepoRoot()): Promise<InterviewState> {
@@ -531,7 +557,7 @@ export async function recordGoal(options: RecordGoalOptions): Promise<Goal> {
     let goal: Goal;
     if (existing) {
       existing.description = options.description;
-      if (options.priority) existing.priority = options.priority;
+      if (options.priority) existing.priority = normalizePriority(options.priority);
       if (options.relatedRequirements) {
         existing.related_requirements = cleanArray(options.relatedRequirements);
       }
@@ -541,7 +567,7 @@ export async function recordGoal(options: RecordGoalOptions): Promise<Goal> {
         goal_id: options.goalId,
         description: options.description,
         category: options.domain || options.category || "GENERAL",
-        priority: options.priority || "P1_HIGH",
+        priority: normalizePriority(options.priority || "P1_HIGH"),
         status: "ACTIVE",
         related_requirements: cleanArray(options.relatedRequirements),
       };
@@ -1221,20 +1247,21 @@ export async function evaluateSufficiency(repoRoot: string = findRepoRoot()): Pr
           (q) => !q.question_id.startsWith("SPONTANEOUS-") && (q.related_goal_ids || []).includes(gId)
         );
         const clarificationLimitReached = goalQuestions.length >= maxClarification;
+        const normalizedGoalPrio = normalizePriority(g.priority);
         const isOneWayDoor =
-          g.priority === "P0_CRITICAL" || matchingAssumptions.some((a) => a.risk_level === "CRITICAL");
+          normalizedGoalPrio === "P0_CRITICAL" || matchingAssumptions.some((a) => a.risk_level === "CRITICAL");
 
         const autoAsmId = `ASM-AUTODELEGATE-${gId}`;
         const existingAuto = state.assumptions.find((a) => a.assumption_id === autoAsmId);
 
-        if (rejectedDecs.length > 0) {
+        if (approvedDecs.length > 0) {
+          gStatus = "RESOLVED";
+        } else if (rejectedDecs.length > 0) {
           gBlockers.push(`Goal ${gId} is linked to REJECTED decision ${rejectedDecs[0].decision_id}.`);
           gStatus = "BLOCKED";
         } else if (existingAuto && (existingAuto.approval_status === "REJECTED" || existingAuto.status === "INVALIDATED")) {
           gBlockers.push(`Goal ${gId} auto-delegate assumption ${existingAuto.assumption_id} was rejected or invalidated.`);
           gStatus = "BLOCKED";
-        } else if (approvedDecs.length > 0) {
-          gStatus = "RESOLVED";
         } else if (approvedAssumptions.length > 0) {
           gStatus = "ASSUMED_WITH_APPROVAL";
         } else if (existingAuto) {
@@ -1273,7 +1300,14 @@ export async function evaluateSufficiency(repoRoot: string = findRepoRoot()): Pr
           gBlockers.push(`Goal ${gId} decision ${proposedDecs[0].decision_id} remains PROPOSED (requires user approval).`);
           gStatus = "NEEDS_INPUT";
         } else if (deferredDecs.length > 0) {
-          gStatus = "DEFERRED";
+          if (isOneWayDoor) {
+            gBlockers.push(
+              `Goal ${gId} is P0_CRITICAL / One-Way Door and cannot be resolved with DEFERRED decision ${deferredDecs[0].decision_id} without explicit approval.`
+            );
+            gStatus = "BLOCKED";
+          } else {
+            gStatus = "DEFERRED";
+          }
         } else {
           gBlockers.push(`Goal ${gId} has no resolving decision recorded.`);
           gStatus = "NEEDS_INPUT";

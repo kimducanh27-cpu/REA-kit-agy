@@ -43,6 +43,7 @@ export interface CompileTokensResult {
  * Extracts a normalized string value from W3C DTCG 2025.10 token value representations.
  * Handles:
  * - DTCG Color objects with .hex (e.g. { hex: "#2563eb", colorSpace: "srgb" })
+ * - DTCG Color objects with pure components array (e.g. { colorSpace: "srgb", components: [0.2, 0.4, 0.6] })
  * - DTCG Dimension / Duration objects with .value and .unit (e.g. { value: 12, unit: "px" })
  * - Raw numbers (e.g. 1.5 -> "1.5")
  * - Raw strings (e.g. "#ffffff" -> "#ffffff", "6px" -> "6px")
@@ -56,6 +57,24 @@ export function extractDtcgValue(raw: unknown): string {
     // If object with .hex, return .hex
     if (typeof obj.hex === "string") {
       return obj.hex;
+    }
+    // DTCG 2025.10 Color Object with components array ([r, g, b, a?])
+    if (Array.isArray(obj.components) && obj.components.length >= 3) {
+      const toHex = (n: number) => {
+        const clamped = Math.max(0, Math.min(255, Math.round(Number(n) * 255)));
+        return clamped.toString(16).padStart(2, "0");
+      };
+      const r = toHex(obj.components[0]);
+      const g = toHex(obj.components[1]);
+      const b = toHex(obj.components[2]);
+      if (obj.components.length >= 4 && obj.components[3] !== undefined) {
+        const a = toHex(obj.components[3]);
+        return `#${r}${g}${b}${a}`;
+      } else if (obj.alpha !== undefined && obj.alpha !== null) {
+        const a = toHex(obj.alpha);
+        return `#${r}${g}${b}${a}`;
+      }
+      return `#${r}${g}${b}`;
     }
     // If object with .value and .unit, return `${raw.value}${raw.unit}`
     if (obj.value !== undefined && obj.unit !== undefined) {
@@ -76,7 +95,8 @@ export function extractDtcgValue(raw: unknown): string {
 export function resolveTokenRef(
   refStr: unknown,
   rootTokens: any,
-  maxHops = 10
+  maxHops = 10,
+  visited: Set<string> = new Set<string>()
 ): string {
   if (typeof refStr === "object" && refStr !== null) {
     const extracted = extractDtcgValue(refStr);
@@ -92,9 +112,17 @@ export function resolveTokenRef(
   while (hop < maxHops) {
     const match = currentStr.match(/^\{([^}]+)\}$/);
     if (!match) break;
+
+    const refKey = match[1].trim();
+    if (visited.has(refKey)) {
+      throw new Error(
+        `Circular token dependency detected: ${[...visited, refKey].join(" -> ")}`
+      );
+    }
+    visited.add(refKey);
     hop++;
 
-    const pathParts = match[1].split(".");
+    const pathParts = refKey.split(".");
     let curr: any = rootTokens;
 
     for (const part of pathParts) {
@@ -125,36 +153,74 @@ export function resolveTokenRef(
   return extractDtcgValue(currentStr);
 }
 
+export const resolveAlias = resolveTokenRef;
+
 export function toComposeColorHex(hex: string): string {
   const clean = hex.trim().replace(/^#/, "");
   if (clean.length === 6) {
     return `0xFF${clean.toUpperCase()}`;
   } else if (clean.length === 8) {
-    return `0x${clean.toUpperCase()}`;
+    const rr = clean.slice(0, 2).toUpperCase();
+    const gg = clean.slice(2, 4).toUpperCase();
+    const bb = clean.slice(4, 6).toUpperCase();
+    const aa = clean.slice(6, 8).toUpperCase();
+    return `0x${aa}${rr}${gg}${bb}`;
   } else if (clean.length === 3) {
     const [r, g, b] = clean;
     return `0xFF${(r + r + g + g + b + b).toUpperCase()}`;
+  } else if (clean.length === 4) {
+    const [r, g, b, a] = clean;
+    return `0x${(a + a + r + r + g + g + b + b).toUpperCase()}`;
   }
   return "0xFF000000";
 }
 
 export function toXmlColorHex(hex: string): string {
   const clean = hex.trim().replace(/^#/, "");
-  if (clean.length === 6 || clean.length === 8) {
+  if (clean.length === 6) {
     return `#${clean.toUpperCase()}`;
+  } else if (clean.length === 8) {
+    const rr = clean.slice(0, 2).toUpperCase();
+    const gg = clean.slice(2, 4).toUpperCase();
+    const bb = clean.slice(4, 6).toUpperCase();
+    const aa = clean.slice(6, 8).toUpperCase();
+    return `#${aa}${rr}${gg}${bb}`;
   } else if (clean.length === 3) {
     const [r, g, b] = clean;
     return `#${r}${r}${g}${g}${b}${b}`.toUpperCase();
+  } else if (clean.length === 4) {
+    const [r, g, b, a] = clean;
+    return `#${(a + a + r + r + g + g + b + b).toUpperCase()}`;
   }
   return "#000000";
 }
 
 export function toAndroidDp(dim: string): string {
-  let clean = dim.trim().toLowerCase().replace(/px$/, "dp");
-  if (!clean.endsWith("dp")) {
-    clean += "dp";
+  const clean = dim.trim().toLowerCase();
+  const remMatch = clean.match(/^([\d.]+)\s*rem$/);
+  if (remMatch) {
+    const val = parseFloat(remMatch[1]);
+    const dpVal = Math.round(val * 16 * 100) / 100;
+    return `${dpVal}dp`;
   }
-  return clean;
+  let converted = clean.replace(/px$/, "dp");
+  if (!converted.endsWith("dp")) {
+    converted += "dp";
+  }
+  return converted;
+}
+
+export function toAndroidSp(fontSize: string, fallback = "16"): string {
+  if (!fontSize) return fallback;
+  const clean = fontSize.trim().toLowerCase();
+  const remMatch = clean.match(/^([\d.]+)\s*rem$/);
+  if (remMatch) {
+    const val = parseFloat(remMatch[1]);
+    const spVal = Math.round(val * 16 * 100) / 100;
+    return String(spVal);
+  }
+  const parsed = fontSize.replace(/[^0-9.]/g, "");
+  return parsed || fallback;
 }
 
 async function findDirsRecursively(
@@ -394,11 +460,10 @@ export async function compileTokens(
   generatedFiles.push(colorKtOut);
 
   // 3. Generate Type.kt (Jetpack Compose Typography)
-  const parseNumOnly = (s: string) => s.replace(/[^0-9.]/g, "");
-  const numSm = parseNumOnly(fontSizeSm) || "14";
-  const numBase = parseNumOnly(fontSizeBase) || "16";
-  const numLg = parseNumOnly(fontSizeLg) || "20";
-  const numXl = parseNumOnly(fontSizeXl) || "24";
+  const numSm = toAndroidSp(fontSizeSm, "14");
+  const numBase = toAndroidSp(fontSizeBase, "16");
+  const numLg = toAndroidSp(fontSizeLg, "20");
+  const numXl = toAndroidSp(fontSizeXl, "24");
 
   const typeKtLines: string[] = [
     "package ui.theme",
