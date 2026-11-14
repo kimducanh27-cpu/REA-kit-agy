@@ -1,0 +1,117 @@
+{
+  "schema_version": 2,
+  "case_id": "CASE-INITIAL",
+  "target_name": null,
+  "target_class": "ANDROID_APK",
+  "development_strategy": null,
+  "delivery_platform": null,
+  "build_strategy": null,
+  "build_route": null,
+  "current_phase": "STAGE_00_BOOTSTRAP",
+  "current_step": "00_PROJECT_BOOTSTRAP",
+  "current_gate_status": "GATE_00_READY",
+  "next_prompt_guide": "Dán 'prompts/00-WORKFLOW-ROUTER.md' để phân loại luồng yêu cầu (Router) hoặc 'prompts/01-TAB-DISCOVERY.md' để bắt đầu tiếp nhận app.",
+  "revision": 1,
+  "backup_verified": false,
+  "workflow": {
+    "mode": "NEW_CASE",
+    "parent_case_id": null,
+    "change_request_id": null,
+    "run_id": "RUN-001",
+    "target_fingerprint": null,
+    "execution_plan": {
+      "path": "HAPPY_PATH_FULL",
+      "steps_mandatory": [
+        "01_APP_INTAKE",
+        "02_BASELINE_MEASUREMENT",
+        "05_REA_AUDIT",
+        "08_IMPLEMENTATION_PLAN",
+        "09_REA_BUILD",
+        "10_BUILD_QA",
+        "11_SMOKE_TEST",
+        "13_RELEASE_AND_HANDOFF"
+      ],
+      "steps_conditional": [
+        "03_REA_SCAN",
+        "04_DEEP_INVESTIGATION",
+        "06_REA_INTERVIEW",
+        "07_UI_SPEC",
+        "12_HARD_VERIFY"
+      ],
+      "steps_skipped": [],
+      "steps_waived": []
+    },
+    "step_records": {},
+    "skip_records": [],
+    "invalidation_history": [],
+    "reused_artifacts": []
+  },
+  "gates": {
+    "gate_01_baseline_verified": {
+      "state": "NOT_STARTED",
+      "baseline_type": null,
+      "evidence": [],
+      "evidence_sha256": null,
+      "approved_by": null,
+      "approved_at": null,
+      "revoked_reason": null,
+      "waived_reason": null,
+      "skip_reason": null
+    },
+    "gate_02_audit_passed": {
+      "state": "NOT_STARTED",
+      "evidence": [],
+      "evidence_sha256": null,
+      "approved_by": null,
+      "approved_at": null,
+      "revoked_reason": null,
+      "waived_reason": null,
+      "skip_reason": null
+    },
+    "gate_03_spec_frozen": {
+      "state": "NOT_STARTED",
+      "evidence": [],
+      "evidence_sha256": null,
+      "approved_by": null,
+      "approved_at": null,
+      "revoked_reason": null,
+      "waived_reason": null,
+      "skip_reason": null
+    },
+    "gate_04_build_qa_passed": {
+      "state": "NOT_STARTED",
+      "evidence": [],
+      "evidence_sha256": null,
+      "approved_by": null,
+      "approved_at": null,
+      "revoked_reason": null,
+      "waived_reason": null,
+      "skip_reason": null
+    },
+    "gate_05_hard_verify_passed": {
+      "state": "NOT_STARTED",
+      "evidence": [],
+      "evidence_sha256": null,
+      "approved_by": null,
+      "approved_at": null,
+      "revoked_reason": null,
+      "waived_reason": null,
+      "skip_reason": null
+    },
+    "gate_06_handoff_signed": {
+      "state": "NOT_STARTED",
+      "evidence": [],
+      "evidence_sha256": null,
+      "approved_by": null,
+      "approved_at": null,
+      "revoked_reason": null,
+      "waived_reason": null,
+      "skip_reason": null
+    }
+  },
+  "metrics": {
+    "risk_level": "UNASSESSED",
+    "review_convergence_rounds": 0,
+    "max_convergence_rounds": 2
+  }
+}

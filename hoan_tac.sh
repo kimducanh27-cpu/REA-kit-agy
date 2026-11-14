@@ -21,12 +21,22 @@ case "$confirm" in
         ;;
 esac
 
+# 1. Ưu tiên Node CLI (dist/cli.js rollback)
+if [ -f "$SCRIPT_DIR/dist/cli.js" ] && command -v node >/dev/null 2>&1; then
+    node "$SCRIPT_DIR/dist/cli.js" rollback restore --force "$@"
+    exit $?
+fi
+
+# 2. Fallback về PowerShell Core (pwsh) hoặc PowerShell nếu có
 if command -v pwsh >/dev/null 2>&1; then
-    pwsh -NoProfile -File "$SCRIPT_DIR/.agents/scripts/rollback.ps1" -Force
+    pwsh -NoProfile -File "$SCRIPT_DIR/.agents/scripts/rollback.ps1" -Force "$@"
+    exit $?
+elif command -v powershell >/dev/null 2>&1; then
+    powershell -NoProfile -ExecutionPolicy Bypass -File "$SCRIPT_DIR/.agents/scripts/rollback.ps1" -Force "$@"
     exit $?
 else
-    echo "[!] Không tìm thấy 'pwsh' (PowerShell Core)."
-    echo "    Vui lòng cài đặt 'pwsh' để thực thi rollback.ps1 có xác thực mã băm SHA-256 an toàn."
+    echo "[!] Không tìm thấy node runtime hoặc PowerShell (pwsh/powershell)."
+    echo "    Vui lòng cài đặt 'pwsh' hoặc Node.js để thực thi hoàn tác có xác thực mã băm SHA-256 an toàn."
     latest_backup=$(find "$SCRIPT_DIR/04_SAO_LUU_AN_TOAN" -mindepth 1 -maxdepth 1 -type d 2>/dev/null | sort -r | head -n 1 || true)
     if [ -n "$latest_backup" ] && [ -d "$latest_backup" ]; then
         echo "    GỢI Ý KHÔI PHỤC THỦ CÔNG:"

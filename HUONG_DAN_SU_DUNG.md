@@ -8,8 +8,9 @@
 Bộ kit `REA-kit-agy` được thiết kế để vận hành tự động trong môi trường **Local AI Agent**:
 - **Nền tảng khuyến nghị**: **Google Antigravity** hoặc các IDE Coding Agent cục bộ (Antigravity IDE, Claude Code, Cursor, OpenCode).
 - **Yêu cầu môi trường thiết yếu**:
-  1. **Quyền truy cập Terminal**: Có thể thực thi PowerShell 5.1+/pwsh trên Windows, hoặc Bash trên Linux/macOS để chạy các lá chắn tự động (`health_check`, `verify_code`, `rollback`, `gate`).
-  2. **Hỗ trợ giao thức MCP (Model Context Protocol)**: Để kết nối trực tiếp với công cụ phân tích dịch ngược `reverse-engineer-anything` (REA MCP) và các Host Plugins như `android-cli`.
+  1. **Node.js (>= 18)**: Chạy bộ công cụ Hybrid npm CLI (`rea-kit`) và MCP Server (`dist/mcp.js`) đa nền tảng (Windows, Linux, macOS).
+  2. **Quyền truy cập Terminal**: Có thể thực thi Node.js CLI hoặc PowerShell/Bash để chạy các lá chắn tự động (`health_check`, `verify_code`, `rollback`, `gate`).
+  3. **Hỗ trợ giao thức MCP (Model Context Protocol)**: Kết nối trực tiếp với công cụ dịch ngược `reverse-engineer-anything` (REA MCP) và `rea-kit` MCP Server v2.0 tích hợp sẵn.
 - ⚠️ *Lưu ý*: Không thể sử dụng trên các giao diện web chat thông thường (như ChatGPT Web, Claude Web) vì các công cụ này không có quyền đọc/ghi file ổ đĩa và không có terminal cục bộ.
 
 ---

@@ -1,0 +1,125 @@
+import fs from "node:fs/promises";
+import path from "node:path";
+import crypto from "node:crypto";
+
+const STALE_LOCK_TIMEOUT_MS = 10_000;
+const MAX_LOCK_RETRIES = 5;
+
+/**
+ * Executes an async function while holding an exclusive file lock.
+ * Employs retry backoff (5 retries, 50-200ms) and automatically clears stale locks (>10s).
+ */
+export async function withFileLock<T>(
+  filePath: string,
+  fn: () => Promise<T>
+): Promise<T> {
+  const lockPath = `${filePath}.lock`;
+  const pid = process.pid.toString();
+  let acquired = false;
+
+  for (let attempt = 0; attempt <= MAX_LOCK_RETRIES; attempt++) {
+    try {
+      // 'wx' flag ensures atomic creation; fails if file already exists
+      const handle = await fs.open(lockPath, "wx");
+      await handle.writeFile(`${pid}\n${Date.now()}\n`, "utf8");
+      await handle.close();
+      acquired = true;
+      break;
+    } catch (err: unknown) {
+      const code = (err as NodeJS.ErrnoException).code;
+      const isLocked = code === "EEXIST" || code === "EPERM" || code === "EBUSY";
+      if (!isLocked) {
+        throw err;
+      }
+
+      // Check for stale lock
+      try {
+        const stat = await fs.stat(lockPath);
+        const age = Date.now() - stat.mtimeMs;
+        if (age > STALE_LOCK_TIMEOUT_MS) {
+          try {
+            await fs.unlink(lockPath);
+          } catch {
+            // Unlink may race with another process; ignore error
+          }
+        }
+      } catch {
+        // Stat could fail if lock was just released; ignore
+      }
+
+      if (attempt === MAX_LOCK_RETRIES) {
+        throw new Error(
+          `Failed to acquire file lock on ${lockPath} after ${MAX_LOCK_RETRIES} retries`
+        );
+      }
+
+      // Backoff jitter between 50ms and 200ms
+      const delay = Math.floor(50 + Math.random() * 150);
+      await new Promise((resolve) => setTimeout(resolve, delay));
+    }
+  }
+
+  if (!acquired) {
+    throw new Error(`Failed to acquire file lock on ${lockPath}`);
+  }
+
+  try {
+    return await fn();
+  } finally {
+    try {
+      await fs.unlink(lockPath);
+    } catch {
+      // Best-effort cleanup
+    }
+  }
+}
+
+/**
+ * Writes content to targetPath atomically via a temporary file without UTF-8 BOM.
+ */
+export async function writeUtf8NoBomAtomic(
+  targetPath: string,
+  content: string
+): Promise<void> {
+  const cleanContent = content.charCodeAt(0) === 0xfeff ? content.slice(1) : content;
+  const targetDir = path.dirname(targetPath);
+  await fs.mkdir(targetDir, { recursive: true });
+
+  const tempFileName = `.${path.basename(targetPath)}.tmp.${crypto.randomUUID()}`;
+  const tempPath = path.join(targetDir, tempFileName);
+
+  try {
+    // Write buffer without BOM explicitly
+    await fs.writeFile(tempPath, Buffer.from(cleanContent, "utf8"));
+    await fs.rename(tempPath, targetPath);
+  } catch (err) {
+    try {
+      await fs.unlink(tempPath);
+    } catch {
+      // Ignore cleanup error
+    }
+    throw err;
+  }
+}
+
+/**
+ * Atomically appends an event line to .agents/state/events.jsonl inside a file lock.
+ */
+export async function appendEventAtomic(
+  repoRoot: string,
+  event: Record<string, unknown>
+): Promise<void> {
+  const stateDir = path.join(repoRoot, ".agents", "state");
+  await fs.mkdir(stateDir, { recursive: true });
+
+  const eventsFile = path.join(stateDir, "events.jsonl");
+
+  await withFileLock(eventsFile, async () => {
+    const payload = {
+      timestamp: event.timestamp || new Date().toISOString(),
+      ...event,
+    };
+    const line = JSON.stringify(payload) + "\n";
+    await fs.appendFile(eventsFile, Buffer.from(line, "utf8"));
+  });
+}

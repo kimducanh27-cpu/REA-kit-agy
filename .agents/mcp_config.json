@@ -8,6 +8,15 @@
         "serve"
       ],
       "description": "Reverse Engineer Anything (REA) MCP Server (Workspace Scope for REA-kit-agy)"
+    },
+    "rea-kit": {
+      "command": "node",
+      "args": [
+        "dist/mcp.js",
+        "--workspace",
+        "${workspaceFolder}"
+      ],
+      "description": "REA-kit-agy Hybrid MCP Server v2.0"
     }
   }
 }

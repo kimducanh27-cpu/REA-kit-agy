@@ -11,8 +11,27 @@ for %%I in ("%LOCALAPPDATA%\Temp") do (
     set "TMP=%%~fsI"
 )
 
-powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0.agents\scripts\health_check.ps1"
-set "EXIT_CODE=%ERRORLEVEL%"
+:: Ưu tiên TypeScript / Node CLI (rea-kit verify)
+if exist "%~dp0dist\cli.js" (
+    where node >nul 2>&1
+    if not errorlevel 1 (
+        node "%~dp0dist\cli.js" verify %*
+        set "EXIT_CODE=%ERRORLEVEL%"
+        goto :finish
+    )
+)
+
+:: Fallback về PowerShell verify_code.ps1 nếu node hoặc dist/cli.js chưa có
+if exist "%~dp0.agents\scripts\verify_code.ps1" (
+    powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0.agents\scripts\verify_code.ps1" %*
+    set "EXIT_CODE=%ERRORLEVEL%"
+    goto :finish
+)
+
+echo [ERROR] Không tìm thấy runtime thực thi kiểm tra hợp lệ (node dist/cli.js hoặc .agents/scripts/verify_code.ps1).
+set "EXIT_CODE=1"
+
+:finish
 echo.
 pause
 exit /b %EXIT_CODE%
