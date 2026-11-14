@@ -54,18 +54,24 @@ flowchart TD
     end
 
     S00 --> S01 --> S02 --> G1
-    G1 -- Đạt --> S03 --> S04 --> S05 --> G2
-    G2 -- Đạt / Bỏ qua hợp lệ --> S06 --> EX
-    EX -- SUFFICIENT --> S07 --> S08 --> G3
-    EX -- BLOCKED / NEEDS_INPUT --> S06
-    G3 -- Duyệt --> S09 --> S10 --> G4
-    G4 -- Đạt --> S11 --> S12 --> G5
-    G5 -- Đạt --> S13 --> G6
+    G1 -->|"Đạt"| S03
+    S03 --> S04 --> S05 --> G2
+    G2 -->|"Đạt / Bỏ qua hợp lệ"| S06
+    S06 --> EX
+    EX -->|"SUFFICIENT"| S07
+    EX -->|"BLOCKED / NEEDS_INPUT"| S06
+    S07 --> S08 --> G3
+    G3 -->|"Duyệt"| S09
+    S09 --> S10 --> G4
+    G4 -->|"Đạt"| S11
+    S11 --> S12 --> G5
+    G5 -->|"Đạt"| S13
+    S13 --> G6
 
     %% Reject / Retry Loops
-    G3 -. Sửa Spec .->|Tạo v2| S06
-    G4 -. Lỗi cú pháp / Vượt 2 vòng .->|Sửa code| S09
-    G5 -. Chưa khớp app gốc .->|Bản vá bổ sung| S09
+    G3 -.->|"Sửa Spec (Tạo v2)"| S06
+    G4 -.->|"Lỗi cú pháp (Sửa code)"| S09
+    G5 -.->|"Chưa khớp app gốc"| S09
 ```
 
 ---
