@@ -23,15 +23,21 @@ Tài liệu này là quy chuẩn bắt buộc dành cho AI Agent khi đóng vai 
 
 ## 2. CHECKLIST THẨM ĐỊNH ĐỘC LẬP 4 TẦNG
 
-### 🏗️ Tầng 1: Ranh giới Kiến trúc Zero-Install
-- [ ] Ứng dụng là Web độc lập (HTML5 + Tailwind CSS CDN + Vanilla/Alpine JS).
-- [ ] Mở chạy được trực tiếp trên trình duyệt bằng cách nhấp đúp chuột vào file `index.html` hoặc `preview.html`.
-- [ ] Không đòi hỏi cài đặt môi trường phức tạp (Node.js, Python, Docker) từ phía máy người dùng.
+### 🏗️ Tầng 1: Ranh giới Kiến trúc Đã Duyệt (Route A Zero-Install hoặc Route B Android Native)
+- **Khi chọn Route A (Web App Zero-Install — Mặc định)**:
+  * [ ] Ứng dụng là Web độc lập (HTML5 + Tailwind CSS CDN + Vanilla/Alpine JS).
+  * [ ] Mở chạy được trực tiếp trên trình duyệt bằng cách nhấp đúp chuột vào file `index.html` hoặc `preview.html`.
+  * [ ] Không đòi hỏi cài đặt môi trường phức tạp (Node.js, Python, Docker) từ phía máy người dùng.
+- **Khi chọn Route B (Android Native Project)**:
+  * [ ] Cấu trúc dự án Android Native chuẩn mực (khởi tạo qua Antigravity Android CLI `android create` hoặc Gradle/Kotlin/Jetpack Compose/XML).
+  * [ ] Mã nguồn đặt đúng thư mục quy định tại `05_MA_NGUON_PHAT_TRIEN/android/`.
+  * [ ] File cấu hình build (`build.gradle.kts` / `build.gradle`, `settings.gradle`) hợp lệ, biên dịch được bằng `./gradlew assembleDebug` hoặc công cụ Android CLI.
+  * [ ] Sẵn sàng cài đặt và chạy thử trên máy ảo AVD hoặc thiết bị thật qua Antigravity Device Hub.
 
 ### ⚙️ Tầng 2: Kiểm tra Xác định (Deterministic Static Checks)
 - [ ] Chạy script `.agents/scripts/verify_code.ps1` đạt **Exit Code 0**.
-- [ ] Cặp thẻ HTML hợp lệ, không sót thẻ mở/đóng.
-- [ ] Cú pháp JavaScript hợp lệ, không gây lỗi cú pháp (SyntaxError).
+- [ ] Với Route A: Cặp thẻ HTML hợp lệ, không sót thẻ mở/đóng; cú pháp JavaScript hợp lệ, không gây lỗi cú pháp (SyntaxError).
+- [ ] Với Route B: Cú pháp Kotlin/Java/XML hợp lệ, không có lỗi cấu trúc build hoặc dependencies chưa khai báo.
 - [ ] Không có API key, password, secret chuỗi thô trong mã nguồn (đạt bộ lọc Regex Redaction).
 
 ### 🎨 Tầng 3.1: Hợp đồng Giao diện (Đối chiếu `02_YEU_CAU_CUA_TOI/design.md`)

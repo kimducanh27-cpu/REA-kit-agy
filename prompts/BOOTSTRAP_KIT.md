@@ -1,6 +1,6 @@
 # SIÊU LỆNH KHỞI TẠO BỘ KIT (META-BOOTSTRAP PROMPT)
 
-*Dán toàn bộ khối lệnh dưới đây vào một thư mục trống tinh trong AI Agent (Antigravity, Claude Code, Cursor, OpenCode) để AI tự động dựng 100% bộ kit REA-kit-agy hoàn chỉnh theo chuẩn 6 Phase · 14 Bước.*
+*Dán toàn bộ khối lệnh dưới đây vào một thư mục trống tinh trong AI Agent (Antigravity, Claude Code, Cursor, OpenCode) để AI tự động dựng 100% bộ kit REA-kit-agy hoàn chỉnh theo chuẩn 6 Stage · 14 Bước.*
 
 ---
 
@@ -16,14 +16,14 @@ Tạo đầy đủ các thư mục sau:
 3. `03_KET_QUA_KIEM_TRA` (Thư mục xuất báo cáo, unknowns, spec chốt, kế hoạch và nghiệm thu)
 4. `04_SAO_LUU_AN_TOAN` (Thư mục sao lưu bất khả xâm phạm)
 5. `05_MA_NGUON_PHAT_TRIEN` (Thư mục chứa code mới/viết lại, preview.html, và bàn giao)
-6. `prompts` (Bộ câu lệnh dán theo 5 Tab / 6 Phase)
+6. `prompts` (Bộ câu lệnh dán theo 5 Tab / 6 Stage)
 7. `templates` (Khung mẫu tài liệu hợp đồng chuẩn từ 01 đến 09)
 8. `docs` (Bộ tài liệu quản trị ngữ cảnh đa phiên)
 9. `.agents/rules` (Luật an toàn cho Agent)
 10. `.agents/skills/reverse-engineer-anything` (Kỹ năng lõi gốc upstream REA)
-11. `.agents/skills/rea-scan` (Kỹ năng điều phối Phase 01 & 02)
-12. `.agents/skills/rea-interview` (Kỹ năng điều phối Phase 03)
-13. `.agents/skills/rea-build` (Kỹ năng điều phối Phase 04 & 05)
+11. `.agents/skills/rea-scan` (Kỹ năng điều phối Stage 01 & 02)
+12. `.agents/skills/rea-interview` (Kỹ năng điều phối Stage 03)
+13. `.agents/skills/rea-build` (Kỹ năng điều phối Stage 04 & 05)
 14. `.agents/scripts` (Script kiểm tra sức khỏe, verify code và rollback)
 15. `.agents/state` (Bộ nhớ máy trạng thái 6 Gates và học sự cố)
 
@@ -34,7 +34,7 @@ Tạo đầy đủ các thư mục sau:
 2. Tạo `.agents/state/active_case.json` (máy trạng thái 6 Gates & 14 Steps) và `.agents/state/learned_rules.json` (bộ nhớ học từ sự cố).
 3. Tạo file đăng ký Upstream `UPSTREAMS.md`:
    - Pinned to morluto/rea commit SHA `5cddc69c51a0fb18d021417199046314581ba9c2`, package `rea-agents@6.9.0`.
-4. Tạo `AGENTS.md` (Não bộ điều hành 6 Phase 14 Bước và 6 Cổng kiểm soát).
+4. Tạo `AGENTS.md` (Não bộ điều hành 6 Stage 14 Bước và 6 Cổng kiểm soát).
 5. Tạo `CLAUDE.md`: Chứa dòng `@AGENTS.md`.
 6. Tạo `REVIEW.md`: Hợp đồng thẩm định độc lập 2 trục, bộ lọc dẹp nhiễu và phân tầng rủi ro.
 7. Tạo `HUONG_DAN_SU_DUNG.md`: Hướng dẫn 1 trang kèm sơ đồ Mermaid và 5 mẫu câu lệnh tự dán.
@@ -44,20 +44,20 @@ Tạo đầy đủ các thư mục sau:
 
 ### BƯỚC 3: TẠO BỘ KỸ NĂNG TRONG .agents/skills/
 1. `.agents/skills/reverse-engineer-anything/`: Kỹ năng lõi gốc sao chép từ upstream morluto/rea.
-2. `.agents/skills/rea-scan/SKILL.md`: Điều phối Phase 01 (Intake, Baseline, Fallback) và Phase 02 (Scan, Investigate, Audit, Sổ Unknowns). Mở Cổng 01 & 02.
-3. `.agents/skills/rea-interview/SKILL.md`: Điều phối Phase 03 (Interview, Design Tokens, Spec frozen, Implementation plan). Mở Cổng 03.
-4. `.agents/skills/rea-build/SKILL.md`: Điều phối Phase 04 (Build Zero-Install, Snapshot, Build QA & Review) và Phase 05 (Smoke test, Hard Verify đối chiếu 1-1, Handoff trọn gói). Mở Cổng 04, 05, 06.
+2. `.agents/skills/rea-scan/SKILL.md`: Điều phối Stage 01 (Intake, Baseline, Fallback) và Stage 02 (Scan, Investigate, Audit, Sổ Unknowns). Mở Cổng 01 & 02.
+3. `.agents/skills/rea-interview/SKILL.md`: Điều phối Stage 03 (Interview, Design Tokens, Spec frozen, Implementation plan). Mở Cổng 03.
+4. `.agents/skills/rea-build/SKILL.md`: Điều phối Stage 04 (Build Zero-Install, Snapshot, Build QA & Review) và Stage 05 (Smoke test, Hard Verify đối chiếu 1-1, Handoff trọn gói). Mở Cổng 04, 05, 06.
 
 ---
 
-### BƯỚC 4: TẠO BỘ PROMPTS/ VÀ TEMPLATES/ (6 PHASE · 14 BƯỚC)
+### BƯỚC 4: TẠO BỘ PROMPTS/ VÀ TEMPLATES/ (6 STAGE · 14 BƯỚC)
 1. Trong `prompts/`:
    - `00-SESSION-CONTINUITY.md` (Phục hồi phiên & Auto-Resume)
-   - `01-TAB-DISCOVERY.md` (Phase 01: Intake & Baseline)
-   - `02-TAB-REVERSE-ENGINEERING.md` (Phase 02: Scan, Investigate & Audit)
-   - `03-TAB-PRODUCT-DEFINITION.md` (Phase 03: Interview, Spec & Plan)
-   - `04-TAB-IMPLEMENTATION.md` (Phase 04: Build & Build QA)
-   - `05-TAB-VALIDATION.md` (Phase 05: Smoke Test, Hard Verify & Handoff)
+   - `01-TAB-DISCOVERY.md` (Stage 01: Intake & Baseline — STAGE_01_DISCOVERY)
+   - `02-TAB-REVERSE-ENGINEERING.md` (Stage 02: Scan, Investigate & Audit — STAGE_02_REVERSE_ENGINEERING)
+   - `03-TAB-PRODUCT-DEFINITION.md` (Stage 03: Interview, Spec & Plan — STAGE_03_PRODUCT_DEFINITION)
+   - `04-TAB-IMPLEMENTATION.md` (Stage 04: Build & Build QA — STAGE_04_IMPLEMENTATION)
+   - `05-TAB-VALIDATION.md` (Stage 05: Smoke Test, Hard Verify & Handoff — STAGE_05_VALIDATION)
 2. Trong `templates/`:
    - `01-REPORT-TEMPLATE.md` (Báo cáo hiện trạng)
    - `02-SPEC-TEMPLATE.md` (Đặc tả đóng băng)
@@ -69,7 +69,7 @@ Tạo đầy đủ các thư mục sau:
    - `08-HARD-VERIFY-TEMPLATE.md` (Bảng đối chiếu 1-1 với app gốc)
    - `09-HANDOFF-BUNDLE-TEMPLATE.md` (Biên bản bàn giao sản phẩm)
 3. Trong `docs/`:
-   - `WORKFLOW_LIFECYCLE.md` (Đặc tả chuẩn 6 Phase · 14 Bước)
+   - `WORKFLOW_LIFECYCLE.md` (Đặc tả chuẩn 6 Stage · 14 Bước)
    - `PROGRESS.md` (Bảng tiến độ 14 bước tự động đồng bộ)
    - `HANDOFF.md`, `PRD.md`, `ARCHITECTURE.md`, `PLAN.md`, `RULES.md`, `PROMPTS.md`.
 

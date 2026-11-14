@@ -20,14 +20,31 @@
 
 ---
 
-## 2. Hướng Dẫn Sử Dụng Nhanh (1-Click Run Guide)
+## 2. Hướng Dẫn Khởi Chạy Nhanh (Run Guide Theo Route)
 
+### A. Đối với Route A — Web App Zero-Install (Mặc định)
 - **Cách mở ứng dụng**:
   1. Vào thư mục `05_MA_NGUON_PHAT_TRIEN/`.
   2. Nhấp đúp chuột trái vào file `index.html`.
   3. Ứng dụng sẽ tự động mở trên trình duyệt mặc định (Chrome, Edge, Cốc Cốc) mà không cần cài đặt thêm bất kỳ phần mềm nào.
 - **Dữ liệu được lưu ở đâu?**:
-  - Toàn bộ dữ liệu được lưu an toàn trực tiếp trên trình duyệt của máy bạn (LocalStorage), không gửi lên bất kỳ máy chủ nào trên mạng.
+  - Toàn bộ dữ liệu được lưu an toàn trực tiếp trên trình duyệt của máy bạn (LocalStorage/IndexedDB), không gửi lên bất kỳ máy chủ nào trên mạng.
+
+### B. Đối với Route B — Android Native Project
+- **Cách biên dịch & cài đặt**:
+  1. Mở terminal tại thư mục `05_MA_NGUON_PHAT_TRIEN/android/`.
+  2. Biên dịch gói ứng dụng debug:
+     ```powershell
+     ./gradlew assembleDebug
+     ```
+  3. Cài đặt lên máy ảo AVD hoặc thiết bị thật kết nối qua Antigravity Device Hub:
+     ```powershell
+     ./gradlew installDebug
+     ```
+- **Kiểm tra giao diện & vận hành**:
+  - Khởi chạy app: gọi REA ADB `start_adb_app` (với tham số `serial`, `package`) hoặc mở từ launcher máy ảo.
+  - Chụp ảnh màn hình nghiệm thu: `android screen capture -o <file_path>`.
+  - Trích xuất phân cấp UI: `android layout`.
 
 ---
 
@@ -50,7 +67,7 @@ Nếu sau khi sử dụng hoặc sau các lần cập nhật tiếp theo, bạn 
 
 ## 5. Ký Nhận Bàn Giao & Trách Nhiệm ("You Land It, You Own It")
 
-- **Mã nguồn đã kiểm tra**: Không chứa mã độc, không có cú pháp lỗi, đạt chuẩn chất lượng Anthropic.
+- **Mã nguồn đã kiểm tra (Scoped Static Audit)**: Hoàn thành kiểm tra tĩnh có giới hạn; không phát hiện rủi ro trong phạm vi quét; vùng chưa kiểm toán đưa vào Sổ Unknowns; không có cú pháp lỗi, đạt chuẩn chất lượng Anthropic.
 - **Trạng thái bàn giao**: ĐÃ BÀN GIAO HOÀN TẤT.
 
 | Đại Diện Triển Khai (AI Agent) | Người Tiếp Nhận Vận Hành (Chủ Dự Án) |

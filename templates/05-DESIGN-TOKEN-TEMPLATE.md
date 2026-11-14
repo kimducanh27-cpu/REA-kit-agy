@@ -12,6 +12,7 @@
 ### 2. Bảng màu hệ thống (Color Tokens)
 *Toàn bộ mã nguồn đọc các biến này, tuyệt đối không hardcode mã màu:*
 
+#### a) Web CSS Tokens (Route A)
 ```css
 :root {
   /* Màu chủ đạo thương hiệu */
@@ -35,7 +36,42 @@
 }
 ```
 
+#### b) Android Native Tokens (Route B — Jetpack Compose & XML)
+```kotlin
+// Jetpack Compose Colors (ui/theme/Color.kt)
+val Primary = Color(0xFF2563EB)
+val PrimaryHover = Color(0xFF1D4ED8)
+val Background = Color(0xFFF8FAFC)
+val Surface = Color(0xFFFFFFFF)
+val Border = Color(0xFFE2E8F0)
+val TextMain = Color(0xFF0F172A)
+val TextMuted = Color(0xFF64748B)
+val Accent = Color(0xFF10B981)
+val Danger = Color(0xFFEF4444)
+val Warning = Color(0xFFF59E0B)
+val Info = Color(0xFF0284C7)
+```
+
+```xml
+<!-- Android XML Colors (res/values/colors.xml) -->
+<resources>
+    <color name="color_primary">#2563EB</color>
+    <color name="color_primary_hover">#1D4ED8</color>
+    <color name="color_background">#F8FAFC</color>
+    <color name="color_surface">#FFFFFF</color>
+    <color name="color_border">#E2E8F0</color>
+    <color name="color_text_main">#0F172A</color>
+    <color name="color_text_muted">#64748B</color>
+    <color name="color_accent">#10B981</color>
+    <color name="color_danger">#EF4444</color>
+    <color name="color_warning">#F59E0B</color>
+    <color name="color_info">#0284C7</color>
+</resources>
+```
+
 ### 3. Phông chữ & Kích thước (Typography)
+
+#### a) Web CSS
 ```css
 :root {
   --font-main: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
@@ -47,7 +83,19 @@
 }
 ```
 
+#### b) Android Native (Compose Typography)
+```kotlin
+// Compose Typography (ui/theme/Type.kt)
+val Typography = Typography(
+    bodyLarge = TextStyle(fontSize = 16.sp, lineHeight = 24.sp),
+    titleLarge = TextStyle(fontSize = 20.sp, fontWeight = FontWeight.Bold),
+    headlineMedium = TextStyle(fontSize = 24.sp, fontWeight = FontWeight.Bold)
+)
+```
+
 ### 4. Bo góc & Đổ bóng (Radius & Elevation)
+
+#### a) Web CSS
 ```css
 :root {
   --radius-sm: 6px;                 /* Bo góc nút bấm nhỏ, ô nhập liệu */
@@ -57,6 +105,25 @@
   --shadow-card: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
   --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
 }
+```
+
+#### b) Android Native (Compose Shapes & XML Dimens)
+```kotlin
+// Compose Shapes (ui/theme/Shape.kt)
+val Shapes = Shapes(
+    small = RoundedCornerShape(6.dp),
+    medium = RoundedCornerShape(12.dp),
+    large = RoundedCornerShape(20.dp)
+)
+```
+
+```xml
+<!-- Android Dimens (res/values/dimens.xml) -->
+<resources>
+    <dimen name="radius_sm">6dp</dimen>
+    <dimen name="radius_md">12dp</dimen>
+    <dimen name="radius_lg">20dp</dimen>
+</resources>
 ```
 
 ---

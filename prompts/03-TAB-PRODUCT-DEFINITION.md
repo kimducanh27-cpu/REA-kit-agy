@@ -1,19 +1,19 @@
 # PROMPT 03: ĐỊNH HÌNH SẢN PHẨM & KẾ HOẠCH TRIỂN KHAI (TAB 03 — PRODUCT DEFINITION)
 
-*Dán đoạn lệnh này vào AI Agent sau khi hoàn thành Phase 02 (Gate 02 đã mở).*
+*Dán đoạn lệnh này vào AI Agent sau khi hoàn thành Stage 02 (Gate 02 đã mở).*
 
 ---
 
 ```markdown
-# Tab 03 — Phase 03: Product Definition (Bước 06: Interview, Bước 07: Spec & Design & Bước 08: Implementation Plan)
+# Tab 03 — Stage 03: Product Definition (Bước 06: Interview, Bước 07: Spec & Design & Bước 08: Implementation Plan)
 
 Read and follow `AGENTS.md`, `REVIEW.md`, and `docs/WORKFLOW_LIFECYCLE.md`.
 Activate Skill `rea-interview`.
 
 ## Điều kiện tiên quyết:
-Kiểm tra `.agents/state/active_case.json`. Nếu `gates.gate_02_audit_passed` chưa đạt (`false`), dừng lại và yêu cầu hoàn thành Phase 02 trước.
+Kiểm tra `.agents/state/active_case.json`. Nếu `gates.gate_02_audit_passed` chưa đạt (`false`), dừng lại và yêu cầu hoàn thành Stage 02 trước.
 
-You are executing **PHASE 03 · PRODUCT DEFINITION**:
+You are executing **STAGE_03 · PRODUCT DEFINITION**:
 
 ### BƯỚC 06: REA INTERVIEW (Phỏng Vấn Người Dùng)
 1. Đọc kỹ:
@@ -42,10 +42,10 @@ You are executing **PHASE 03 · PRODUCT DEFINITION**:
 4. **CỔNG 03 (Quality Gate 03: `gate_03_spec_frozen`)**:
    - Yêu cầu người dùng xác nhận: "Đồng ý" với Đặc tả, Design System và Kế hoạch.
    - Khi người dùng đồng ý:
-     * Cập nhật `active_case.json`: `gates.gate_03_spec_frozen = true`, `current_phase = "PHASE_03_PRODUCT_DEFINITION"`, `current_step = "08_IMPLEMENTATION_PLAN"`.
+     * Cập nhật `active_case.json`: `gates.gate_03_spec_frozen = true`, `current_phase = "STAGE_03_PRODUCT_DEFINITION"`, `current_step = "08_IMPLEMENTATION_PLAN"`.
      * Cập nhật checklist trong `docs/PROGRESS.md`.
    - **Vòng lặp sửa sai (Reject Loop)**: Nếu người dùng yêu cầu chỉnh sửa, tạo bản `SPEC_v2.md` và lùi về Bước 06/07. Tuyệt đối không xóa bản cũ.
 
 ### BÁO CÁO CHO NGƯỜI DÙNG:
-Trình bày tóm tắt đặc tả và kế hoạch chia task. Đề nghị người dùng duyệt để mở CỔNG 03 và bắt đầu viết code tại Phase 04.
+Trình bày tóm tắt đặc tả và kế hoạch chia task. Đề nghị người dùng duyệt để mở CỔNG 03 và bắt đầu viết code tại Stage 04.
 ```

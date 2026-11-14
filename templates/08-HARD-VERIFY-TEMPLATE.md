@@ -7,10 +7,17 @@
 
 ---
 
-## 1. Tóm Tắt Kết Quả Đối Chiếu
+## 1. Tóm Tắt Kết Quả Đối Chiếu & Phương Pháp Kiểm Chứng
 
 - **Tổng số tính năng đem so sánh**: [Số lượng]
 - **Tỷ lệ tương thích yêu cầu**: [Ví dụ: 100%]
+- **Build Route đã chọn**: `[ ] Route A (Web App Zero-Install)` | `[ ] Route B (Android Native Project)` | `[ ] Route C (Patch APK / Hybrid)`
+- **Phương pháp & Công cụ kiểm chứng sử dụng**:
+  * **Đối với Web (Route A)**: Đối chiếu trực tiếp trên trình duyệt với ảnh baseline trong `01_THA_APP_VAO_DAY/baseline/`.
+  * **Đối với Android (Route B / Route C)**:
+    - Trích xuất và so sánh phân cấp cây giao diện 1-1: `android layout`.
+    - Chụp ảnh màn hình đối chiếu: `android screen capture -o <file_path>` (hoặc REA ADB `capture_adb_screen` với tham số `serial`, `output-directory`).
+    - Khởi chạy và kiểm tra luồng runtime trên AVD/thiết bị: `start_adb_app` (với `serial`, `package`) hoặc qua Antigravity Device Hub.
 - **Kết luận chung**: `[ ] ĐẠT NGHIỆM THU (PASS)` | `[ ] CẦN CHỈNH SỬA (RETRY)`
 
 ---

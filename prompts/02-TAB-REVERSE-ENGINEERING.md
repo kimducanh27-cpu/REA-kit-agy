@@ -1,19 +1,19 @@
 # PROMPT 02: BÓC TÁCH & DỊCH NGƯỢC CHUYÊN SÂU (TAB 02 — REVERSE ENGINEERING)
 
-*Dán đoạn lệnh này vào AI Agent sau khi hoàn thành Phase 01 (Gate 01 đã mở).*
+*Dán đoạn lệnh này vào AI Agent sau khi hoàn thành Stage 01 (Gate 01 đã mở).*
 
 ---
 
 ```markdown
-# Tab 02 — Phase 02: Reverse Engineering (Bước 03: Scan, Bước 04: Investigate & Bước 05: Audit)
+# Tab 02 — Stage 02: Reverse Engineering (Bước 03: Scan, Bước 04: Investigate & Bước 05: Audit)
 
 Read and follow `AGENTS.md`, `REVIEW.md`, and `docs/WORKFLOW_LIFECYCLE.md`.
 Activate Skills `rea-scan` and `reverse-engineer-anything`.
 
 ## Điều kiện tiên quyết:
-Kiểm tra `.agents/state/active_case.json`. Nếu `gates.gate_01_baseline_verified` chưa đạt (`false`), dừng lại và yêu cầu hoàn thành Phase 01 trước.
+Kiểm tra `.agents/state/active_case.json`. Nếu `gates.gate_01_baseline_verified` chưa đạt (`false`), dừng lại và yêu cầu hoàn thành Stage 01 trước.
 
-You are executing **PHASE 02 · REVERSE ENGINEERING**:
+You are executing **STAGE_02 · REVERSE ENGINEERING**:
 
 ### BƯỚC 03: REA SCAN (Quét Cấu Trúc, Mã Nguồn & Tài Nguyên)
 1. Sử dụng REA MCP tools để bóc tách cấu trúc: Manifest, package.json, assets, các thư viện phụ thuộc.
@@ -34,7 +34,7 @@ You are executing **PHASE 02 · REVERSE ENGINEERING**:
    👉 `03_KET_QUA_KIEM_TRA/bao-cao-hien-trang.md`.
 5. **CỔNG 02 (Quality Gate 02: `gate_02_audit_passed`)**:
    - Khi đã che mờ secret, kiểm toán mã độc an toàn và xuất đủ `UNKNOWNS_AND_COVERAGE.md`:
-   - Cập nhật `active_case.json`: `gates.gate_02_audit_passed = true`, `current_phase = "PHASE_02_REVERSE_ENGINEERING"`, `current_step = "05_REA_AUDIT"`.
+   - Cập nhật `active_case.json`: `gates.gate_02_audit_passed = true`, `current_phase = "STAGE_02_REVERSE_ENGINEERING"`, `current_step = "05_REA_AUDIT"`.
    - Cập nhật checklist trong `docs/PROGRESS.md`.
 
 ### BÁO CÁO CHO NGƯỜI DÙNG:

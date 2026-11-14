@@ -3,11 +3,31 @@
 
 ---
 
-## 1. CÁCH MỞ ỨNG DỤNG (ZERO-INSTALL)
+## 1. CÁCH MỞ VÀ KHỞI CHẠY ỨNG DỤNG (RUN GUIDE THEO ROUTE)
+
+### A. Đối với Route A — Web App Zero-Install (Mặc định)
 👉 **Cách đơn giản nhất:**
-- Tìm tệp `index.html` (hoặc `preview.html` nếu đang xem thử) trong thư mục này.
+- Tìm tệp `index.html` (hoặc `preview.html` nếu đang xem thử) trong thư mục `05_MA_NGUON_PHAT_TRIEN/`.
 - **Nhấp đúp chuột** vào file để mở trực tiếp trên trình duyệt web (Google Chrome, Microsoft Edge, Cốc Cốc, Safari).
 - Ứng dụng sẽ hoạt động ngay lập tức mà không cần cài đặt Node.js, Python hay Docker!
+
+### B. Đối với Route B — Android Native Project (Gradle / Android CLI)
+👉 **Khởi chạy trên máy ảo AVD hoặc thiết bị thật:**
+1. **Kiểm tra thiết bị kết nối:**
+   - Sử dụng Antigravity Device Hub hoặc chạy lệnh:
+     ```powershell
+     android devices
+     ```
+2. **Biên dịch & Cài đặt qua Gradle:**
+   - Mở terminal tại thư mục `05_MA_NGUON_PHAT_TRIEN/android/`:
+     ```powershell
+     ./gradlew assembleDebug
+     ./gradlew installDebug
+     ```
+3. **Khởi chạy & Kiểm tra giao diện qua Android CLI:**
+   - Khởi chạy ứng dụng: gọi REA ADB `start_adb_app` (tham số `serial`, `package`) hoặc mở từ màn hình chính.
+   - Chụp ảnh màn hình kiểm chứng: `android screen capture -o baseline/screen.png`.
+   - Bóc tách phân cấp giao diện: `android layout`.
 
 ---
 

@@ -1,8 +1,8 @@
 # PRD — REA-kit-agy
 
 - Product: REA-powered App Investigation & Development Kit
-- Version: 0.2 — corrected direction
-- Status: DRAFT; product direction clarified, v1 boundary not yet approved
+- Version: 1.0 — approved v1 baseline
+- Status: APPROVED; product direction clarified, v1 boundary approved via ADR-0001 & ADR-0002
 - Last updated: 2026-11-13
 
 ## 1. Vision
@@ -98,12 +98,10 @@ See SECURITY_REVIEW_MODEL.md.
 - Test results are real; unrun checks are stated.
 - At least one target path is tested end-to-end before v1 is called usable.
 
-## 9. Open decisions
+## 9. Closed decisions (via ADR-0001 through ADR-0006)
 
-- First v1 target: Android APK, web app, Electron/desktop app, or source repository plus packaged build.
-- Delivery: Skills/instructions bundle, CLI wrapper, or both.
-- First agent to verify end-to-end.
-- Whether supplementary SAST/dependency/UI testing tools are needed beyond REA and the coding agent.
-- Report format/location and backup policy.
-
-Do not silently resolve these owner decisions.
+- First v1 target: **`ANDROID_APK`** (approved via ADR-0001 & ADR-0005, leveraging Google Antigravity's official Android CLI plugin + REA static & dynamic tooling).
+- Delivery model: **Skill-first** via upstream REA MCP (`npx -y rea-agents`) and native orchestration skills (`rea-scan`, `rea-interview`, `rea-build`), zero premature wrapper CLI (approved via ADR-0002).
+- First agent verified end-to-end: **Google Antigravity** (with cross-agent compatibility for Claude Code, Cursor, OpenCode).
+- Supplementary tools: Antigravity Android CLI plugin (`android layout`, `android screen capture -o <file_path>`, `android create`, AVD/Device Hub) + lightweight PowerShell scripts (`.agents/scripts/`).
+- Report format & backup policy: 6-stage 14-step case lifecycle in `docs/WORKFLOW_LIFECYCLE.md`, 6 quality gates in `.agents/state/active_case.json`, automated `.backup/` snapshots and `HOAN_TAC.bat` (approved via ADR-0003 & ADR-0004).

@@ -2,8 +2,27 @@
 $OutputEncoding = [System.Text.Encoding]::UTF8
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 
+# Tree-climbing từ $PSScriptRoot để tìm docs\WORKFLOW_LIFECYCLE.md và xác định $repoRoot
+$scriptDir = $PSScriptRoot
+if (-not $scriptDir) { $scriptDir = (Get-Location).Path }
+$current = $scriptDir
+$repoRoot = $null
+while ($current) {
+    if (Test-Path (Join-Path $current "docs\WORKFLOW_LIFECYCLE.md")) {
+        $repoRoot = $current
+        break
+    }
+    $parent = Split-Path $current -Parent
+    if ($parent -eq $current -or [string]::IsNullOrEmpty($parent)) { break }
+    $current = $parent
+}
+if (-not $repoRoot) {
+    $repoRoot = (Get-Location).Path
+}
+
 Write-Host "==========================================================" -ForegroundColor Cyan
 Write-Host "   ĐANG KIỂM TRA HỆ THỐNG WORKSPACE REA-KIT-AGY...        " -ForegroundColor Cyan
+Write-Host "   Repo Root: $repoRoot" -ForegroundColor DarkCyan
 Write-Host "==========================================================" -ForegroundColor Cyan
 
 $score = 0
@@ -13,7 +32,7 @@ $total = 6
 $dirs = @("01_THA_APP_VAO_DAY", "02_YEU_CAU_CUA_TOI", "03_KET_QUA_KIEM_TRA", "04_SAO_LUU_AN_TOAN", "05_MA_NGUON_PHAT_TRIEN")
 $allDirsOk = $true
 foreach ($d in $dirs) {
-    if (-not (Test-Path $d)) { $allDirsOk = $false }
+    if (-not (Test-Path (Join-Path $repoRoot $d))) { $allDirsOk = $false }
 }
 if ($allDirsOk) {
     Write-Host "[OK] (1/6) Cấu trúc 5 thư mục giao diện người dùng đầy đủ." -ForegroundColor Green
@@ -23,7 +42,12 @@ if ($allDirsOk) {
 }
 
 # 2. Kiểm tra tài liệu hướng dẫn và luật chơi cốt lõi
-if ((Test-Path "AGENTS.md") -and (Test-Path "HUONG_DAN_SU_DUNG.md") -and (Test-Path "REVIEW.md")) {
+$coreDocs = @("AGENTS.md", "HUONG_DAN_SU_DUNG.md", "REVIEW.md")
+$allCoreDocsOk = $true
+foreach ($cd in $coreDocs) {
+    if (-not (Test-Path (Join-Path $repoRoot $cd))) { $allCoreDocsOk = $false }
+}
+if ($allCoreDocsOk) {
     Write-Host "[OK] (2/6) File luật AGENTS.md, REVIEW.md và Hướng dẫn sử dụng đã sẵn sàng." -ForegroundColor Green
     $score++
 } else {
@@ -34,7 +58,7 @@ if ((Test-Path "AGENTS.md") -and (Test-Path "HUONG_DAN_SU_DUNG.md") -and (Test-P
 $skills = @("rea-scan", "rea-interview", "rea-build", "reverse-engineer-anything")
 $allSkillsOk = $true
 foreach ($sk in $skills) {
-    if (-not (Test-Path ".agents\skills\$sk\SKILL.md")) { $allSkillsOk = $false }
+    if (-not (Test-Path (Join-Path $repoRoot ".agents\skills\$sk\SKILL.md"))) { $allSkillsOk = $false }
 }
 if ($allSkillsOk) {
     Write-Host "[OK] (3/6) Bộ kỹ năng đầy đủ (3 skills điều phối + 1 skill lõi REA gốc)." -ForegroundColor Green
@@ -44,7 +68,7 @@ if ($allSkillsOk) {
 }
 
 # 4. Kiểm tra Luật an toàn (Rules)
-if (Test-Path ".agents\rules\rea-workflow.md") {
+if (Test-Path (Join-Path $repoRoot ".agents\rules\rea-workflow.md")) {
     Write-Host "[OK] (4/6) Luật an toàn và bảo vệ dữ liệu đã được kích hoạt." -ForegroundColor Green
     $score++
 } else {
@@ -55,9 +79,9 @@ if (Test-Path ".agents\rules\rea-workflow.md") {
 $docs = @("docs\PRD.md", "docs\ARCHITECTURE.md", "docs\PROGRESS.md", "docs\HANDOFF.md", "docs\PLAN.md", "docs\WORKFLOW_LIFECYCLE.md")
 $allDocsOk = $true
 foreach ($doc in $docs) {
-    if (-not (Test-Path $doc)) { $allDocsOk = $false }
+    if (-not (Test-Path (Join-Path $repoRoot $doc))) { $allDocsOk = $false }
 }
-if (-not (Test-Path ".agents\state\learned_rules.json") -or -not (Test-Path ".agents\state\active_case.json")) {
+if (-not (Test-Path (Join-Path $repoRoot ".agents\state\learned_rules.json")) -or -not (Test-Path (Join-Path $repoRoot ".agents\state\active_case.json"))) {
     $allDocsOk = $false
 }
 if ($allDocsOk) {
@@ -111,9 +135,10 @@ if ($score -eq $total) {
 }
 
 # Hiển thị Tự động phục hồi phiên (Auto-Resume Banner)
-if (Test-Path ".agents\state\active_case.json") {
+$activeCasePath = Join-Path $repoRoot ".agents\state\active_case.json"
+if (Test-Path $activeCasePath) {
     try {
-        $case = Get-Content ".agents\state\active_case.json" -Raw -Encoding UTF8 | ConvertFrom-Json
+        $case = Get-Content $activeCasePath -Raw -Encoding UTF8 | ConvertFrom-Json
         if ($case) {
             Write-Host ""
             Write-Host "--- TIẾN ĐỘ DỰ ÁN (LIFECYCLE STATUS) ---" -ForegroundColor Yellow
@@ -130,3 +155,4 @@ if (Test-Path ".agents\state\active_case.json") {
 }
 
 Write-Host "==========================================================" -ForegroundColor Cyan
+if ($score -eq $total) { exit 0 } else { exit 1 }

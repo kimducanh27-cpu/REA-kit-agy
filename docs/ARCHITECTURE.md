@@ -1,6 +1,6 @@
 # ARCHITECTURE — REA-kit-agy
 
-- Status: direction defined / not implemented
+- Status: ACCEPTED (ADR-0001 through ADR-0006 approved)
 - Last updated: 2026-11-13
 - Upstream baseline: morluto/rea main SHA 5cddc69c51a0fb18d021417199046314581ba9c2; package 6.9.0
 
@@ -82,15 +82,15 @@ REA is local and uses host permissions; it is not a sandbox or multi-tenant auth
 
 See SECURITY_REVIEW_MODEL.md and upstream SECURITY.md / DISCLAIMER.md.
 
-## 8. Deferred choices
+## 8. Architectural decisions & delivery model
 
-### Delivery-model comparison — PROPOSED, not approved
+### Delivery model — ACCEPTED (referencing ADR-0002)
 
-- **Skill-first over upstream REA MCP:** smallest initial integration surface. The kit contributes Vietnamese intake, decision-critical questions, report structure, authorization gates and handoff while REA retains its target tools and schemas. This is a preferred prototype candidate only.
-- **Thin CLI wrapper:** consider only if a verified gap requires deterministic case persistence, schema validation, repeatable reports, cross-agent setup or automation that a Skill plus existing REA CLI/MCP cannot provide. A wrapper adds packaging, runtime, filesystem, update and test obligations.
-- **Status:** PROPOSED. Neither delivery model is approved. Do not create a wrapper, package, server or dependency until the owner approves the v1 boundary and a demonstrated gap justifies it.
+- **Skill-first over upstream REA MCP (ACCEPTED via ADR-0002):** The kit delegates tool execution directly to upstream REA via local stdio MCP (`tools/list`, `binary_session`, `discover_tools`) and provides native Vietnamese orchestration skills (`rea-scan`, `rea-interview`, `rea-build`), Markdown prompt templates, and lightweight PowerShell helper scripts.
+- **Thin CLI wrapper (REJECTED for V1 via ADR-0002):** A custom binary or npm package wrapper is rejected for V1 to eliminate premature abstraction, compilation, and maintenance overhead.
+- **Status:** ACCEPTED. The Skill-first delivery model is approved per ADR-0002.
 
-Other deferred choices: case schema; Evidence persistence; supplementary source/dependency/UI security tools; GUI; multi-agent orchestration. Add no framework, server, database or dependency without a demonstrated need and source-backed comparison.
+Other formalized architectural decisions: multi-target architecture with `ANDROID_APK` first target (ADR-0001, ADR-0005); 4-tier hybrid local memory (ADR-0003); single authoritative coordinator agent model (ADR-0004); and markdown-based CLI ADR management (ADR-0006).
 
 ## 9. Sơ đồ kiến trúc & Quy trình (Mermaid Visual Architecture)
 

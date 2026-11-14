@@ -96,7 +96,7 @@ Nhằm đảm bảo sự tách bạch tuyệt đối giữa việc phát triển
 - Hoàn thành phiên Grilling về 4 mảnh ghép cuối cùng từ bài viết *"How the Claude Code team does code review"*:
   1. **Bản giải thích cho người dùng thay vì đọc diff (Explainers Over Diffs)**:
      - Bắt buộc xuất mục Plain-Language Explainer trong `templates/03-RUN-GUIDE-TEMPLATE.md` và `templates/04-TEST-RESULT-TEMPLATE.md` trả lời 3 câu hỏi (vừa sửa gì, tại sao, giao diện khác ở đâu) bằng tiếng Việt đời thường.
-  2. **Thẩm định độc lập trong Fresh Context (`prompts/05-TAB-REVIEW.md`)**:
+  2. **Thẩm định độc lập trong Fresh Context (`prompts/05-TAB-VALIDATION.md`)**:
      - Tạo Tab Prompt 05 cho phép mở cửa sổ chat sạch hoàn toàn độc lập với lượt viết code, xóa sạch thiên kiến AI.
   3. **Hộp kiểm trách nhiệm con người ("You Land It, You Own It")**:
      - Bổ sung ô kiểm tra trách nhiệm vận hành tại Tầng 4 của `templates/04-TEST-RESULT-TEMPLATE.md`.
@@ -121,7 +121,7 @@ Nhằm đảm bảo sự tách bạch tuyệt đối giữa việc phát triển
   4. **Bản xem trước an toàn theo giai đoạn (Staged Preview)**:
      - Khi nâng cấp/sửa lỗi, AI xuất ra `05_MA_NGUON_PHAT_TRIEN/preview.html` để người dùng duyệt trước; chỉ chuyển thành `index.html` khi người dùng phê duyệt.
   5. **Đồng bộ hóa hệ sinh thái**:
-     - Cập nhật `.agents/skills/rea-build/SKILL.md`, `.agents/scripts/health_check.ps1`, `prompts/04-TAB-BUILD.md`, `README.md`, `prompts/BOOTSTRAP_KIT.md`, `docs/HANDOFF.md`.
+     - Cập nhật `.agents/skills/rea-build/SKILL.md`, `.agents/scripts/health_check.ps1`, `prompts/04-TAB-IMPLEMENTATION.md`, `README.md`, `prompts/BOOTSTRAP_KIT.md`, `docs/HANDOFF.md`.
      - Health check đạt 6/6 PASSED.
 
 ---
@@ -140,4 +140,4 @@ Nhằm đảm bảo sự tách bạch tuyệt đối giữa việc phát triển
      - Tự động lưu snapshot mã nguồn vào `05_MA_NGUON_PHAT_TRIEN/.backup/` trước mỗi đợt sinh code mới.
      - Tạo script `HOAN_TAC.bat` và `.agents/scripts/rollback.ps1` giúp người non-tech hoàn tác 100% về phiên bản chạy tốt gần nhất chỉ bằng 1 cú nhấp đúp chuột.
   5. **Đồng bộ hóa hệ sinh thái**:
-     - Cập nhật `templates/04-TEST-RESULT-TEMPLATE.md`, `.agents/skills/rea-build/SKILL.md`, `prompts/04-TAB-BUILD.md`, `UPSTREAMS.md`, `README.md`, `prompts/BOOTSTRAP_KIT.md`, và `docs/HANDOFF.md`.
+     - Cập nhật `templates/04-TEST-RESULT-TEMPLATE.md`, `.agents/skills/rea-build/SKILL.md`, `prompts/04-TAB-IMPLEMENTATION.md`, `UPSTREAMS.md`, `README.md`, `prompts/BOOTSTRAP_KIT.md`, và `docs/HANDOFF.md`.

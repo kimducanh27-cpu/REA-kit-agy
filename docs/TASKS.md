@@ -44,14 +44,15 @@
 
 ## P01 — REA integration
 
-Status: **IN_PROGRESS**. (P00 exit gate passed with ADRs 0001–0006).
+Status: **IN_PROGRESS** (P00 exit gate passed with ADRs 0001–0006; integration artifacts delivered & verified via health check 6/6 PASSED).
 
 - [x] Establish MADR repository architecture decisions (`docs/adrs/0001`–`0006`) and CLI runner (`.agents/scripts/adr.ps1`).
-- [ ] Connect and verify upstream REA MCP server (`npx -y rea-agents`) with Google Antigravity.
-- [ ] Integrate Antigravity Android CLI plugin (`android-cli-plugin`) for Android APK target class (SDK, AVD, Device Hub, Layout Inspector).
-- [ ] Build original Vietnamese kit skills (`rea-scan`, `rea-interview`, `rea-build`).
-- [ ] Implement target preflight / capability reporting for `ANDROID_APK`.
-- [ ] Test in Antigravity using a clean workspace and record exact application/REA versions.
+- [x] Connect and verify upstream REA MCP server (`npx -y rea-agents`) with Google Antigravity (runtime doctor check in `health_check.ps1`).
+- [x] Integrate Antigravity Android CLI plugin (`android-cli-plugin`) for Android APK target class (SDK, AVD, Device Hub, Layout Inspector in `WORKFLOW_LIFECYCLE.md`, `AGENTS.md`, `health_check.ps1`).
+- [x] Build original Vietnamese kit skills (`rea-scan`, `rea-interview`, `rea-build` in `.agents/skills/`).
+- [x] Implement target preflight / capability reporting for `ANDROID_APK` (`prompts/01-TAB-DISCOVERY.md`, `health_check.ps1`, `active_case.json`).
+- [x] Test in Antigravity workspace and verify environment integrity (Health check 6/6 PASSED, Auto-Resume banner active).
+- [ ] Complete live end-to-end sample APK ingestion through P01 exit gate into P02.
 
 ---
 

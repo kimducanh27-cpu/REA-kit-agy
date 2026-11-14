@@ -26,8 +26,8 @@ Mọi hoạt động đều phải tuân thủ tuần tự qua 6 Stage và 6 C�
 2. **STAGE 01 · DISCOVERY (Tab 01)**:
    - Bước 01: App Intake / Preflight (Tiếp nhận, kiểm tra file, sao lưu sang `04_SAO_LUU_AN_TOAN/`).
    - Bước 02: Reference Baseline:
-     * Đối với Android APK: Tận dụng plugin **Android CLI** (`android layout`, `android screen`, AVD/Device Hub) và REA ADB (`inspect_android_package`, `capture_adb_screen`, `start_adb_app`) để chạy thử, chụp ảnh UI và trích xuất cấu trúc phân cấp layout.
-     * Cơ chế Fallback tĩnh: Nếu thiếu thiết bị ảo AVD / Device Hub / thiết bị thật, tự động chuyển sang bóc tách tài nguyên tĩnh bằng `inspect_android_package` (layout XML, drawables, strings) và đánh dấu `SKIPPED (Tĩnh)`. Tuyệt đối không crash.
+     * Đối với Android APK: Tận dụng plugin **Android CLI** (`android layout`, `android screen capture -o <file_path>`, AVD/Device Hub), phân tích tĩnh JADX nội bộ từ REA MCP (`inspect_android_package` — lưu ý: đây là phân tích tĩnh cục bộ bằng JADX, KHÔNG PHẢI lệnh ADB) và REA ADB (`capture_adb_screen` với tham số bắt buộc `serial`, `output-directory`; `start_adb_app` với tham số bắt buộc `serial`, `package`) để chạy thử, chụp ảnh UI và trích xuất cấu trúc phân cấp layout.
+     * Cơ chế Fallback tĩnh: Nếu thiếu thiết bị ảo AVD / Device Hub / thiết bị thật, tự động chuyển sang bóc tách tài nguyên tĩnh bằng REA MCP `inspect_android_package` (sử dụng JADX cục bộ phân tích layout XML, drawables, strings; không phải lệnh ADB) và đánh dấu `SKIPPED (Tĩnh)`. Tuyệt đối không crash.
    - 👉 **CỔNG 01 (`gate_01_baseline_verified`)**: Đã có ảnh chụp baseline hoặc tài nguyên tĩnh dự phòng.
 
 3. **STAGE 02 · REVERSE ENGINEERING (Tab 02)**:
@@ -54,10 +54,10 @@ Mọi hoạt động đều phải tuân thủ tuần tự qua 6 Stage và 6 C�
    - 👉 **CỔNG 04 (`gate_04_build_qa_passed`)**: Mã nguồn vượt qua kiểm tra cú pháp, không có cờ HIGH RISK chưa giải trình.
 
 6. **STAGE 05 · VALIDATION (Tab 05)**:
-   - Bước 11: Run App / Smoke Test (Khởi chạy Web trên trình duyệt hoặc chạy Android Native/APK trên AVD/Device Hub qua `start_adb_app` / Android CLI, kiểm tra happy path).
+   - Bước 11: Run App / Smoke Test (Khởi chạy Web trên trình duyệt hoặc chạy Android Native/APK trên AVD/Device Hub qua `start_adb_app` [yêu cầu tham số `serial`, `package`] / Android CLI, kiểm tra happy path).
    - Bước 12: Hard Verify:
      * Đối chiếu trực tiếp 1-1 với app gốc theo 3 cột: Khớp 100% / Khác biệt / Nâng cấp mới.
-     * Với Android: Sử dụng `android layout` và `android screen` / `capture_adb_screen` để so sánh trực quan và cấu trúc layout.
+     * Với Android: Sử dụng `android layout` và `android screen capture -o <file_path>` / REA ADB `capture_adb_screen` (yêu cầu tham số `serial`, `output-directory`) để so sánh trực quan và cấu trúc layout.
      * Xuất `03_KET_QUA_KIEM_TRA/BAO_CAO_NGHIEM_THU_HARD_VERIFY.md`.
    - 👉 **CỔNG 05 (`gate_05_hard_verify_passed`)**: Người dùng xác nhận ứng dụng mới đạt yêu cầu nghiệm thu.
    - Bước 13: Release & Handoff (Đóng gói, Explainer đời thường, hướng dẫn `HOAN_TAC.bat`, xuất `05_MA_NGUON_PHAT_TRIEN/BAN_GIAO_SAN_PHAM.md`).
@@ -93,5 +93,5 @@ Mọi hoạt động đều phải tuân thủ tuần tự qua 6 Stage và 6 C�
 - **Học từ sự cố (Incidents to Evals)**: Khi phát sinh lỗi hoặc hoàn tác, Agent tự động cập nhật nguyên nhân vào `.agents/state/learned_rules.json`.
 - **Khử trùng dữ liệu nhạy cảm**: 100% API keys, tokens bí mật trong báo cáo đều được che mờ thành `[REDACTED]`.
 - **Tuyên bố bảo mật chuẩn mực (Scoped Claims)**: Không cam kết "quét sạch 100% mã độc"; chỉ báo cáo kết quả kiểm toán tĩnh theo phạm vi (Scoped Static Audit) và đưa vùng chưa kiểm toán vào Sổ Unknowns.
-- **Năng lực Android CLI**: Tận dụng triệt để Antigravity Android CLI plugin (`android layout`, `android screen`, `android create`, AVD/Device Hub) kết hợp REA ADB (`inspect_android_package`, `capture_adb_screen`, `start_adb_app`).
+- **Năng lực Android CLI & REA**: Tận dụng triệt để Antigravity Android CLI plugin (`android layout`, `android screen capture -o <file_path>`, `android create`, AVD/Device Hub) kết hợp phân tích tĩnh JADX cục bộ từ REA MCP (`inspect_android_package` — lưu ý: đây là phân tích tĩnh JADX cục bộ, KHÔNG PHẢI lệnh ADB) và công cụ REA ADB (`capture_adb_screen` với `serial`, `output-directory`; `start_adb_app` với `serial`, `package`).
 - **Hoàn tác 1-Click**: Luôn duy trì nút `HOAN_TAC.bat` và thư mục `.backup/` để người dùng có thể quay lại phiên bản tốt gần nhất bất kỳ lúc nào.

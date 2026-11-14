@@ -66,7 +66,7 @@ flowchart TD
 | Cổng Kiểm Soát | Vị Trí Vòng Đời | Điều Kiện Vượt Qua (Passing Criteria) | Hành Động Khi Bị Từ Chối (Reject Loop) |
 | :--- | :--- | :--- | :--- |
 | **GATE 01** (`gate_01_baseline_verified`) | Sau Bước 02 | Có ảnh chụp baseline thực tế HOẶC đã bóc tách tài nguyên tĩnh dự phòng. | Bổ sung file vào `01_` hoặc chạy lại chế độ Static Fallback. |
-| **GATE 02** (`gate_02_audit_passed`) | Sau Bước 05 | Quét sạch mã độc, che mờ API Keys `[REDACTED]`, xuất đủ `UNKNOWNS_AND_COVERAGE.md`. | Điều tra bổ sung các file nghi vấn tại Bước 04. |
+| **GATE 02** (`gate_02_audit_passed`) | Sau Bước 05 | Hoàn thành kiểm tra tĩnh có giới hạn; không phát hiện rủi ro trong phạm vi quét; vùng chưa kiểm toán đưa vào Sổ Unknowns; che mờ API Keys `[REDACTED]`. | Điều tra bổ sung các file nghi vấn tại Bước 04. |
 | **GATE 03** (`gate_03_spec_frozen`) | Sau Bước 08 | Người dùng duyệt `dac-ta-yeu-cau-da-chot.md` và `KE_HOACH_TRIEN_KHAI.md`. | Tạo bản `SPEC_v2.md`, lùi về Bước 06 để phỏng vấn lại. Không xóa bản cũ. |
 | **GATE 04** (`gate_04_build_qa_passed`) | Sau Bước 10 | Syntax check 100% OK, không có HIGH RISK chưa duyệt, Independent Reviewer PASS. | Lùi về Bước 09 tối đa 2 lần. Nếu vẫn lỗi, dừng lại báo cáo người dùng. |
 | **GATE 05** (`gate_05_hard_verify_passed`) | Sau Bước 12 | Người dùng xác nhận bảng đối chiếu Hard Verify đạt yêu cầu. | Tạo `FIX_PLAN_v2.md`, lùi về Bước 09 để sửa code cục bộ. |

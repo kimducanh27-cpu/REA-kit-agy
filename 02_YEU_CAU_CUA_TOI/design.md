@@ -9,7 +9,9 @@
 - **Tên phong cách:** Hiện đại & Tối giản (Modern Clean)
 - **Chế độ hiển thị:** Light Mode (Sáng)
 
-### 2. Bảng màu ứng dụng (CSS Tokens)
+### 2. Bảng màu ứng dụng (CSS & Android Native Tokens)
+
+#### a) Web CSS Tokens (Route A)
 ```css
 :root {
   /* Màu thương hiệu & Nút chính */
@@ -32,7 +34,40 @@
 }
 ```
 
-### 3. Phông chữ & Bo góc
+#### b) Android Native Tokens (Route B — Jetpack Compose & XML)
+```kotlin
+// Jetpack Compose Color Tokens (ui/theme/Color.kt)
+val PrimaryColor = Color(0xFF2563EB)
+val PrimaryHoverColor = Color(0xFF1D4ED8)
+val BackgroundColor = Color(0xFFF8FAFC)
+val SurfaceColor = Color(0xFFFFFFFF)
+val BorderColor = Color(0xFFE2E8F0)
+val TextMainColor = Color(0xFF0F172A)
+val TextMutedColor = Color(0xFF64748B)
+val AccentColor = Color(0xFF10B981)
+val DangerColor = Color(0xFFEF4444)
+val WarningColor = Color(0xFFF59E0B)
+```
+
+```xml
+<!-- Android XML Color Tokens (res/values/colors.xml) -->
+<resources>
+    <color name="color_primary">#2563EB</color>
+    <color name="color_primary_hover">#1D4ED8</color>
+    <color name="color_background">#F8FAFC</color>
+    <color name="color_surface">#FFFFFF</color>
+    <color name="color_border">#E2E8F0</color>
+    <color name="color_text_main">#0F172A</color>
+    <color name="color_text_muted">#64748B</color>
+    <color name="color_accent">#10B981</color>
+    <color name="color_danger">#EF4444</color>
+    <color name="color_warning">#F59E0B</color>
+</resources>
+```
+
+### 3. Phông chữ, Bo góc & Kích thước (Web & Android Dimensions)
+
+#### a) Web CSS
 ```css
 :root {
   --font-main: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
@@ -40,6 +75,25 @@
   --radius-md: 10px;
   --radius-lg: 16px;
 }
+```
+
+#### b) Android Native (Compose Shapes & XML Dimens)
+```kotlin
+// Jetpack Compose Shapes (ui/theme/Shape.kt)
+val Shapes = Shapes(
+    small = RoundedCornerShape(6.dp),
+    medium = RoundedCornerShape(10.dp),
+    large = RoundedCornerShape(16.dp)
+)
+```
+
+```xml
+<!-- Android XML Dimens (res/values/dimens.xml) -->
+<resources>
+    <dimen name="radius_sm">6dp</dimen>
+    <dimen name="radius_md">10dp</dimen>
+    <dimen name="radius_lg">16dp</dimen>
+</resources>
 ```
 
 ---

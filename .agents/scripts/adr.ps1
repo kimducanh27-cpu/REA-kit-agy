@@ -2,11 +2,14 @@
 # Standard: MADR (Markdown Any Architectural Decision Records)
 param(
     [Parameter(Position=0)]
-    [ValidateSet("list", "show", "validate", "status", "help")]
+    [ValidateSet("list", "show", "validate", "status", "new", "help")]
     [string]$Action = "list",
 
     [Parameter(Position=1)]
-    [string]$Id = ""
+    [string]$Id = "",
+
+    [Parameter(Position=2)]
+    [string]$Title = ""
 )
 
 $OutputEncoding = [System.Text.Encoding]::UTF8
@@ -18,9 +21,13 @@ if (-not $scriptDir) { $scriptDir = (Get-Location).Path }
 $repoRoot = $scriptDir
 while ($repoRoot -and -not (Test-Path (Join-Path $repoRoot "docs\adrs"))) {
     $parent = Split-Path $repoRoot -Parent
-    if ($parent -eq $repoRoot) { break }
+    if ($parent -eq $repoRoot -or [string]::IsNullOrEmpty($parent)) { break }
     $repoRoot = $parent
 }
+if (-not $repoRoot) {
+    $repoRoot = (Get-Location).Path
+}
+
 $adrDir = Join-Path $repoRoot "docs\adrs"
 
 if (-not (Test-Path $adrDir)) {
@@ -151,15 +158,16 @@ switch ($Action) {
             $content = Get-Content -Path $adr.FullName -Raw -Encoding UTF8
             $missing = @()
 
-            if (-not ($content -match '^#\s+.+')) {
+            if (-not ($content -match '(?m)^#\s+.+')) {
                 $missing += "Tiêu đề chính (# Title)"
             }
-            if (-not ($content -match '-\s*Status:\s*.+')) {
+            if (-not ($content -match '(?m)^-\s*Status:\s*.+')) {
                 $missing += "Trường '- Status:'"
             }
 
             foreach ($sec in $requiredSections) {
-                if (-not ($content.Contains($sec))) {
+                $escaped = [regex]::Escape($sec)
+                if (-not ($content -match $escaped)) {
                     $missing += "Mục '$sec'"
                 }
             }
@@ -212,12 +220,110 @@ switch ($Action) {
         }
     }
 
+    "new" {
+        $adrs = Get-AdrList
+        $maxNum = 0
+        foreach ($adr in $adrs) {
+            if ($adr.Id -match '^\d+$') {
+                $n = [int]$adr.Id
+                if ($n -gt $maxNum) { $maxNum = $n }
+            }
+        }
+        
+        $newNum = $maxNum + 1
+        $titleText = "New Architectural Decision"
+        if ($Title) {
+            $titleText = $Title
+        } elseif ($Id -and ($Id -notmatch '^\d+$')) {
+            $titleText = $Id
+        } elseif ($Id -match '^\d+$') {
+            $newNum = [int]$Id
+            if ($Title) { $titleText = $Title }
+        }
+
+        $formattedId = "{0:D4}" -f $newNum
+        $slug = $titleText.ToLower() -replace '[^a-z0-9]+', '-' -replace '^-+|-+$', ''
+        if ([string]::IsNullOrWhiteSpace($slug)) { $slug = "new-record" }
+
+        $fileName = "$formattedId-$slug.md"
+        $filePath = Join-Path $adrDir $fileName
+
+        if (Test-Path $filePath) {
+            Write-Host "[!] File ADR đã tồn tại: $filePath" -ForegroundColor Red
+            exit 1
+        }
+
+        $currentDate = (Get-Date).ToString("yyyy-MM-dd")
+        $template = @"
+# $titleText
+
+- Status: proposed
+- Deciders: REA Agent Swarm & Human Architect
+- Date: $currentDate
+
+## Context and Problem Statement
+
+[Mô tả bối cảnh và vấn đề kiến trúc cần đưa ra quyết định...]
+
+## Decision Drivers
+
+* [Động lực 1: ví dụ yêu cầu hiệu năng, độ tin cậy]
+* [Động lực 2: ví dụ chi phí bảo trì, tính tương thích]
+
+## Considered Options
+
+* Option 1: [Lựa chọn 1]
+* Option 2: [Lựa chọn 2]
+
+## Decision Outcome
+
+Chosen option: "[Lựa chọn được chọn]", because [lý do lựa chọn].
+
+### Positive Consequences
+
+* [Hệ quả tích cực 1]
+* [Hệ quả tích cực 2]
+
+### Negative Consequences
+
+* [Hệ quả tiêu cực hoặc thỏa hiệp 1]
+
+## Pros and Cons of the Options
+
+### Option 1
+
+* Good, because [lợi ích]
+* Bad, because [nhược điểm]
+
+### Option 2
+
+* Good, because [lợi ích]
+* Bad, because [nhược điểm]
+
+## Links
+
+* [Link tham khảo hoặc task liên quan]
+"@
+        Set-Content -Path $filePath -Value $template -Encoding UTF8
+        Write-Host "================================================================================" -ForegroundColor Cyan
+        Write-Host "   ĐÃ TẠO MỚI ARCHITECTURE DECISION RECORD (ADR)                                " -ForegroundColor Green
+        Write-Host "================================================================================" -ForegroundColor Cyan
+        Write-Host " ID       : $formattedId" -ForegroundColor Cyan
+        Write-Host " File     : $fileName" -ForegroundColor White
+        Write-Host " Đường dẫn: $filePath" -ForegroundColor Gray
+        Write-Host " Tiêu đề  : $titleText" -ForegroundColor White
+        Write-Host " Chuẩn    : MADR (Markdown Any Architectural Decision Records)" -ForegroundColor DarkGray
+        Write-Host "================================================================================" -ForegroundColor Cyan
+        exit 0
+    }
+
     "help" {
-        Write-Host "SỬ DỤNG: .\.agents\scripts\adr.ps1 [Action] [Id]" -ForegroundColor Cyan
-        Write-Host "  list      : Liệt kê toàn bộ các bản ghi ADR và trạng thái (mặc định)."
-        Write-Host "  show <id> : Xem nội dung đầy đủ của một bản ghi ADR theo mã số hoặc tên."
-        Write-Host "  validate  : Kiểm tra tính tuân thủ cấu trúc chuẩn MADR cho tất cả ADR."
-        Write-Host "  status    : Thống kê số lượng ADR theo trạng thái (accepted, proposed,...)."
-        Write-Host "  help      : Hiển thị hướng dẫn này."
+        Write-Host "SỬ DỤNG: .\.agents\scripts\adr.ps1 [Action] [Id/Title] [Title]" -ForegroundColor Cyan
+        Write-Host "  list                  : Liệt kê toàn bộ các bản ghi ADR và trạng thái (mặc định)."
+        Write-Host "  show <id>             : Xem nội dung đầy đủ của một bản ghi ADR theo mã số hoặc tên."
+        Write-Host "  validate              : Kiểm tra tính tuân thủ cấu trúc chuẩn MADR cho tất cả ADR."
+        Write-Host "  status                : Thống kê số lượng ADR theo trạng thái (accepted, proposed,...)."
+        Write-Host "  new [title]           : Tạo bản ghi ADR mới tiếp theo theo mẫu chuẩn MADR."
+        Write-Host "  help                  : Hiển thị hướng dẫn này."
     }
 }

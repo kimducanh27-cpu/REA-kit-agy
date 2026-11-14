@@ -1,19 +1,19 @@
 # PROMPT 04: VIẾT CODE & KIỂM TOÁN MÃ NGUỒN (TAB 04 — IMPLEMENTATION)
 
-*Dán đoạn lệnh này vào AI Agent sau khi hoàn thành Phase 03 (Gate 03 đã mở).*
+*Dán đoạn lệnh này vào AI Agent sau khi hoàn thành Stage 03 (Gate 03 đã mở).*
 
 ---
 
 ```markdown
-# Tab 04 — Phase 04: Implementation (Bước 09: REA Build & Bước 10: Build QA / Code Review)
+# Tab 04 — Stage 04: Implementation (Bước 09: REA Build & Bước 10: Build QA / Code Review)
 
 Read and follow `AGENTS.md`, `REVIEW.md`, and `docs/WORKFLOW_LIFECYCLE.md`.
 Activate Skill `rea-build`.
 
 ## Điều kiện tiên quyết:
-Kiểm tra `.agents/state/active_case.json`. Nếu `gates.gate_03_spec_frozen` chưa đạt (`false`), dừng lại và yêu cầu hoàn thành Phase 03 trước.
+Kiểm tra `.agents/state/active_case.json`. Nếu `gates.gate_03_spec_frozen` chưa đạt (`false`), dừng lại và yêu cầu hoàn thành Stage 03 trước.
 
-You are executing **PHASE 04 · IMPLEMENTATION**:
+You are executing **STAGE_04 · IMPLEMENTATION**:
 
 ### BƯỚC 09: REA BUILD (Phát Triển Mã Nguồn Chuẩn Zero-Install)
 1. **LÁ CHẮN HOÀN TÁC**: Tự động lưu snapshot mã nguồn hiện tại vào `05_MA_NGUON_PHAT_TRIEN/.backup/`.
@@ -35,12 +35,12 @@ You are executing **PHASE 04 · IMPLEMENTATION**:
 5. **Chốt chặn phân tầng rủi ro**:
    - `LOW RISK`: UI/Text tĩnh ➔ Tự động duyệt sau khi syntax OK.
    - `MEDIUM RISK`: Logic form, LocalStorage ➔ Báo cáo checklist tính năng.
-   - `HIGH RISK` / `SYNTAX ERROR`: Lỗi cú pháp hoặc gọi mạng ngoài không phép ➔ **CHẶN ĐỨNG**. Không cho phép sang Phase 05.
+   - `HIGH RISK` / `SYNTAX ERROR`: Lỗi cú pháp hoặc gọi mạng ngoài không phép ➔ **CHẶN ĐỨNG**. Không cho phép sang Stage 05.
 6. Xuất báo cáo kiểm thử vào:
    👉 `03_KET_QUA_KIEM_TRA/KET_QUA_KIEM_THU.md`.
 7. **CỔNG 04 (Quality Gate 04: `gate_04_build_qa_passed`)**:
    - Khi syntax 100% OK và không còn lỗi chặn:
-   - Cập nhật `active_case.json`: `gates.gate_04_build_qa_passed = true`, `current_phase = "PHASE_04_IMPLEMENTATION"`, `current_step = "10_BUILD_QA"`.
+   - Cập nhật `active_case.json`: `gates.gate_04_build_qa_passed = true`, `current_phase = "STAGE_04_IMPLEMENTATION"`, `current_step = "10_BUILD_QA"`.
    - Cập nhật checklist trong `docs/PROGRESS.md`.
 
 ### BÁO CÁO CHO NGƯỜI DÙNG:

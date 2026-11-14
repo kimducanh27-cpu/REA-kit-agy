@@ -26,12 +26,17 @@
 
 ---
 
-## 🏗️ TẦNG 1: KIẾN TRÚC & CẤU TRÚC CODE (ZERO-INSTALL WEB)
+## 🏗️ TẦNG 1: KIẾN TRÚC & CẤU TRÚC CODE (ROUTE A WEB HOẶC ROUTE B ANDROID NATIVE)
 *Mục tiêu: Thiết kế sao cho lỗi không thể xảy ra ngay từ đầu, ranh giới rõ ràng, dễ chạy.*
 
-- [x] **Mô hình triển khai:** Web App độc lập (Single-file HTML5 + Tailwind CSS CDN + Alpine/Vanilla JS).
-- [x] **Ranh giới dữ liệu:** Dữ liệu lưu trữ cục bộ trên máy (LocalStorage/IndexedDB), không gửi ra ngoài trái phép.
-- [x] **Khả dụng tức thì:** Nhấp đúp chuột vào file `index.html` hoặc `preview.html` mở chạy ngay trên trình duyệt mà không cần cài Node.js, Python hay Docker.
+- **Khi chọn Route A (Web App Zero-Install — Mặc định)**:
+  * [x] **Mô hình triển khai:** Web App độc lập (Single-file HTML5 + Tailwind CSS CDN + Alpine/Vanilla JS).
+  * [x] **Ranh giới dữ liệu:** Dữ liệu lưu trữ cục bộ trên máy (LocalStorage/IndexedDB), không gửi ra ngoài trái phép.
+  * [x] **Khả dụng tức thì:** Nhấp đúp chuột vào file `index.html` hoặc `preview.html` mở chạy ngay trên trình duyệt mà không cần cài Node.js, Python hay Docker.
+- **Khi chọn Route B (Android Native Project)**:
+  * [x] **Cấu trúc dự án:** Tạo chuẩn qua Antigravity Android CLI (`android create`) hoặc Gradle Android trong `05_MA_NGUON_PHAT_TRIEN/android/`.
+  * [x] **Biên dịch & Khởi chạy:** Gradle build thành công (`./gradlew assembleDebug`), cài đặt và khởi chạy trên AVD/Device Hub.
+  * [x] **Kiểm thử giao diện:** Xác thực trực quan và cấu trúc qua `android layout` và `android screen capture -o <file_path>`.
 
 ---
 
@@ -52,7 +57,7 @@
 *Mục tiêu: Tách biệt vai trò Builder và Reviewer để loại bỏ thiên kiến xác nhận của AI; áp dụng Bộ lọc dẹp nhiễu (High-Signal Filter).*
 
 ### 3.1. Trục Tiêu chuẩn Giao diện (Standards Review — Đối chiếu `02_YEU_CAU_CUA_TOI/design.md`)
-- [x] **Tầng 1 (Tokens):** Ánh xạ đầy đủ biến màu `--color-primary`, font chữ, bo góc vào CSS `:root` và Tailwind classes, không hardcode mã màu lung tung.
+- [x] **Tầng 1 (Tokens):** Ánh xạ đầy đủ biến màu `--color-primary` (CSS Web) hoặc `PrimaryColor` / `@color/color_primary` (Android Compose/XML), font chữ, bo góc từ `02_YEU_CAU_CUA_TOI/design.md`, không hardcode mã màu lung tung.
 - [x] **Tầng 2 (Components):** Các nút bấm, thẻ card, ô nhập liệu tuân thủ đúng quy chuẩn kích thước và hiệu ứng hover/focus.
 - [x] **Tầng 3 (UI States):** Triển khai đủ 4 trạng thái bắt buộc:
   * *Loading*: Có hiệu ứng khung xương (skeleton) hoặc vòng xoay khi tải.
@@ -71,7 +76,8 @@
 *Mục tiêu: Người dùng kiểm tra trực quan và xác nhận trách nhiệm vận hành.*
 
 1. **Cách kiểm tra nhanh:**
-   - Mở file `05_MA_NGUON_PHAT_TRIEN/preview.html` (hoặc `index.html`) trong trình duyệt.
+   - **Với Web (Route A)**: Mở file `05_MA_NGUON_PHAT_TRIEN/preview.html` (hoặc `index.html`) trong trình duyệt.
+   - **Với Android (Route B)**: Khởi chạy trên máy ảo AVD hoặc thiết bị thật qua Antigravity Device Hub/`start_adb_app`, kiểm tra giao diện bằng `android layout` và `android screen capture -o <file_path>`.
 2. **Danh sách các tính năng cần nhấp thử:**
    - [ ] **Thao tác 1:** [Tên chức năng 1] ➔ Kiểm tra kết quả hiển thị trên màn hình.
    - [ ] **Thao tác 2:** [Tên chức năng 2] ➔ Kiểm tra dữ liệu được lưu đúng.

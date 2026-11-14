@@ -33,7 +33,7 @@
 - [x] **API Keys**: Đã rà soát và che mờ 100% thành `[REDACTED]`
 - [x] **Mật khẩu / Private Keys cứng**: Đã loại bỏ hoặc thay thế bằng biến môi trường
 - [x] **URL máy chủ nội bộ / IP riêng**: Đã gắn cờ kiểm duyệt
-- [x] **Quyền truy cập độc hại (Malicious Permissions)**: Không phát hiện backdoor hoặc mã độc gián điệp
+- [x] **Kiểm toán tĩnh có giới hạn phạm vi (Scoped Static Audit)**: Hoàn thành kiểm tra tĩnh có giới hạn; không phát hiện rủi ro trong phạm vi quét; vùng chưa kiểm toán đưa vào Sổ Unknowns
 
 ---
 
