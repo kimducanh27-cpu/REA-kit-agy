@@ -39,7 +39,7 @@ Read and follow AGENTS.md and docs/WORKFLOW_LIFECYCLE.md.
 
 ## Active Skills for this Tab:
 - Local Kit Skills: rea-scan, reverse-engineer-anything
-- Host Plugin Skills: android-cli, android-device-hub
+- Host Plugin Skills: android-cli, android-device-hub, investigate-first
 
 1. Tiếp nhận file trong 01_THA_APP_VAO_DAY/, sao lưu an toàn sang 04_SAO_LUU_AN_TOAN/.
 2. Thử chạy app gốc, chụp màn hình baseline bằng android screen capture hoặc ADB. Nếu không có máy ảo/runtime thì Fallback bóc tách tài nguyên tĩnh và đánh dấu SKIPPED (Tĩnh).
@@ -55,8 +55,8 @@ Read and follow AGENTS.md and docs/WORKFLOW_LIFECYCLE.md.
 Read and follow AGENTS.md, REVIEW.md, and docs/WORKFLOW_LIFECYCLE.md.
 
 ## Active Skills for this Tab:
-- Local Kit Skills: rea-scan, reverse-engineer-anything
-- Host Plugin Skills: android-cli (kiểm tra tài nguyên thô khi phân tích APK)
+- Local Kit Skills: rea-scan, rea-audit, reverse-engineer-anything
+- Host Plugin Skills: android-cli, cookie-debugging, investigate-first
 
 1. Bước 03: Bóc tách cấu trúc, che mờ bí mật [REDACTED], trích xuất Screen Inventory & State Matrix.
 2. Bước 04: Điều tra luồng nghiệp vụ, API endpoints và lưu trữ dữ liệu.
@@ -73,8 +73,8 @@ Read and follow AGENTS.md, REVIEW.md, and docs/WORKFLOW_LIFECYCLE.md.
 Read and follow AGENTS.md, REVIEW.md, and docs/WORKFLOW_LIFECYCLE.md.
 
 ## Active Skills for this Tab:
-- Local Kit Skills: rea-interview
-- Host Plugin Skills: ui-styling, design-system
+- Local Kit Skills: rea-interview, rea-plan
+- Host Plugin Skills: grilling, ui-styling, design-system, ui-ux-pro-max, figma-generate-diagram
 
 1. Bước 06: Phỏng vấn tôi từ 3 đến 5 câu hỏi tiếng Việt dựa trên hồ sơ mong muốn, sổ Unknowns và chốt 1 trong 4 Build Routes (Extend, Feature Branch, Compatible Clean-room, Full Rewrite).
 2. Bước 07: Chốt Design System 3 tầng vào 02_YEU_CAU_CUA_TOI/design.md và xuất 03_KET_QUA_KIEM_TRA/dac-ta-yeu-cau-da-chot.md.
@@ -92,7 +92,7 @@ Read and follow AGENTS.md, REVIEW.md, and docs/WORKFLOW_LIFECYCLE.md.
 
 ## Active Skills for this Tab:
 - Local Kit Skills: rea-build
-- Host Plugin Skills: surgical-patch (khi sửa lỗi), lean-build (khi viết mới), ui-styling
+- Host Plugin Skills: tdd, surgical-patch, lean-build, safe-refactor, compose-preview, ui-styling
 
 1. Bước 09: Lưu snapshot vào .backup/ bằng lệnh rollback.ps1 -Snapshot, viết mã nguồn theo Build Route vào 05_MA_NGUON_PHAT_TRIEN/, tuân thủ design.md và 4 trạng thái UI. Xuất preview.html nếu là bản sửa đổi Web.
 2. Bước 10: Thẩm định độc lập 2 trục theo REVIEW.md, chạy verify_code.ps1, áp dụng bộ lọc dẹp nhiễu, khống chế 2 vòng tự sửa. Chặn đứng nếu gặp cú pháp lỗi hoặc HIGH RISK.
@@ -110,12 +110,30 @@ Read and follow AGENTS.md, REVIEW.md, and docs/WORKFLOW_LIFECYCLE.md.
 
 ## Active Skills for this Tab:
 - Local Kit Skills: rea-build
-- Host Plugin Skills: code-review, android-cli, android-device-hub
+- Host Plugin Skills: verify-and-stop, code-review, android-cli, android-device-hub, compose-preview, a11y-debugging
 
 1. Bước 11: Smoke test chạy thử app trên trình duyệt hoặc máy ảo AVD/Device Hub.
 2. Bước 12: Hard Verify đối chiếu 1-1 với app gốc theo 3 cột, dùng android layout và android screen capture để so sánh layout, xuất 03_KET_QUA_KIEM_TRA/BAO_CAO_NGHIEM_THU_HARD_VERIFY.md. Mở CỔNG 05 (gate_05_hard_verify_passed = true).
 3. Bước 13: Đóng gói hoàn chỉnh, viết Explainer đời thường, hướng dẫn HOAN_TAC.bat, xuất 05_MA_NGUON_PHAT_TRIEN/BAN_GIAO_SAN_PHAM.md. Mở CỔNG 06 (gate_06_handoff_signed = true).
 4. Đồng bộ hóa toàn bộ thông tin vào docs/PROGRESS.md và docs/HANDOFF.md.
+```
+
+---
+
+### 📌 PROMPT 06: Tổng hợp & Nuôi dưỡng bộ nhớ (Anthropic Dreaming)
+*(Mở file `prompts/06-CONSOLIDATION-AND-MEMORY.md` hoặc copy đoạn dưới đây)*
+```markdown
+# Session Memory Consolidation (Anthropic Dreaming Protocol)
+Read and follow AGENTS.md, docs/ARCHITECTURE.md, and .agents/skills/memory-consolidation/SKILL.md.
+
+## Active Skills for this Step:
+- Local Kit Skills: memory-consolidation
+- Host Plugin Skills: agent-chat-export, caveman-compress, caveman-learn
+
+1. Trích xuất nhật ký chat phiên này với agent-chat-export sang .agents/state/cases/.
+2. Rà soát bài học kỹ thuật bền vững (Verified Fixes, Architectural Decisions).
+3. Đối chiếu nguồn gốc và cập nhật .agents/state/MEMORY.md (Layer 2).
+4. Hợp nhất trùng lặp, dọn dẹp ghi chú cũ, nén handoff với caveman-compress và cập nhật docs/HANDOFF.md.
 ```
 
 ---

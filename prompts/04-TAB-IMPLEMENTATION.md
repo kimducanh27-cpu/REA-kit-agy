@@ -11,7 +11,7 @@ Read and follow `AGENTS.md`, `REVIEW.md`, and `docs/WORKFLOW_LIFECYCLE.md`.
 
 ## Active Skills for this Tab:
 - Local Kit Skills: `rea-build`
-- Host Plugin Skills: `surgical-patch` (khi sửa lỗi phạm vi hẹp), `lean-build` (khi triển khai tính năng mới), `ui-styling` (áp dụng tokens giao diện)
+- Host Plugin Skills: `tdd`, `surgical-patch`, `lean-build`, `safe-refactor`, `compose-preview`, `ui-styling`
 
 ## Điều kiện tiên quyết:
 Kiểm tra `.agents/state/active_case.json`. Nếu `gates.gate_03_spec_frozen` chưa đạt (`false`), dừng lại và yêu cầu hoàn thành Stage 03 trước.

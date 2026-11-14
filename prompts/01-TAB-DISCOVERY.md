@@ -11,7 +11,7 @@ Read and follow `AGENTS.md` and `docs/WORKFLOW_LIFECYCLE.md`.
 
 ## Active Skills for this Tab:
 - Local Kit Skills: `rea-scan`, `reverse-engineer-anything`
-- Host Plugin Skills: `android-cli`, `android-device-hub`
+- Host Plugin Skills: `android-cli`, `android-device-hub`, `investigate-first`
 
 You are executing **STAGE_01 · DISCOVERY**:
 

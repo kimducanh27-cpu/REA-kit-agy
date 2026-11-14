@@ -68,7 +68,7 @@ Read and follow `AGENTS.md` and `docs/WORKFLOW_LIFECYCLE.md`.
 
 ## Active Skills for this Tab:
 - Local Kit Skills: `rea-scan`, `reverse-engineer-anything`
-- Host Plugin Skills: `android-cli`, `android-device-hub`
+- Host Plugin Skills: `android-cli`, `android-device-hub`, `investigate-first`
 
 You are executing **STAGE_01 · DISCOVERY**:
 
@@ -112,8 +112,8 @@ Báo cáo ngắn gọn bằng tiếng Việt đời thường:
 Read and follow `AGENTS.md`, `REVIEW.md`, and `docs/WORKFLOW_LIFECYCLE.md`.
 
 ## Active Skills for this Tab:
-- Local Kit Skills: `rea-scan`, `reverse-engineer-anything`
-- Host Plugin Skills: `android-cli` (kiểm tra tài nguyên thô khi phân tích APK)
+- Local Kit Skills: `rea-scan`, `rea-audit`, `reverse-engineer-anything`
+- Host Plugin Skills: `android-cli`, `cookie-debugging`, `investigate-first`
 
 ## Điều kiện tiên quyết:
 Kiểm tra `.agents/state/active_case.json`. Nếu `gates.gate_01_baseline_verified` chưa đạt (`false`), dừng lại và yêu cầu hoàn thành Stage 01 trước.
@@ -165,8 +165,8 @@ Báo cáo ngắn gọn:
 Read and follow `AGENTS.md`, `REVIEW.md`, and `docs/WORKFLOW_LIFECYCLE.md`.
 
 ## Active Skills for this Tab:
-- Local Kit Skills: `rea-interview`
-- Host Plugin Skills: `ui-styling`, `design-system`
+- Local Kit Skills: `rea-interview`, `rea-plan`
+- Host Plugin Skills: `grilling`, `ui-styling`, `design-system`, `ui-ux-pro-max`, `figma-generate-diagram`
 
 ## Điều kiện tiên quyết:
 Kiểm tra `.agents/state/active_case.json`. Nếu `gates.gate_02_audit_passed` chưa đạt (`false`), dừng lại và yêu cầu hoàn thành Stage 02 trước.
@@ -227,7 +227,7 @@ Read and follow `AGENTS.md`, `REVIEW.md`, and `docs/WORKFLOW_LIFECYCLE.md`.
 
 ## Active Skills for this Tab:
 - Local Kit Skills: `rea-build`
-- Host Plugin Skills: `surgical-patch` (khi sửa lỗi phạm vi hẹp), `lean-build` (khi triển khai tính năng mới), `ui-styling` (áp dụng tokens giao diện)
+- Host Plugin Skills: `tdd`, `surgical-patch`, `lean-build`, `safe-refactor`, `compose-preview`, `ui-styling`
 
 ## Điều kiện tiên quyết:
 Kiểm tra `.agents/state/active_case.json`. Nếu `gates.gate_03_spec_frozen` chưa đạt (`false`), dừng lại và yêu cầu hoàn thành Stage 03 trước.
@@ -284,7 +284,7 @@ Read and follow `AGENTS.md`, `REVIEW.md`, and `docs/WORKFLOW_LIFECYCLE.md`.
 
 ## Active Skills for this Tab:
 - Local Kit Skills: `rea-build`
-- Host Plugin Skills: `code-review` (thẩm định tiêu chuẩn & spec độc lập), `android-cli`, `android-device-hub`
+- Host Plugin Skills: `verify-and-stop`, `code-review`, `android-cli`, `android-device-hub`, `compose-preview`, `a11y-debugging`
 
 ## Điều kiện tiên quyết:
 Kiểm tra `.agents/state/active_case.json`. Nếu `gates.gate_04_build_qa_passed` chưa đạt (`false`), dừng lại và yêu cầu hoàn thành Stage 04 trước.
@@ -329,4 +329,27 @@ You are executing **STAGE_05 · VALIDATION**:
 
 ### BÁO CÁO CHO NGƯỜI DÙNG:
 Báo cáo hoàn tất dự án, chúc mừng người dùng và hướng dẫn cách mở ứng dụng hoàn thiện tại `05_MA_NGUON_PHAT_TRIEN/`.
+```
+
+---
+
+## 📌 PROMPT 06: TỔNG HỢP & NUÔI DƯỠNG BỘ NHỚ (DREAMING & MEMORY CONSOLIDATION)
+- **Tệp nguồn**: `prompts/06-CONSOLIDATION-AND-MEMORY.md`
+- **Thời điểm sử dụng**: Sau mỗi Milestone hoặc kết thúc phiên làm việc để nuôi dưỡng `MEMORY.md`.
+- **Cổng chất lượng**: Tinh gọn ngữ cảnh, cập nhật `docs/HANDOFF.md`.
+
+```markdown
+# Session Memory Consolidation (Anthropic Dreaming Protocol)
+
+Read and follow `AGENTS.md`, `docs/ARCHITECTURE.md`, and `.agents/skills/memory-consolidation/SKILL.md`.
+
+## Active Skills for this Step:
+- Local Kit Skills: `memory-consolidation`
+- Host Plugin Skills: `agent-chat-export`, `caveman-compress`, `caveman-learn`
+
+You are executing **DREAMING & MEMORY CONSOLIDATION**:
+1. Bước 1: Trích xuất lịch sử phiên với `agent-chat-export` sang `.agents/state/cases/`.
+2. Bước 2: Rà soát bài học kỹ thuật bền vững (Verified Fixes, Architectural Decisions).
+3. Bước 3: Đối chiếu nguồn gốc và cập nhật `.agents/state/MEMORY.md` (Layer 2).
+4. Bước 4: Hợp nhất trùng lặp, dọn dẹp ghi chú cũ, nén handoff với `caveman-compress` và cập nhật `docs/HANDOFF.md`.
 ```

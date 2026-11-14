@@ -21,11 +21,14 @@ Tạo đầy đủ các thư mục sau:
 8. `docs` (Bộ tài liệu quản trị ngữ cảnh đa phiên)
 9. `.agents/rules` (Luật an toàn cho Agent)
 10. `.agents/skills/reverse-engineer-anything` (Kỹ năng lõi gốc upstream REA)
-11. `.agents/skills/rea-scan` (Kỹ năng điều phối Stage 01 & 02)
-12. `.agents/skills/rea-interview` (Kỹ năng điều phối Stage 03)
-13. `.agents/skills/rea-build` (Kỹ năng điều phối Stage 04 & 05)
-14. `.agents/scripts` (Script kiểm tra sức khỏe, verify code và rollback)
-15. `.agents/state` (Bộ nhớ máy trạng thái 6 Gates và học sự cố)
+11. `.agents/skills/rea-scan` (Kỹ năng điều phối Intake & Scan)
+12. `.agents/skills/rea-audit` (Kỹ năng kiểm toán bằng chứng độc lập & Coverage)
+13. `.agents/skills/rea-interview` (Kỹ năng phỏng vấn người dùng & 4 Build Routes)
+14. `.agents/skills/rea-plan` (Kỹ năng lập kiến trúc & chia Vertical Slices)
+15. `.agents/skills/rea-build` (Kỹ năng điều phối viết mã nguồn & bàn giao)
+16. `.agents/skills/memory-consolidation` (Kỹ năng nuôi dưỡng bộ nhớ Anthropic)
+17. `.agents/scripts` (Script kiểm tra sức khỏe, verify code và rollback)
+18. `.agents/state` (Bộ nhớ máy trạng thái 6 Gates, MEMORY.md và cases/)
 
 ---
 
@@ -44,21 +47,25 @@ Tạo đầy đủ các thư mục sau:
 
 ### BƯỚC 3: TẠO BỘ KỸ NĂNG TRONG .agents/skills/
 1. `.agents/skills/reverse-engineer-anything/`: Kỹ năng lõi gốc sao chép từ upstream morluto/rea.
-2. `.agents/skills/rea-scan/SKILL.md`: Điều phối Stage 01 (Intake, Baseline, Fallback) và Stage 02 (Scan, Investigate, Audit, Sổ Unknowns). Mở Cổng 01 & 02.
-3. `.agents/skills/rea-interview/SKILL.md`: Điều phối Stage 03 (Interview, Design Tokens, Spec frozen, Implementation plan). Mở Cổng 03.
-4. `.agents/skills/rea-build/SKILL.md`: Điều phối Stage 04 (Build Zero-Install, Snapshot, Build QA & Review) và Stage 05 (Smoke test, Hard Verify đối chiếu 1-1, Handoff trọn gói). Mở Cổng 04, 05, 06.
+2. `.agents/skills/rea-scan/SKILL.md`: Điều phối Intake, Baseline và Scan.
+3. `.agents/skills/rea-audit/SKILL.md`: Kiểm toán bằng chứng độc lập, Coverage và Sổ Unknowns. Mở Cổng 02.
+4. `.agents/skills/rea-interview/SKILL.md`: Phỏng vấn người dùng, lựa chọn 4 Build Routes và đóng băng đặc tả.
+5. `.agents/skills/rea-plan/SKILL.md`: Lập kiến trúc, chia Vertical Slices và Task Dependency Graph. Mở Cổng 03.
+6. `.agents/skills/rea-build/SKILL.md`: Triển khai mã nguồn theo lát cắt, quản lý snapshot, Hard Verify và bàn giao. Mở Cổng 04, 05, 06.
+7. `.agents/skills/memory-consolidation/SKILL.md`: Cơ chế Dreaming tổng hợp bài học vào MEMORY.md theo chuẩn Anthropic.
 
 ---
 
 ### BƯỚC 4: TẠO BỘ PROMPTS/ VÀ TEMPLATES/ (6 STAGE · 14 BƯỚC)
 1. Trong `prompts/`:
    - `00-SESSION-CONTINUITY.md` (Phục hồi phiên & Auto-Resume)
-   - `01-TAB-DISCOVERY.md` (Stage 01: Intake & Baseline — STAGE_01_DISCOVERY — Active Skills: `rea-scan`, `reverse-engineer-anything`, `android-cli`, `android-device-hub`)
-   - `02-TAB-REVERSE-ENGINEERING.md` (Stage 02: Scan, Investigate & Audit — STAGE_02_REVERSE_ENGINEERING — Active Skills: `rea-scan`, `reverse-engineer-anything`, `android-cli`)
-   - `03-TAB-PRODUCT-DEFINITION.md` (Stage 03: Interview, Spec & Plan — STAGE_03_PRODUCT_DEFINITION — Active Skills: `rea-interview`, `ui-styling`, `design-system`)
-   - `04-TAB-IMPLEMENTATION.md` (Stage 04: Build & Build QA — STAGE_04_IMPLEMENTATION — Active Skills: `rea-build`, `surgical-patch`, `lean-build`, `ui-styling`)
-   - `05-TAB-VALIDATION.md` (Stage 05: Smoke Test, Hard Verify & Handoff — STAGE_05_VALIDATION — Active Skills: `rea-build`, `code-review`, `android-cli`, `android-device-hub`)
-   *(Lưu ý: Mọi prompt 01-05 đều khai báo tường minh khối `## Active Skills for this Tab` để AI Agent kích hoạt chính xác kỹ năng cần dùng).*
+   - `01-TAB-DISCOVERY.md` (Stage 01: Intake & Baseline — Active Skills: `rea-scan`, `reverse-engineer-anything`, `android-cli`, `android-device-hub`, `investigate-first`)
+   - `02-TAB-REVERSE-ENGINEERING.md` (Stage 02: Scan & Audit — Active Skills: `rea-scan`, `rea-audit`, `reverse-engineer-anything`, `android-cli`, `cookie-debugging`, `investigate-first`)
+   - `03-TAB-PRODUCT-DEFINITION.md` (Stage 03: Interview & Plan — Active Skills: `rea-interview`, `rea-plan`, `grilling`, `ui-styling`, `design-system`, `ui-ux-pro-max`, `figma-generate-diagram`)
+   - `04-TAB-IMPLEMENTATION.md` (Stage 04: Build & Review — Active Skills: `rea-build`, `tdd`, `surgical-patch`, `lean-build`, `safe-refactor`, `compose-preview`, `ui-styling`)
+   - `05-TAB-VALIDATION.md` (Stage 05: Smoke Test & Handoff — Active Skills: `rea-build`, `verify-and-stop`, `code-review`, `android-cli`, `android-device-hub`, `compose-preview`, `a11y-debugging`)
+   - `06-CONSOLIDATION-AND-MEMORY.md` (Anthropic Dreaming — Active Skills: `memory-consolidation`, `agent-chat-export`, `caveman-compress`, `caveman-learn`)
+   *(Lưu ý: Mọi prompt đều khai báo tường minh khối `## Active Skills for this Tab` kết hợp Local Skills + Host Plugins).*
 2. Trong `templates/`:
    - `01-REPORT-TEMPLATE.md` (Báo cáo hiện trạng)
    - `02-SPEC-TEMPLATE.md` (Đặc tả đóng băng)

@@ -10,8 +10,8 @@
 Read and follow `AGENTS.md`, `REVIEW.md`, and `docs/WORKFLOW_LIFECYCLE.md`.
 
 ## Active Skills for this Tab:
-- Local Kit Skills: `rea-interview`
-- Host Plugin Skills: `ui-styling`, `design-system`
+- Local Kit Skills: `rea-interview`, `rea-plan`
+- Host Plugin Skills: `grilling`, `ui-styling`, `design-system`, `ui-ux-pro-max`, `figma-generate-diagram`
 
 ## Điều kiện tiên quyết:
 Kiểm tra `.agents/state/active_case.json`. Nếu `gates.gate_02_audit_passed` chưa đạt (`false`), dừng lại và yêu cầu hoàn thành Stage 02 trước.

@@ -10,8 +10,8 @@
 Read and follow `AGENTS.md`, `REVIEW.md`, and `docs/WORKFLOW_LIFECYCLE.md`.
 
 ## Active Skills for this Tab:
-- Local Kit Skills: `rea-scan`, `reverse-engineer-anything`
-- Host Plugin Skills: `android-cli` (kiểm tra tài nguyên thô khi phân tích APK)
+- Local Kit Skills: `rea-scan`, `rea-audit`, `reverse-engineer-anything`
+- Host Plugin Skills: `android-cli`, `cookie-debugging`, `investigate-first`
 
 ## Điều kiện tiên quyết:
 Kiểm tra `.agents/state/active_case.json`. Nếu `gates.gate_01_baseline_verified` chưa đạt (`false`), dừng lại và yêu cầu hoàn thành Stage 01 trước.

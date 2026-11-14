@@ -11,7 +11,7 @@ Read and follow `AGENTS.md`, `REVIEW.md`, and `docs/WORKFLOW_LIFECYCLE.md`.
 
 ## Active Skills for this Tab:
 - Local Kit Skills: `rea-build`
-- Host Plugin Skills: `code-review` (thẩm định tiêu chuẩn & spec độc lập), `android-cli`, `android-device-hub`
+- Host Plugin Skills: `verify-and-stop`, `code-review`, `android-cli`, `android-device-hub`, `compose-preview`, `a11y-debugging`
 
 ## Điều kiện tiên quyết:
 Kiểm tra `.agents/state/active_case.json`. Nếu `gates.gate_04_build_qa_passed` chưa đạt (`false`), dừng lại và yêu cầu hoàn thành Stage 04 trước.

@@ -54,14 +54,14 @@ if ($allCoreDocsOk) {
     Write-Host "[!] (2/6) Thiếu AGENTS.md, HUONG_DAN_SU_DUNG.md hoặc REVIEW.md." -ForegroundColor Red
 }
 
-# 3. Kiểm tra Kỹ năng: 3 Skills điều phối + 1 Skill lõi Upstream
-$skills = @("rea-scan", "rea-interview", "rea-build", "reverse-engineer-anything")
+# 3. Kiểm tra Kỹ năng: 6 Skills điều phối + 1 Skill lõi Upstream
+$skills = @("rea-scan", "rea-audit", "rea-interview", "rea-plan", "rea-build", "memory-consolidation", "reverse-engineer-anything")
 $allSkillsOk = $true
 foreach ($sk in $skills) {
     if (-not (Test-Path (Join-Path $repoRoot ".agents\skills\$sk\SKILL.md"))) { $allSkillsOk = $false }
 }
 if ($allSkillsOk) {
-    Write-Host "[OK] (3/6) Bộ kỹ năng đầy đủ (3 skills điều phối + 1 skill lõi REA gốc)." -ForegroundColor Green
+    Write-Host "[OK] (3/6) Bộ kỹ năng đầy đủ (6 skills điều phối + 1 skill lõi REA gốc)." -ForegroundColor Green
     $score++
 } else {
     Write-Host "[!] (3/6) Thiếu một trong các kỹ năng trong .agents\skills." -ForegroundColor Red
