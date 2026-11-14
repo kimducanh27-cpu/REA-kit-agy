@@ -41,9 +41,10 @@ Hệ thống phỏng vấn thích ứng được hợp thành từ 6 phân hệ 
 │    - 03_KET_QUA_KIEM_TRA/UNKNOWNS_AND_COVERAGE.md                                │
 │    - Ảnh chụp màn hình ứng dụng gốc (AVD/Browser từ Bước 02)                     │
 ├──────────────────────────────────────────────────────────────────────────────────┤
-│ 2. ĐỘNG CƠ ĐIỀU HƯỚNG TÊN MIỀN (DOMAIN ROUTING ENGINE)                           │
-│    Phân loại mục tiêu case vào 1 trong 6 Domain:                                 │
-│    [APP_OPT] [SECURITY] [FEAT_ADD] [FEAT_OPT] [BUG_FIX] [UX_UI]                 │
+│ 2. ĐỘNG CƠ ĐIỀU HƯỚNG TÊN MIỀN (10 DOMAIN ROUTING ENGINE)                        │
+│    Phân loại mục tiêu case vào 10 Domain chuyên biệt:                            │
+│    [BUG_FIX] [APP_OPT] [SECURITY] [FEAT_ADD] [FEAT_OPT] [UX_UI]                 │
+│    [ARCH_MAINT] [PLATFORM_COMPAT] [REQ_PRIO] [ACCEPT_CRIT]                       │
 ├──────────────────────────────────────────────────────────────────────────────────┤
 │ 3. ĐỘNG CƠ SÀNG LỌC CÂU HỎI (QUESTION NECESSITY ENGINE - 8 FILTERS)              │
 │    Kiểm tra 8 bộ lọc: Known, Inspectable, Evidence, Impact, Risk,                │
@@ -114,6 +115,22 @@ Nếu biểu thức trên có giá trị `FALSE`, Agent phân loại và xử l�
 │                 │ đóng băng đặc tả hay để Stage 05? │ bước vào Milestone cần dùng.    │
 └─────────────────┴───────────────────────────────────┴─────────────────────────────────┘
 ```
+
+### 3.3 Quy Chuẩn Điều Tra Màn Hình Di Động, Tỷ Lệ Khung Hình & Bố Cục Thích Ứng (Mobile Display & Responsive Layout Rules)
+Khi ứng dụng có giao diện hỗ trợ thiết bị di động (Smartphone, Tablet, Foldable):
+1. **Kiểm Tra Bằng Chứng Trước Khi Hỏi (Evidence-First)**:
+   - Tự động trích xuất cấu hình từ APK: các bộ định danh tài nguyên (`layout-sw*`, `layout-land*`), `screenOrientation`, `resizeableActivity` trong `AndroidManifest.xml`, và các file Compose/XML layout.
+   - Không hỏi người dùng những thông số kỹ thuật đã có bằng chứng trong ứng dụng.
+2. **Không Ép Buộc Người Dùng Chọn Tỷ Lệ Kỹ Thuật**:
+   - Người dùng không có nghĩa vụ phải biết 18:9, 19.5:9 hay 20:9.
+   - Nếu người dùng không nắm rõ, Agent tự động áp dụng chiến lược bố cục co giãn thích ứng (Fluid Responsive Strategy) bao phủ dải tỷ lệ 16:9 đến 21:9, ghi nhận giả định an toàn (Risk: `BENIGN`).
+3. **Phân Biệt Rõ Physical Resolution (px) & Logical Viewport (dp)**:
+   - Toàn bộ thiết kế, co giãn và kiểm thử phải tính bằng `dp` và `sp`. Cổng hiển thị tối thiểu hỗ trợ là 320dp width × 568dp height.
+4. **Không Giả Định Tương Thích Một Chiều**:
+   - Chạy tốt trên 16:9 không đảm bảo hiển thị đẹp trên 20:9 hoặc màn hình gập.
+5. **Khóa Ma Trận Tương Thích Màn Hình Di Động (Mobile Display Compatibility Matrix)**:
+   - Bản đặc tả đóng băng tại Bước 07 bắt buộc có bảng `Mobile Display Compatibility Matrix` phân loại Small Phone (16:9), Standard (18:9), Tall (19.5:9/20:9), Ultra-Tall (21:9), Foldable (Outer & Inner), Tablet (16:10).
+   - Xử lý nghiêm ngặt: Insets an toàn (Edge-to-Edge), container cuộn dọc chống tràn layout, bọc và cắt chữ có kiểm soát (`maxLines` + `TextOverflow.Ellipsis`), và kiểm thử hồi quy thị giác qua ảnh chụp.
 
 ---
 

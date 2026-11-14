@@ -59,16 +59,54 @@
 
 ## 4. Ma Trận Tương Thích & Môi Trường Nền Tảng (Platform & Compatibility Matrix)
 
-- **Môi trường Android Mục Tiêu**:
-  * `minSdkVersion`: 26 (Android 8.0 Oreo)
-  * `targetSdkVersion`: 34 hoặc 35 (Android 14 / Android 15)
-  * `compileSdkVersion`: 35
+### 4.1 Môi trường Android Mục Tiêu:
+- `minSdkVersion`: 26 (Android 8.0 Oreo)
+- `targetSdkVersion`: 34 hoặc 35 (Android 14 / Android 15)
+- `compileSdkVersion`: 35
 - **Chuẩn Căn Chỉnh Trang Bộ Nhớ 16 KB (Android 15 Compliance)**:
   * Toàn bộ thư viện native `.so` biên dịch với NDK r28 (`-Wl,-z,max-page-size=16384`).
   * Gói APK đóng gói với `zipalign -P 16 -f -v 4`.
-- **Thích Ứng Màn Hình & Insets (Edge-to-Edge)**:
-  * Hỗ trợ đầy đủ Window Size Classes (Compact, Medium, Expanded).
-  * Xử lý padding Insets cho thanh trạng thái, thanh điều hướng và camera cutout.
+
+### 4.2 Ma Trận Tương Thích Màn Hình Di Động (Mobile Display Compatibility Matrix):
+| Device class | Aspect ratio | Viewport (dp) | Orientation | Support status | Verification |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **Small Phone** (Legacy/Compact) | 16:9 | 320 × 568 to 360 × 640 | Portrait / Landscape | SUPPORTED (Baseline) | Automated Screenshot & Smoke Test |
+| **Standard Smartphone** | 18:9 (2:1) / 18.5:9 | 360 × 720 to 393 × 800 | Portrait / Landscape | SUPPORTED (Primary) | Device Runner / AVD & Visual Review |
+| **Tall Smartphone** (Modern Mainstream) | 19.5:9 / 20:9 | 360 × 780 to 412 × 915 | Portrait / Landscape | SUPPORTED (Primary) | Device Runner / AVD & Cutout Check |
+| **Ultra-Tall Smartphone** (Cinematic) | 21:9 | 360 × 840 to 412 × 960 | Portrait / Landscape | SUPPORTED | Inset Padding & Scroll Flow Test |
+| **Foldable (Outer / Folded)** | 21:9 to 23:9 | 320 × 800 to 360 × 880 | Portrait | SUPPORTED | Aspect Ratio & Text Wrap Test |
+| **Foldable (Inner / Unfolded)** | 8:7.1 / 4:3 | 674 × 841 to 768 × 1024 | Portrait / Landscape | SUPPORTED (Adaptive) | Two-Pane / Dual-Column Layout Test |
+| **Tablet** (Large Screen) | 16:10 / 3:2 | 800 × 1280 to 1200 × 1920 | Landscape / Portrait | SUPPORTED (Expanded) | Window Size Class Expanded Test |
+
+### 4.3 Quy Chuẩn Bố Cục Thích Ứng & Ranh Giới Kỹ Thuật (Responsive Layout Rules):
+- **Cổng Hiển Thị Tối Thiểu (Minimum Supported Viewport)**:
+  * Chiều rộng tối thiểu: **320 dp** (Small phone portrait).
+  * Chiều cao tối thiểu: **568 dp** (Small phone portrait) / **320 dp** (Phone landscape with system bars).
+  * 100% nội dung phải tiếp cận được, tuyệt đối không bị tràn ngoài mép màn hình không cuộn được.
+- **Điểm Ngắt Thích Ứng (Responsive Breakpoints — Window Size Classes)**:
+  * `Compact`: Width < 600 dp (Đơn cột, Bottom Navigation Bar, danh sách dọc tràn viền).
+  * `Medium`: Width 600 - 840 dp (Bố cục linh hoạt, Navigation Rail, dialog giới hạn maxWidth 560dp).
+  * `Expanded`: Width > 840 dp (Đa cột Two-Pane List-Detail, Navigation Rail/Drawer cố định).
+- **Xử Lý Vùng An Toàn & Insets (Safe-Area & Edge-to-Edge Handling)**:
+  * Áp dụng `enableEdgeToEdge()` chuẩn Android 15.
+  * Phân biệt rõ ràng độ phân giải vật lý (Physical Pixels) và kích thước cổng hiển thị logic (Logical Viewport in dp).
+  * Xử lý Insets toàn diện qua `WindowInsetsCompat` / Compose `Modifier.windowInsetsPadding()`:
+    - Status bar & Navigation bar insets: Bảo vệ các thành phần điều hướng và nút thao tác chính.
+    - Camera cutout / Notch / Camera holes: Không đặt chữ, logo hoặc nút bấm đè lên vùng khoét camera.
+    - Bo góc màn hình (Rounded corners): Padding tối thiểu 16dp từ mép vật lý trên màn hình bo cong.
+    - Bàn phím ảo (IME Insets): Form tự động cuộn lên khi bàn phím mở (`imePadding()`), không che nút CTA.
+- **Yêu Cầu Tràn Bố Cục & Cuộn (Layout Overflow Requirements)**:
+  * 100% màn hình form và nội dung chi tiết phải nằm trong container cuộn được theo chiều dọc (`Modifier.verticalScroll()` hoặc `NestedScrollView`).
+  * Tuyệt đối cấm cuộn ngang không chủ đích (Unintended horizontal scrolling) trên màn hình điện thoại.
+  * Khi xoay ngang (Landscape), nội dung phải reflow thành cuộn dọc thông suốt, không bị kẹt chiều cao cố định.
+- **Quy Chuẩn Cắt & Xuống Dòng Văn Bản (Text Wrapping & Clipping Requirements)**:
+  * Tương thích với tính năng phóng to chữ hệ thống (Font Scaling) từ 100% đến 200% (sử dụng đơn vị `sp`).
+  * Tiêu đề và nhãn trong không gian giới hạn: Sử dụng `maxLines` kết hợp `TextOverflow.Ellipsis`.
+  * Tuyệt đối không để chữ bị cắt cụt ngang (clipping) hoặc chồng chéo lên thành phần giao diện khác.
+  * Vùng chạm cảm ứng (Touch Target): Luôn đảm bảo tối thiểu **48 × 48 dp** bất kể tỷ lệ co giãn giao diện.
+- **Kiểm Thử Hồi Quy Thị Giác Dựa Trên Ảnh Chụp (Screenshot-Based Visual Regression)**:
+  * Chụp ảnh tự động trên ma trận kích thước: Small Phone (320x568 dp), Tall Phone (412x915 dp, 20:9), và Tablet (800x1280 dp).
+  * Kiểm tra xoay màn hình (Portrait ➔ Landscape) đảm bảo không vỡ bố cục, không tràn chữ, không che nút bấm.
 
 ---
 
@@ -153,6 +191,13 @@ GIVEN [Trạng thái lỗi giả lập: Mất mạng / Nhập sai thông tin]
 WHEN  [Người dùng kích hoạt hành động]
 THEN  [Thông báo lỗi rõ ràng bằng tiếng Việt đời thường kèm nút thử lại]
 AND   [Dữ liệu trên form không bị xóa mất theo RULE-INIT-001]
+
+Kịch bản 3: [Tương Thích Màn Hình Di Động & Tỷ Lệ Khung Hình — AC-RESP-01]
+GIVEN Ứng dụng chạy trên thiết bị với bất kỳ tỷ lệ nào: 16:9, 18:9, 19.5:9, 20:9, 21:9 hoặc màn hình gập
+WHEN  Người dùng mở ứng dụng ở chế độ dọc (Portrait), xoay ngang (Landscape), hoặc mở bàn phím ảo (IME)
+THEN  Toàn bộ các nút thao tác chính (CTA), trường nhập liệu, và thanh điều hướng vẫn hiển thị đầy đủ, không bị che khuất bởi tai thỏ (cutout), thanh hệ thống (system insets) hay bàn phím
+AND   Nội dung tự động co giãn, cuộn mượt mà theo chiều dọc, không bị cắt cụt chữ (text clipping) và không phát sinh cuộn ngang ngoài ý muốn
+AND   Vùng chạm cảm ứng cho mọi nút bấm duy trì kích thước tối thiểu 48x48dp across all viewport sizes
 ```
 
 ---

@@ -78,6 +78,14 @@ $$\text{Priority} = \text{Decision Impact} \times \text{Information Gap} \times 
 - Hỏi người dùng về tính năng sản phẩm: "Ứng dụng có cần kết nối máy chủ không hay chạy offline hoàn toàn?"
 - **CẤM** hỏi người dùng về các cờ nội bộ kỹ thuật như `-AllowHighRisk`. Quyền hạn công cụ do Coordinator quản trị độc lập.
 
+### 4.4 Điều Tra Màn Hình Di Động & Tỷ Lệ Khung Hình Thích Ứng (Mobile Display & Aspect Ratio Protocol):
+Khi ứng dụng có giao diện hỗ trợ thiết bị di động:
+1. **Kiểm tra bằng chứng trước khi hỏi**: Khảo sát trước các qualifier layout (`layout-sw*`, `layout-land*`), `screenOrientation`, `resizeableActivity` trong APK hoặc mã nguồn gốc.
+2. **Không ép người dùng chọn tỷ lệ kỹ thuật**: Người dùng không cần hiểu 16:9, 18:9, 19.5:9 hay 20:9. Cung cấp tùy chọn thân thiện ("Bố cục thích ứng linh hoạt cho mọi dòng máy") và ghi nhận giả định an toàn (`BENIGN`).
+3. **Phân biệt độ phân giải vật lý (px) và kích thước logic (dp)**: Thiết kế và kiểm định luôn dựa trên đơn vị `dp` và `sp`. Cổng hiển thị tối thiểu hỗ trợ là 320dp width × 568dp height.
+4. **Không giả định tương thích tự động**: Hoạt động đúng trên 16:9 không đảm bảo hiển thị đúng trên 20:9 hay màn hình gập.
+5. **Khóa Ma Trận Tương Thích Màn Hình Di Động**: Đặc tả đóng băng tại Bước 07 bắt buộc có bảng `Mobile Display Compatibility Matrix` (Small Phone, Standard, Tall 20:9, Ultra-Tall 21:9, Foldable, Tablet) kèm xử lý an toàn Insets/Edge-to-Edge, bọc/cắt chữ và container cuộn dọc chống tràn.
+
 ---
 
 ## 5. Diễn Giải 10 Loại Câu Trả Lời & Quản Trị Mâu Thuẫn

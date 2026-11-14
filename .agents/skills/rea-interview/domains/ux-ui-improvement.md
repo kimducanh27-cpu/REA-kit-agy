@@ -103,6 +103,11 @@ Dù ở bất kỳ chế độ nào, bản đặc tả thiết kế phải đáp
    - Kích thước vùng chạm cảm ứng tối thiểu **48x48dp**.
    - Vùng thao tác một tay bằng ngón cái (Thumb zone) cho các nút quan trọng ở nửa dưới màn hình.
    - Độ tương phản chữ đạt tối thiểu **WCAG AA** (tỷ lệ tương phản 4.5:1).
+5. **Quy Chuẩn Bố Cục Thích Ứng & Tỷ Lệ Khung Hình (Responsive Layout & Aspect Ratio Rules)**:
+   - **Chống Tràn Bố Cục (Overflow Prevention)**: Toàn bộ form và màn hình chi tiết phải được bọc trong container cuộn dọc (`verticalScroll` / `NestedScrollView`) để không bị tràn mép trên màn hình 16:9 hoặc khi xoay ngang (Landscape).
+   - **Bọc & Cắt Chữ Chuẩn Mực (Text Wrapping & Truncation)**: Hỗ trợ phóng to chữ hệ thống (Font Scaling up to 200% bằng đơn vị `sp`). Tiêu đề giới hạn dòng phải dùng `maxLines` + `TextOverflow.Ellipsis`, tuyệt đối không để chữ bị cắt ngang thân hoặc đè lên nút bên cạnh.
+   - **Tương Tác Bàn Phím Ảo (IME Insets)**: Tự động đệm padding khi mở bàn phím ảo (`imePadding()`), đảm bảo trường nhập liệu và nút CTA luôn nhìn thấy và thao tác được.
+   - **Đồng Bộ Ma Trận Màn Hình Di Động**: Khớp 100% với Mobile Display Compatibility Matrix (16:9, 18:9, 19.5:9, 20:9, 21:9, Foldable, Tablet) theo domain `PLATFORM_COMPATIBILITY`.
 
 ---
 

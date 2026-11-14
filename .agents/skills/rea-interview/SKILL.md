@@ -104,6 +104,21 @@ $$\text{Question Priority} = \text{Decision Impact} \times \text{Information Gap
 - Hỏi người dùng về hành vi sản phẩm: "Ứng dụng cần hoạt động ngoại tuyến hoàn toàn hay có kết nối đồng bộ máy chủ?"
 - **TUYỆT ĐỐI KHÔNG HỎI** người dùng về các cờ bảo mật nội bộ của Agent như `-AllowHighRisk`. Quyền thực thi của Agent do Coordinator và Scoped Rules quản lý độc lập.
 
+### 4.4 Điều Tra Tỷ Lệ Màn Hình Di Động & Bố Cục Thích Ứng (Mobile Display & Responsive Layout Protocol):
+Khi ứng dụng đích hỗ trợ thiết bị di động (Android / Web Mobile):
+1. **Kiểm tra bằng chứng trước khi hỏi (Evidence-First)**:
+   - Tự động trích xuất các qualifier tài nguyên (`layout-sw*`, `layout-land*`), `AndroidManifest.xml` (`screenOrientation`, `resizeableActivity`), và layout XML/Compose trước khi mở câu hỏi.
+2. **Hỏi có mục tiêu khi thiếu thông tin ảnh hưởng thực chất**:
+   - Chỉ hỏi người dùng khi thiếu quyết định quan trọng (ví dụ: có mở rộng sang tablet/foldable không) ảnh hưởng trực tiếp đến kiến trúc bố cục.
+3. **Không ép người dùng chọn tỷ lệ kỹ thuật (No Forced Technical Selection)**:
+   - Người dùng không bắt buộc phải hiểu 18:9, 19.5:9 hay 20:9.
+   - Khi người dùng phản hồi "không rõ", Agent đề xuất chiến lược bố cục co giãn linh hoạt (Fluid Responsive Strategy) phủ dải 16:9 đến 21:9 và ghi vào `Assumption Record` (Risk: `BENIGN`).
+4. **Phân biệt độ phân giải vật lý (Pixels) và cổng hiển thị logic (dp)**:
+   - Toàn bộ quy chuẩn và kích thước tính toán bằng `dp` (Logical Viewport) và `sp` (Scalable Text), không dùng `px`.
+5. **Cấm giả định tương thích tự động (Never Assume Compatibility)**:
+   - Chạy tốt trên 16:9 không đồng nghĩa hiển thị đẹp trên 20:9 hay màn hình gập.
+   - Bắt buộc hoàn tất **Mobile Display Compatibility Matrix** trong `03_KET_QUA_KIEM_TRA/dac-ta-yeu-cau-da-chot.md` trước khi thông qua Cổng 03.
+
 ---
 
 ## 5. DIỄN GIẢI CÂU TRẢ LỜI & QUẢN TRỊ MÂU THUẪN (CONTRADICTION MANAGEMENT)

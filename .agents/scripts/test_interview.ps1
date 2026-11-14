@@ -248,6 +248,43 @@ try {
     $caseJ_Pass = $domainReq -match "MoSCoW" -and ($domainReq -match "Trade-off" -or $domainReq -match "đánh đổi")
     Assert-Test "Case J: Mục tiêu cạnh tranh được phân cấp ưu tiên MoSCoW và phân tích đánh đổi (Trade-offs)" $caseJ_Pass
 
+    # ----------------------------------------------------------------------
+    # TEST GROUP 6: MOBILE DISPLAY ASPECT RATIO & RESPONSIVE LAYOUT
+    # ----------------------------------------------------------------------
+    Write-Host "`n>>> KIỂM TRA NHÓM 6: TƯƠNG THÍCH MÀN HÌNH DI ĐỘNG & TỶ LỆ KHUNG HÌNH" -ForegroundColor Cyan
+
+    $specTemplatePath = Join-Path $repoRoot "templates/02-SPEC-TEMPLATE.md"
+    $specTemplateContent = Get-Content -LiteralPath $specTemplatePath -Raw -Encoding UTF8
+
+    # 6.1 Check Mobile Display Compatibility Matrix columns
+    $matrixHeaderMatch = $specTemplateContent -match '\|\s*Device class\s*\|\s*Aspect ratio\s*\|\s*Viewport \(dp\)\s*\|\s*Orientation\s*\|\s*Support status\s*\|\s*Verification\s*\|'
+    Assert-Test "Spec Template có Mobile Display Compatibility Matrix chuẩn 6 cột" $matrixHeaderMatch
+
+    # 6.2 Check Minimum supported viewport & Breakpoints
+    $viewportMatch = ($specTemplateContent -match "320\s*dp") -and ($specTemplateContent -match "Window Size Classes")
+    Assert-Test "Spec Template định nghĩa Cổng hiển thị tối thiểu (320dp) và Điểm ngắt thích ứng" $viewportMatch
+
+    # 6.3 Check Safe-area, Overflow & Text clipping rules
+    $safeAreaMatch = ($specTemplateContent -match "WindowInsetsCompat" -or $specTemplateContent -match "Insets") -and ($specTemplateContent -match "verticalScroll" -or $specTemplateContent -match "cuộn dọc") -and ($specTemplateContent -match "TextOverflow.Ellipsis" -or $specTemplateContent -match "maxLines")
+    Assert-Test "Spec Template định nghĩa Xử lý Safe-area, Chống tràn bố cục và Bọc/cắt chữ" $safeAreaMatch
+
+    # 6.4 Check Acceptance Criteria for display compatibility
+    $acRespMatch = ($specTemplateContent -match "AC-RESP-01" -or $specTemplateContent -match "Tương Thích Màn Hình Di Động") -and ($specTemplateContent -match "48x48dp" -or $specTemplateContent -match "48\s*×\s*48\s*dp")
+    Assert-Test "Spec Template có Tiêu chí nghiệm thu BDD cho tương thích màn hình di động" $acRespMatch
+
+    # 6.5 Check Platform Compatibility domain aspect ratio investigation
+    $domainCompat = Get-Content -LiteralPath (Join-Path $domainsDir "platform-compatibility.md") -Raw -Encoding UTF8
+    $aspectRatioCoverage = ($domainCompat -match "16:9") -and ($domainCompat -match "18:9") -and ($domainCompat -match "19.5:9") -and ($domainCompat -match "20:9") -and ($domainCompat -match "21:9")
+    Assert-Test "Domain platform-compatibility bao phủ đầy đủ dải tỷ lệ khung hình 16:9 đến 21:9" $aspectRatioCoverage
+
+    # 6.6 Check Q-COMPAT-03 with non-technical friendly default
+    $qCompat3Match = ($domainCompat -match "Q-COMPAT-03") -and ($domainCompat -match "Fluid Responsive" -or $domainCompat -match "co giãn linh hoạt")
+    Assert-Test "Domain platform-compatibility có câu hỏi Q-COMPAT-03 kèm giải pháp mặc định an toàn cho người dùng không chuyên" $qCompat3Match
+
+    # 6.7 Check Skill protocol for mobile display
+    $skillMobileProtocol = ($skillContent -match "Mobile Display & Responsive Layout Protocol" -or $skillContent -match "Điều Tra Tỷ Lệ Màn Hình Di Động")
+    Assert-Test "Skill rea-interview kích hoạt quy chuẩn điều tra màn hình di động và cấm giả định tương thích" $skillMobileProtocol
+
 } finally {
     # Khôi phục trạng thái chuẩn sạch ban đầu
     if ($stateBackup) {
