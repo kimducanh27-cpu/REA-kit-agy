@@ -27,6 +27,7 @@ $gateScript      = Join-Path $repoRoot ".agents/scripts/gate.ps1"
 $contextScript   = Join-Path $repoRoot ".agents/scripts/context.ps1"
 $stateFile       = Join-Path $repoRoot ".agents/state/interview_state.json"
 $caseFile        = Join-Path $repoRoot ".agents/state/active_case.json"
+$eventsFile      = Join-Path $repoRoot ".agents/state/events.jsonl"
 $templateFile    = Join-Path $repoRoot "templates/14-INTERVIEW-STATE-TEMPLATE.json"
 $specTemplate    = Join-Path $repoRoot "templates/02-SPEC-TEMPLATE.md"
 $domainsDir      = Join-Path $repoRoot ".agents/skills/rea-interview/domains"
@@ -104,8 +105,10 @@ function Invoke-ContextPlanSafe([string]$taskText) {
 # Sao lưu state ban đầu để khôi phục sau kiểm thử
 $stateBackup = $null
 $caseBackup = $null
+$eventsBackup = $null
 if (Test-Path -LiteralPath $stateFile) { $stateBackup = Get-Content -LiteralPath $stateFile -Raw -Encoding UTF8 }
 if (Test-Path -LiteralPath $caseFile)  { $caseBackup  = Get-Content -LiteralPath $caseFile -Raw -Encoding UTF8 }
+if (Test-Path -LiteralPath $eventsFile) { $eventsBackup = Get-Content -LiteralPath $eventsFile -Raw -Encoding UTF8 }
 
 try {
     # ======================================================================
@@ -587,6 +590,9 @@ try {
     }
     if ($caseBackup) {
         Save-Utf8NoBom $caseFile $caseBackup
+    }
+    if ($eventsBackup) {
+        Save-Utf8NoBom $eventsFile $eventsBackup
     }
     # DIFF-03 Test Safety: Dọn dẹp CHỈ các kế hoạch context tạm do test sinh ra (NEVER wipe entire directory)
     foreach ($planIdToDelete in $createdPlanIds) {

@@ -1,4 +1,4 @@
-﻿# HỢP ĐỒNG THIẾT KẾ GIAO DIỆN & DESIGN SYSTEM 3 TẦNG CỦA TÔI
+# HỢP ĐỒNG THIẾT KẾ GIAO DIỆN & DESIGN SYSTEM 3 TẦNG CỦA TÔI
 *(Người dùng: Tùy chỉnh màu sắc, font chữ hoặc quy chuẩn giao diện tại đây. AI sẽ tự động đọc và áp dụng vào toàn bộ mã nguồn)*
 
 ---

@@ -1,99 +1,41 @@
 {
-    "schema_version":  1,
-    "case_id":  "CASE-INITIAL",
-    "session":  {
-                    "session_id":  "INT-SESSION-20261114-144416",
-                    "status":  "SUFFICIENT",
-                    "current_goal":  "G-OBF-B",
-                    "current_stage":  "STAGE_03_PRODUCT_DEFINITION",
-                    "active_domain":  null,
-                    "design_mode":  null,
-                    "max_clarification_per_goal":  2,
-                    "max_total_questions":  15,
-                    "created_at":  "2026-11-14T14:44:16+07:00",
-                    "updated_at":  "2026-11-14T14:44:17+07:00"
-                },
-    "goals":  [
-                  {
-                      "goal_id":  "G-OBF-B",
-                      "description":  "Khôi phục API Client từ APK bị obfuscate ProGuard",
-                      "category":  "GENERAL",
-                      "priority":  "MEDIUM",
-                      "status":  "ASSUMED_WITH_APPROVAL",
-                      "related_requirements":  [
-
-                                               ]
-                  }
-              ],
-    "questions":  [
-
-                  ],
-    "answers":  [
-
-                ],
-    "decisions":  [
-
-                  ],
-    "assumptions":  [
-                        {
-                            "assumption_id":  "ASM-OBF-NET",
-                            "description":  "G-OBF-B: Sử dụng OkHttp với TLS 1.3 dựa trên string dump network traffic",
-                            "rationale":  "Mã nguồn lớp model bị obfuscate, suy luận từ evidence chuỗi URL",
-                            "impact":  "Low",
-                            "risk_level":  "BENIGN",
-                            "approval_status":  "APPROVED",
-                            "verification_task":  "Kiểm chứng logcat khi gửi request thực tế",
-                            "status":  "ACTIVE",
-                            "invalidated_at":  null,
-                            "revocation_reason":  null,
-                            "downstream_dependencies":  [
-                                                            "G-OBF-B"
-                                                        ]
-                        }
-                    ],
-    "conflicts":  [
-
-                  ],
-    "unknowns":  [
-
-                 ],
-    "scope_changes":  [
-
-                      ],
-    "sufficiency_evaluation":  {
-                                   "verdict":  "SUFFICIENT",
-                                   "evaluated_at":  "2026-11-14T14:44:17+07:00",
-                                   "goal_evaluations":  [
-                                                            {
-                                                                "goal_id":  "G-OBF-B",
-                                                                "status":  "ASSUMED_WITH_APPROVAL",
-                                                                "decision_ids":  [
-
-                                                                                 ],
-                                                                "assumption_ids":  [
-                                                                                       "ASM-OBF-NET"
-                                                                                   ],
-                                                                "pending_questions":  [
-
-                                                                                      ],
-                                                                "blocking_reasons":  [
-
-                                                                                     ]
-                                                            }
-                                                        ],
-                                   "blocking_reasons":  [
-
-                                                        ],
-                                   "deferred_decisions":  [
-
-                                                          ],
-                                   "assumptions_summary":  {
-                                                               "total":  1,
-                                                               "benign":  1,
-                                                               "critical":  0,
-                                                               "pending_approval":  0
-                                                           },
-                                   "summary":  "All active goals, decisions, and assumptions meet the Exit Gate criteria. Ready for Spec Freeze."
-                               },
-    "last_updated":  "2026-11-14T14:44:17+07:00"
+  "schema_version": 1,
+  "case_id": "CASE-INITIAL",
+  "session": {
+    "session_id": "INT-SESSION-INITIAL",
+    "status": "NOT_STARTED",
+    "current_goal": null,
+    "current_stage": "STAGE_03_PRODUCT_DEFINITION",
+    "active_domain": null,
+    "design_mode": null,
+    "max_clarification_per_goal": 2,
+    "max_total_questions": 15,
+    "created_at": "2026-11-14T08:00:00+07:00",
+    "updated_at": "2026-11-14T08:00:00+07:00"
+  },
+  "goals": [],
+  "questions": [],
+  "answers": [],
+  "decisions": [],
+  "assumptions": [],
+  "conflicts": [],
+  "unknowns": [],
+  "scope_changes": [],
+  "sufficiency_evaluation": {
+    "verdict": "NEEDS_INPUT",
+    "evaluated_at": "2026-11-14T08:00:00+07:00",
+    "goal_evaluations": [],
+    "blocking_reasons": [
+      "No goals have been recorded in the interview state."
+    ],
+    "deferred_decisions": [],
+    "assumptions_summary": {
+      "total": 0,
+      "benign": 0,
+      "critical": 0,
+      "pending_approval": 0
+    },
+    "summary": "Chưa có mục tiêu nào được ghi nhận. Hãy bắt đầu bằng cách nạp hồ sơ và phân tích mục tiêu."
+  },
+  "last_updated": "2026-11-14T08:00:00+07:00"
 }

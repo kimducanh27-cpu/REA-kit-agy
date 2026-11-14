@@ -14,6 +14,7 @@ param(
 $ErrorActionPreference = "Stop"
 $OutputEncoding = [System.Text.Encoding]::UTF8
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+$utf8NoBom = New-Object System.Text.UTF8Encoding($false)
 
 # Tree-climbing tim repoRoot
 $scriptDir = if ($PSScriptRoot) { $PSScriptRoot } else { (Get-Location).Path }
@@ -230,7 +231,7 @@ foreach ($k in $defaultColors.Keys) {
 [void]$cssSb.AppendLine("}")
 
 $cssOut = Join-Path $OutputDir "tokens.css"
-[System.IO.File]::WriteAllText($cssOut, $cssSb.ToString(), [System.Text.Encoding]::UTF8)
+[System.IO.File]::WriteAllText($cssOut, $cssSb.ToString(), $utf8NoBom)
 Write-Host " [OK] Da bien dich CSS Tokens     : $cssOut" -ForegroundColor Green
 
 # -----------------------------------------------------------------------------
@@ -259,7 +260,7 @@ $colorKtSb = [System.Text.StringBuilder]::new()
 [void]$colorKtSb.AppendLine(('val Info = Color({0})' -f (To-ComposeColorHex $defaultColors['info'])))
 
 $colorKtOut = Join-Path $OutputDir "Color.kt"
-[System.IO.File]::WriteAllText($colorKtOut, $colorKtSb.ToString(), [System.Text.Encoding]::UTF8)
+[System.IO.File]::WriteAllText($colorKtOut, $colorKtSb.ToString(), $utf8NoBom)
 Write-Host " [OK] Da bien dich Compose Color  : $colorKtOut" -ForegroundColor Green
 
 # -----------------------------------------------------------------------------
@@ -305,7 +306,7 @@ $typeKtSb = [System.Text.StringBuilder]::new()
 [void]$typeKtSb.AppendLine(")")
 
 $typeKtOut = Join-Path $OutputDir "Type.kt"
-[System.IO.File]::WriteAllText($typeKtOut, $typeKtSb.ToString(), [System.Text.Encoding]::UTF8)
+[System.IO.File]::WriteAllText($typeKtOut, $typeKtSb.ToString(), $utf8NoBom)
 Write-Host " [OK] Da bien dich Compose Type   : $typeKtOut" -ForegroundColor Green
 
 # -----------------------------------------------------------------------------
@@ -330,7 +331,7 @@ $shapeKtSb = [System.Text.StringBuilder]::new()
 [void]$shapeKtSb.AppendLine(")")
 
 $shapeKtOut = Join-Path $OutputDir "Shape.kt"
-[System.IO.File]::WriteAllText($shapeKtOut, $shapeKtSb.ToString(), [System.Text.Encoding]::UTF8)
+[System.IO.File]::WriteAllText($shapeKtOut, $shapeKtSb.ToString(), $utf8NoBom)
 Write-Host " [OK] Da bien dich Compose Shape  : $shapeKtOut" -ForegroundColor Green
 
 # -----------------------------------------------------------------------------
@@ -350,7 +351,7 @@ foreach ($k in $defaultColors.Keys) {
 [void]$colorsXmlSb.AppendLine('</resources>')
 
 $colorsXmlOut = Join-Path $OutputDir "colors.xml"
-[System.IO.File]::WriteAllText($colorsXmlOut, $colorsXmlSb.ToString(), [System.Text.Encoding]::UTF8)
+[System.IO.File]::WriteAllText($colorsXmlOut, $colorsXmlSb.ToString(), $utf8NoBom)
 Write-Host " [OK] Da bien dich XML Colors     : $colorsXmlOut" -ForegroundColor Green
 
 # -----------------------------------------------------------------------------
@@ -369,7 +370,7 @@ $dimensXmlSb = [System.Text.StringBuilder]::new()
 [void]$dimensXmlSb.AppendLine('</resources>')
 
 $dimensXmlOut = Join-Path $OutputDir "dimens.xml"
-[System.IO.File]::WriteAllText($dimensXmlOut, $dimensXmlSb.ToString(), [System.Text.Encoding]::UTF8)
+[System.IO.File]::WriteAllText($dimensXmlOut, $dimensXmlSb.ToString(), $utf8NoBom)
 Write-Host " [OK] Da bien dich XML Dimens     : $dimensXmlOut" -ForegroundColor Green
 
 # -----------------------------------------------------------------------------
@@ -527,7 +528,7 @@ if (Test-Path -LiteralPath $DesignDoc) {
         $designContent = [regex]::Replace($designContent, '```xml\s*<!-- Android XML Dimens[\s\S]*?```', $xmlDimensBlock)
     }
 
-    [System.IO.File]::WriteAllText($DesignDoc, $designContent, [System.Text.Encoding]::UTF8)
+    [System.IO.File]::WriteAllText($DesignDoc, $designContent, $utf8NoBom)
     Write-Host " [OK] Da cap nhat xem truoc trong : $DesignDoc" -ForegroundColor Green
 }
 

@@ -535,22 +535,98 @@ if (Test-Path -LiteralPath $specTokenDir) {
     })
 }
 
+function Get-DtcgTokensFromObject {
+    param(
+        $InputObject,
+        [string]$CurrentPath = ""
+    )
+    $tokens = @{}
+    if ($null -eq $InputObject) { return $tokens }
+
+    $hasValue = $false
+    $val = $null
+    if ($InputObject.PSObject.Properties['$value']) {
+        $val = $InputObject.PSObject.Properties['$value'].Value
+        $hasValue = $true
+    } elseif ($InputObject.PSObject.Properties['value']) {
+        $val = $InputObject.PSObject.Properties['value'].Value
+        $hasValue = $true
+    }
+
+    if ($hasValue -and ($val -is [string])) {
+        $tokens[$CurrentPath] = $val
+        return $tokens
+    }
+
+    foreach ($prop in $InputObject.PSObject.Properties) {
+        $pName = $prop.Name
+        if ($pName.StartsWith('$')) { continue }
+        $childPath = if ([string]::IsNullOrEmpty($CurrentPath)) { $pName } else { "$CurrentPath.$pName" }
+        if ($prop.Value -is [System.Management.Automation.PSCustomObject]) {
+            $childTokens = Get-DtcgTokensFromObject -InputObject $prop.Value -CurrentPath $childPath
+            foreach ($k in $childTokens.Keys) {
+                $tokens[$k] = $childTokens[$k]
+            }
+        }
+    }
+    return $tokens
+}
+
 $colorMap = @{}
 foreach ($tf in $tokenFiles) {
     $tText = Get-Content -LiteralPath $tf.FullName -Raw -Encoding UTF8
     if ([string]::IsNullOrWhiteSpace($tText)) { continue }
+
+    # Trích xuất từ tệp JSON (W3C DTCG Format)
+    if ($tf.Extension -eq ".json") {
+        try {
+            $jsonObj = ConvertFrom-Json -InputObject $tText
+            $dtcgTokens = Get-DtcgTokensFromObject -InputObject $jsonObj
+            
+            # Giải tham chiếu Alias (dạng {global.color.*} hoặc {semantic.color.*})
+            for ($pass = 0; $pass -lt 10; $pass++) {
+                $hasUnresolved = $false
+                foreach ($k in @($dtcgTokens.Keys)) {
+                    $v = $dtcgTokens[$k]
+                    if ($v -is [string] -and $v -match '^\{([^\}]+)\}$') {
+                        $refPath = $Matches[1].Trim()
+                        if ($dtcgTokens.ContainsKey($refPath)) {
+                            $targetVal = $dtcgTokens[$refPath]
+                            if ($targetVal -is [string] -and $targetVal -notmatch '^\{') {
+                                $dtcgTokens[$k] = $targetVal
+                            } else {
+                                $hasUnresolved = $true
+                            }
+                        }
+                    }
+                }
+                if (-not $hasUnresolved) { break }
+            }
+
+            foreach ($tk in $dtcgTokens.Keys) {
+                $tVal = $dtcgTokens[$tk]
+                if ($tVal -is [string] -and $tVal -match '^#[0-9a-fA-F]{3,8}$') {
+                    $colorMap[$tk.ToLower()] = $tVal
+                    $leafName = if ($tk.Contains('.')) { $tk.Substring($tk.LastIndexOf('.') + 1).ToLower() } else { $tk.ToLower() }
+                    $colorMap[$leafName] = $tVal
+                    if ($tk -match '^semantic\.color\.(.+)$') {
+                        $colorMap[$Matches[1].ToLower()] = $tVal
+                    }
+                    if ($tk -match '^global\.color\.(.+)$') {
+                        $colorMap[$Matches[1].ToLower()] = $tVal
+                    }
+                }
+            }
+        } catch {}
+    }
+
     $cssVarMatches = [regex]::Matches($tText, '(?m)--([a-zA-Z0-9_-]+)\s*:\s*(#[0-9a-fA-F]{3,8})')
     foreach ($m in $cssVarMatches) {
         $varName = $m.Groups[1].Value.ToLower()
         $varVal = $m.Groups[2].Value
         $colorMap[$varName] = $varVal
     }
-    $jsonValMatches = [regex]::Matches($tText, '(?i)"(?:color[_-])?([a-zA-Z0-9_-]+)"\s*:\s*\{\s*"value"\s*:\s*"(#[0-9a-fA-F]{3,8})"')
-    foreach ($m in $jsonValMatches) {
-        $varName = $m.Groups[1].Value.ToLower()
-        $varVal = $m.Groups[2].Value
-        $colorMap[$varName] = $varVal
-    }
+
     $xmlValMatches = [regex]::Matches($tText, '(?i)<color\s+name=["'']([^"'']+)["'']>(#[0-9a-fA-F]{3,8})</color>')
     foreach ($m in $xmlValMatches) {
         $varName = $m.Groups[1].Value.ToLower()
@@ -559,32 +635,35 @@ foreach ($tf in $tokenFiles) {
     }
 }
 
-$textKeyPatterns = @("text", "foreground", "on-background", "on-surface", "on-primary", "content")
-$bgKeyPatterns   = @("background", "surface", "bg", "container", "card")
+# Danh sách cặp ngữ nghĩa hợp lệ đối chiếu đúng ngữ cảnh sử dụng (tránh tích Đề-các bừa bãi)
+$semanticContrastPairs = @(
+    @{ Text = "text-main";   Background = "background" },
+    @{ Text = "text-main";   Background = "surface" },
+    @{ Text = "text-muted";  Background = "background" },
+    @{ Text = "text-muted";  Background = "surface" },
+    @{ Text = "foreground";  Background = "background" },
+    @{ Text = "foreground";  Background = "surface" },
+    @{ Text = "on-background"; Background = "background" },
+    @{ Text = "on-surface";    Background = "surface" },
+    @{ Text = "on-primary";    Background = "primary" },
+    @{ Text = "on-danger";     Background = "danger" },
+    @{ Text = "on-success";    Background = "accent" },
+    @{ Text = "on-info";       Background = "info" },
+    @{ Text = "component.button.primary.color"; Background = "component.button.primary.background" }
+)
 
-$textKeys = @($colorMap.Keys | Where-Object {
-    $k = $_
-    $matched = $false
-    foreach ($tp in $textKeyPatterns) { if ($k -match $tp) { $matched = $true; break } }
-    $matched
-})
-$bgKeys = @($colorMap.Keys | Where-Object {
-    $k = $_
-    $matched = $false
-    foreach ($bp in $bgKeyPatterns) { if ($k -match $bp) { $matched = $true; break } }
-    $matched
-})
-
-foreach ($tk in $textKeys) {
-    foreach ($bk in $bgKeys) {
-        $textColor = $colorMap[$tk]
-        $bgColor = $colorMap[$bk]
+foreach ($pair in $semanticContrastPairs) {
+    $tKey = $pair.Text.ToLower()
+    $bKey = $pair.Background.ToLower()
+    if ($colorMap.ContainsKey($tKey) -and $colorMap.ContainsKey($bKey)) {
+        $textColor = $colorMap[$tKey]
+        $bgColor = $colorMap[$bKey]
         if ($textColor -and $bgColor -and $textColor -ne $bgColor) {
             $ratio = Get-WcagContrastRatio -Hex1 $textColor -Hex2 $bgColor
             if ($ratio -gt 0) {
                 $pairsChecked++
                 if ($ratio -lt 4.5) {
-                    $contrastFailures += "Cặp [$tk ($textColor) / $bk ($bgColor)]: Tỷ lệ ${ratio}:1 (< 4.5:1)"
+                    $contrastFailures += "Cặp ngữ nghĩa [$tKey ($textColor) / $bKey ($bgColor)]: Tỷ lệ ${ratio}:1 (< 4.5:1)"
                 }
             }
         }
