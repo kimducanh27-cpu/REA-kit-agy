@@ -33,13 +33,13 @@ flowchart TD
     end
 
     subgraph P4["PHASE 04 · IMPLEMENTATION (Tab 04)"]
-        S09["09. REA BUILD<br/>(Web App Zero-Install, Snapshot .backup/, preview.html)"]
+        S09["09. REA BUILD<br/>(4 Routes: Extend / Feature Branch / Compatible / Rewrite)"]
         S10["10. BUILD QA / CODE REVIEW<br/>(Thẩm định độc lập Standards vs Spec, verify_code.ps1)"]
         G4{"CỔNG 04: Build QA Passed?"}
     end
 
     subgraph P5["PHASE 05 · VALIDATION (Tab 05)"]
-        S11["11. RUN APP / SMOKE TEST<br/>(Khởi chạy app mới trên trình duyệt, test happy path)"]
+        S11["11. RUN APP / SMOKE TEST<br/>(Khởi chạy app mới: Web Browser / Android AVD Device Hub)"]
         S12["12. HARD VERIFY<br/>(Đối chiếu 1-1 với app gốc: Khớp 100% / Khác biệt / Nâng cấp)"]
         G5{"CỔNG 05: Hard Verify Passed?"}
         S13["13. RELEASE & HANDOFF<br/>(Đóng gói, Explainer đời thường, HOAN_TAC.bat)"]
@@ -123,18 +123,41 @@ REA-kit-agy/
 
 ---
 
-## 4. Kiến Trúc 2 Tầng Kỹ Năng (Engine & Orchestration Skills)
+## 4. Bốn Hệ Thống Phối Hợp & Kiến Trúc Bộ Nhớ 4 Lớp (Anthropic Research)
 
-* **Tầng 1 — Kỹ năng lõi Upstream (`reverse-engineer-anything`)**:
-  - Sao chép nguyên văn từ `morluto/rea` (SHA `5cddc69c51a0fb18d021417199046314581ba9c2`), gồm 229 MCP tools, hướng dẫn định tuyến dịch ngược APK, Electron ASAR, Native binaries và 7 tài liệu kỹ thuật trong `references/`.
-* **Tầng 2 — Bộ 3 Kỹ năng điều phối tiếng Việt (Orchestration Skills)**:
-  1. **`rea-scan`** (Phase 01 & 02): Tiếp nhận file, sao lưu sang `04_`, thiết lập baseline (kèm fallback tĩnh), gọi công cụ REA, che mờ secrets `[REDACTED]`, trích xuất **Screen Inventory & State Matrix**, đo Coverage Score và xuất sổ Unknowns vào `03_`.
-  2. **`rea-interview`** (Phase 03): Đọc báo cáo và `ho-so-va-muc-tieu.md`, phỏng vấn người dùng, chốt hợp đồng thiết kế **Design System 3 tầng (`design.md`)**, đóng băng đặc tả sản phẩm và lập kế hoạch chia task nguyên tử vào `03_`.
-  3. **`rea-build`** (Phase 04 & 05): Triển khai mã nguồn Web App Zero-Install vào `05_`, kiểm toán độc lập 2 trục theo `REVIEW.md`, chạy `verify_code.ps1`, thực hiện smoke test, hard verify đối chiếu 1-1 và xuất biên bản bàn giao trọn gói.
+REA-kit-agy được tổ chức thành 4 hệ thống nội bộ chặt chẽ nhưng giữ nguyên giao diện 5 thư mục đơn giản cho người dùng non-tech:
+
+1. **01 — PROCESS ORCHESTRATOR**:
+   - Single Authoritative Coordinator điều phối ca làm việc qua `active_case.json` (máy trạng thái 6 Gates & 14 Steps).
+   - Bộ 3 Kỹ năng điều phối tiếng Việt (`rea-scan`, `rea-interview`, `rea-build`).
+2. **02 — AGENT & SKILL SYSTEM**:
+   - Tầng 1: Kỹ năng lõi Upstream `reverse-engineer-anything` (morluto/rea, 229 MCP tools, định tuyến APK / Electron / Binary).
+   - Tầng 2: Host Plugin Skills từ Antigravity (`android-cli`, `android-device-hub`, `ui-styling`, `surgical-patch`, `code-review`).
+   - Hỗ trợ Subagents phân tích độc lập; Swarm chỉ kích hoạt khi Build chia module độc lập; không bắt buộc phụ thuộc Swarm/Teamwork.
+3. **03 — MEMORY & KNOWLEDGE SYSTEM (Chuẩn 4 Lớp Anthropic)**:
+   - **Layer 1 (Transcripts / Event Logs)**: Nhật ký gốc từng phiên lưu tại `.agents/state/cases/`.
+   - **Layer 2 (Memory Notes)**: Ghi chú bền vững, bài học kiểm chứng tại `.agents/state/learned_rules.json` và `.agents/state/MEMORY.md`.
+   - **Layer 3 (Memory Representations)**: Bản đồ tri thức, wiki liên kết tại `docs/` (`ARCHITECTURE.md`, `RULES.md`, `WORKFLOW_LIFECYCLE.md`).
+   - **Layer 4 (Injected Context)**: Ngữ cảnh nạp đầu phiên gồm `active_case.json`, `AGENTS.md` và `docs/HANDOFF.md`.
+   - *Cơ chế Consolidation*: Chạy cuối milestone để đối chiếu nguồn gốc, dọn ghi chú trùng lặp, chống nhiều agent ghi đè tri thức.
+4. **04 — VERIFICATION & REVIEW ENGINE**:
+   - Kiểm tra 2 trục độc lập Standards vs Spec theo `REVIEW.md`.
+   - Hệ thống script kiểm định (`health_check.ps1`, `verify_code.ps1`, `rollback.ps1` hỗ trợ đệ quy thư mục lồng).
+   - Truy vết 1-1 (Traceability 100%): `App Gốc` ➔ `REA Evidence` ➔ `Feature` ➔ `Quyết Định` ➔ `Spec Chốt` ➔ `Task` ➔ `Mã Nguồn` ➔ `Test Case` ➔ `Nghiệm Thu`.
 
 ---
 
-## 5. Bắt Đầu Nhanh Trong 3 Bước
+## 5. Bốn Phương Án Phát Triển Phần Mềm (4 Build Routes)
+
+Tại Bước 06 & 07, người dùng quyết định 1 trong 4 phương án:
+1. **Route 1 — Tiếp tục phát triển trên source hiện tại (Extend)**: Nâng cấp trực tiếp trên codebase gốc của ứng dụng.
+2. **Route 2 — Tạo nhánh riêng để phát triển tính năng (Feature Branch)**: Thêm chức năng mới cô lập trên nhánh riêng.
+3. **Route 3 — Xây dựng implementation tương thích mới (Compatible)**: Tái tạo bản mới tương thích (Android Native via `Android CLI` hoặc Web App Zero-Install).
+4. **Route 4 — Viết lại hoàn toàn (Full Rewrite)**: Thiết kế lại toàn bộ từ đầu theo đặc tả đã chốt.
+
+---
+
+## 6. Bắt Đầu Nhanh Trong 3 Bước
 
 1. Kéo thả file ứng dụng vào thư mục `01_THA_APP_VAO_DAY`.
 2. Mở file [HUONG_DAN_SU_DUNG.md](HUONG_DAN_SU_DUNG.md) hoặc [prompts/01-TAB-DISCOVERY.md](prompts/01-TAB-DISCOVERY.md), copy câu lệnh mẫu và dán vào chat với AI.
@@ -142,7 +165,7 @@ REA-kit-agy/
 
 ---
 
-## 6. Khởi Tạo Bộ Kit Vào Thư Mục Mới (Meta-Bootstrap)
+## 7. Khởi Tạo Bộ Kit Vào Thư Mục Mới (Meta-Bootstrap)
 
 Muốn nhân bản toàn bộ bộ kit này sang một thư mục rỗng bất kỳ chỉ bằng 1 câu lệnh cho AI:
 👉 Mở file **[prompts/BOOTSTRAP_KIT.md](prompts/BOOTSTRAP_KIT.md)**, copy khối siêu lệnh và dán vào Agent trong thư mục mới. Agent sẽ tự động tạo đủ cấu trúc, kiểm tra sức khỏe và báo kết quả `6/6 PASSED`.

@@ -1,0 +1,53 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "CaseManifest",
+  "description": "Internal manifest tracking end-to-end case artifacts and metadata in 03_KET_QUA_KIEM_TRA/case-<ID>/",
+  "type": "object",
+  "required": [
+    "case_id",
+    "target_name",
+    "target_class",
+    "current_stage",
+    "current_step",
+    "gate_status",
+    "created_at",
+    "updated_at",
+    "artifacts"
+  ],
+  "properties": {
+    "case_id": { "type": "string", "example": "APP-001" },
+    "target_name": { "type": "string", "example": "sample-calculator.apk" },
+    "target_class": {
+      "type": "string",
+      "enum": ["ANDROID_APK", "ELECTRON_ASAR", "NATIVE_BINARY", "WEB_APP", "SOURCE_REPO", "CAPTURE"]
+    },
+    "current_stage": { "type": "string", "example": "STAGE_01_DISCOVERY" },
+    "current_step": { "type": "string", "example": "01_APP_INTAKE" },
+    "gate_status": { "type": "string", "example": "GATE_00_READY" },
+    "created_at": { "type": "string", "format": "date-time" },
+    "updated_at": { "type": "string", "format": "date-time" },
+    "owner_authorized": { "type": "boolean", "default": true },
+    "allowed_operations": {
+      "type": "array",
+      "items": { "type": "string" },
+      "example": ["static", "device_adb", "screen_capture"]
+    },
+    "artifacts": {
+      "type": "object",
+      "properties": {
+        "intake_manifest": { "type": "string", "example": "01_INTAKE/INPUT_MANIFEST.json" },
+        "backup_manifest": { "type": "string", "example": "01_INTAKE/BACKUP_MANIFEST.json" },
+        "scan_report": { "type": "string", "example": "02_INVESTIGATION/SCAN_REPORT.md" },
+        "evidence_index": { "type": "string", "example": "02_INVESTIGATION/EVIDENCE_INDEX.json" },
+        "unknown_register": { "type": "string", "example": "02_INVESTIGATION/UNKNOWN_REGISTER.json" },
+        "audit_report": { "type": "string", "example": "03_AUDIT/AUDIT_REPORT.md" },
+        "coverage_matrix": { "type": "string", "example": "03_AUDIT/COVERAGE_MATRIX.json" },
+        "decision_log": { "type": "string", "example": "04_DECISIONS/DECISION_LOG.md" },
+        "approved_spec": { "type": "string", "example": "05_PLAN/APPROVED_SPEC.md" },
+        "architecture": { "type": "string", "example": "05_PLAN/ARCHITECTURE.md" },
+        "tasks": { "type": "string", "example": "05_PLAN/TASKS.json" },
+        "handoff_contract": { "type": "string", "example": "HANDOFF.json" }
+      }
+    }
+  }
+}

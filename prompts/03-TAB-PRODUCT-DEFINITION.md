@@ -27,10 +27,11 @@ You are executing **STAGE_03 · PRODUCT DEFINITION**:
    - Mức độ tương đồng với app gốc (Giữ nguyên hay tối giản?).
    - Phương án giải quyết các Unknowns phát hiện ở Bước 05.
    - Các tính năng mới cần bổ sung hoặc lược bỏ.
-   - **Chốt Build Route**:
-     * Route A (Web App Zero-Install): Chạy ngay trên trình duyệt máy tính/di động.
-     * Route B (Android Native Project): Xây dựng lại app Android mới bằng Kotlin/Jetpack Compose.
-     * Route C (Patch APK / Resources): Vá và can thiệp trực tiếp gói APK gốc.
+   - **Chốt 1 trong 4 Build Routes**:
+     * Route 1 (Extend): Tiếp tục phát triển trên source hiện tại của ứng dụng.
+     * Route 2 (Feature Branch): Tạo nhánh riêng để phát triển cô lập tính năng mới.
+     * Route 3 (Compatible Clean-room): Xây dựng bản tương thích mới (Android Native qua `android-cli` hoặc Web Zero-Install).
+     * Route 4 (Full Rewrite): Viết lại hoàn toàn kiến trúc mới từ đầu theo đặc tả.
 3. Chờ người dùng trả lời và tổng hợp thành tài liệu rõ ràng.
 
 ### BƯỚC 07: SPEC & DESIGN GATE (Đặc Tả Đóng Băng & Hợp Đồng Giao Diện)

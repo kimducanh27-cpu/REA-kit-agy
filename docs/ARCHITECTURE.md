@@ -70,11 +70,70 @@ Exact routes depend on the installed REA version and its Skill:
 
 Maintain a capability matrix with version, platform, prerequisites, operation effects, test status and gaps.
 
-## 6. Per-app case record
+## 6. Per-app case record & Handoff Contract Layout
 
-A case should be able to retain target identity/authorization, input references and hashes, complete Evidence exports/index, human report, questions/decisions, requirements/design, implementation branch, tests and handoff. Exact on-disk layout is not yet approved.
+A case retains target identity/authorization, input references and hashes, complete Evidence exports/index, human report, questions/decisions, requirements/design, implementation branch, tests and handoff. 
+
+The internal case structure inside `03_KET_QUA_KIEM_TRA/` follows a standardized schema:
+```text
+03_KET_QUA_KIEM_TRA/
+└── case-APP-001/
+    ├── 00_CASE_MANIFEST.json        # Manifest định danh ca, metadata, SHA-256 (schema: templates/10-CASE-MANIFEST-TEMPLATE.json)
+    ├── 01_INTAKE/
+    │   ├── INPUT_MANIFEST.json      # Danh mục file đầu vào & hash SHA-256
+    │   └── BACKUP_MANIFEST.json     # Chứng thực bản sao lưu an toàn sang 04_
+    ├── 02_INVESTIGATION/
+    │   ├── SCAN_REPORT.md           # Báo cáo quét tĩnh và phân tích cấu trúc
+    │   ├── EVIDENCE_INDEX.json      # Chỉ mục bằng chứng gốc từ REA Engine
+    │   ├── FEATURE_DOSSIERS/        # Hồ sơ bóc tách chi tiết từng tính năng
+    │   └── UNKNOWN_REGISTER.json    # Sổ theo dõi điểm mù và vùng mã chưa xác minh
+    ├── 03_AUDIT/
+    │   ├── AUDIT_REPORT.md          # Báo cáo kiểm toán độc lập
+    │   └── COVERAGE_MATRIX.json     # Ma trận độ phủ bằng chứng (Coverage Score)
+    ├── 04_DECISIONS/
+    │   └── DECISION_LOG.md          # Nhật ký quyết định người dùng đã chốt
+    ├── 05_PLAN/
+    │   ├── APPROVED_SPEC.md         # Đặc tả yêu cầu đóng băng (Frozen Spec)
+    │   ├── ARCHITECTURE.md          # Kiến trúc kỹ thuật của app mới
+    │   └── TASKS.json               # Danh sách nhiệm vụ nguyên tử & phụ thuộc
+    └── HANDOFF.json                 # Hợp đồng bàn giao pha (schema: templates/11-HANDOFF-CONTRACT-TEMPLATE.json)
+```
 
 Never store real user artifacts, private Evidence, source code or secrets in this public repository. Use synthetic/public fixtures.
+
+## 6.1. Chuỗi truy vết 1-1 (End-to-End Traceability Chain)
+
+Mọi yêu cầu nghiệp vụ đều phải có khả năng truy vết 2 chiều thông suốt:
+```text
+APP ORIGINAL
+   ↓
+REA EVIDENCE (ID, Provenance)
+   ↓
+FEATURE FINDING (Screen/Flow)
+   ↓
+USER DECISION (Decision Log)
+   ↓
+APPROVED REQUIREMENT (Spec Frozen)
+   ↓
+IMPLEMENTATION TASK (Atomic Task)
+   ↓
+SOURCE CODE / COMMIT (Diff)
+   ↓
+TEST CASE (Automated / Manual)
+   ↓
+TEST RESULT (QA Pass/Fail)
+   ↓
+FINAL ACCEPTANCE (Hard Verify 1-1)
+```
+
+## 6.2. Lộ trình phân loại Script Registry (6 Nhóm Kiểm Tra)
+
+1. **Workspace**: `health_check.ps1`, `validate-kit.ps1` (Kiểm tra cấu trúc thư mục, Rules, Context, REA Doctor).
+2. **Intake**: `preflight.ps1`, `verify-backup.ps1` (Kiểm kê đầu vào, tính SHA-256, đối chiếu bản sao lưu).
+3. **Evidence**: `validate-evidence.py`, `validate-report.py`, `validate-coverage.py` (Kiểm toán Evidence ID, độ phủ, che mờ secrets).
+4. **Workflow**: `validate-case-state.py`, `validate-handoff.py` (Kiểm định máy trạng thái `active_case.json`, hợp đồng bàn giao `HANDOFF.json`).
+5. **Engineering**: `verify_code.ps1`, `build-profile.ps1`, `run-tests.ps1`, `rollback.ps1` (Kiểm tra cú pháp, build, test, khôi phục đệ quy).
+6. **Memory**: `validate-memory.py`, `memory-eval.py` (Kiểm định tính xác thực của Memory Notes, loại bỏ mâu thuẫn).
 
 ## 7. Security boundaries
 
@@ -141,17 +200,21 @@ flowchart TD
     Source --> Report
 ```
 
-### 9.3 Sơ đồ phỏng vấn & Lựa chọn hướng phát triển (Interview & Build Route)
+### 9.3 Sơ đồ phỏng vấn & Lựa chọn hướng phát triển (Interview & 4 Build Routes)
 
 ```mermaid
 flowchart TD
     Report["Báo cáo hiện trạng (03_)"] --> Q1["1. App còn thiếu tính năng gì?"]
     Q1 --> Q2["2. Cần nâng cấp công nghệ/giao diện ra sao?"]
     Q2 --> Q3["3. Yêu cầu bảo mật & dữ liệu thế nào?"]
-    Q3 --> Decision{Lựa chọn hướng phát triển?}
-    Decision -->|Hướng A: Có mã nguồn tốt| Branch["Nâng cấp tiếp trên app cũ (Branch mới)"]
-    Decision -->|Hướng B: Công nghệ cũ / Chỉ có binary| Rewrite["Viết lại hoàn toàn app mới (Rebuild/Rewrite)"]
-    Branch --> Build["Triển khai mã nguồn vào 05_MA_NGUON_PHAT_TRIEN/"]
+    Q3 --> Decision{Lựa chọn 1 trong 4 hướng phát triển?}
+    Decision -->|Route 1: Có sẵn source tốt| Extend["Tiếp tục phát triển trên source hiện tại (Extend)"]
+    Decision -->|Route 2: Cần cô lập tính năng mới| Branch["Tạo nhánh riêng phát triển tính năng (Feature Branch)"]
+    Decision -->|Route 3: Tái tạo sạch tương thích| Compatible["Xây dựng bản tương thích mới (Android Native / Web)"]
+    Decision -->|Route 4: Viết lại từ đầu| Rewrite["Viết lại hoàn toàn kiến trúc mới (Full Rewrite)"]
+    Extend --> Build["Triển khai mã nguồn vào 05_MA_NGUON_PHAT_TRIEN/"]
+    Branch --> Build
+    Compatible --> Build
     Rewrite --> Build
 ```
 

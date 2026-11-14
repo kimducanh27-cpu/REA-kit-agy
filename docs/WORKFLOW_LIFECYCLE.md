@@ -140,7 +140,7 @@ flowchart TD
      - Giữ lại chức năng nào của app gốc?
      - Bỏ qua hoặc sửa đổi chức năng nào?
      - Cần bổ sung tính năng mới hoặc đổi giao diện ra sao?
-     - Chọn hướng tái tạo mã nguồn (Web Zero-Install, Android Native hay Patch APK)?
+     - Chọn 1 trong 4 hướng phát triển: (1) Tiếp tục phát triển trên source hiện tại, (2) Tạo nhánh riêng cô lập tính năng, (3) Xây dựng bản tương thích mới (Android Native via Android CLI hoặc Web App Zero-Install), (4) Viết lại hoàn toàn.
      - Xử lý các điểm mù (Unknowns) bằng phương án nào?
 
 #### Bước 07: Spec & Design Gate (Đóng Băng Đặc Tả & Thiết Kế)

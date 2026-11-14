@@ -1,0 +1,2 @@
+# This directory holds per-case transcripts and session logs (Layer 1 of Anthropic Agent Memory).
+# Case-specific data in this directory is ignored by git to protect user privacy.

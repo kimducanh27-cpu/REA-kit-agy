@@ -76,7 +76,7 @@ Read and follow AGENTS.md, REVIEW.md, and docs/WORKFLOW_LIFECYCLE.md.
 - Local Kit Skills: rea-interview
 - Host Plugin Skills: ui-styling, design-system
 
-1. Bước 06: Phỏng vấn tôi từ 3 đến 5 câu hỏi tiếng Việt dựa trên hồ sơ mong muốn, sổ Unknowns và chốt Build Route (Route A: Web Zero-Install, Route B: Android Native, Route C: Patch APK).
+1. Bước 06: Phỏng vấn tôi từ 3 đến 5 câu hỏi tiếng Việt dựa trên hồ sơ mong muốn, sổ Unknowns và chốt 1 trong 4 Build Routes (Extend, Feature Branch, Compatible Clean-room, Full Rewrite).
 2. Bước 07: Chốt Design System 3 tầng vào 02_YEU_CAU_CUA_TOI/design.md và xuất 03_KET_QUA_KIEM_TRA/dac-ta-yeu-cau-da-chot.md.
 3. Bước 08: Chia nhỏ task nguyên tử, xuất 03_KET_QUA_KIEM_TRA/KE_HOACH_TRIEN_KHAI.md.
 4. Chờ tôi duyệt để mở CỔNG 03 (gate_03_spec_frozen = true) và đồng bộ docs/PROGRESS.md.
