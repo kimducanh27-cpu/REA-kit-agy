@@ -27,17 +27,34 @@ Write-Host "==========================================================" -Foregro
 $score = 0
 $total = 6
 
-# 1. Kiểm tra cấu trúc thư mục người dùng
+# 1. Kiểm tra cấu trúc thư mục người dùng & tính bất biến của 01_THA_APP_VAO_DAY
 $dirs = @("01_THA_APP_VAO_DAY", "02_YEU_CAU_CUA_TOI", "03_KET_QUA_KIEM_TRA", "04_SAO_LUU_AN_TOAN", "05_MA_NGUON_PHAT_TRIEN")
 $allDirsOk = $true
 foreach ($d in $dirs) {
     if (-not (Test-Path (Join-Path $repoRoot $d))) { $allDirsOk = $false }
 }
-if ($allDirsOk) {
-    Write-Host "[OK] (1/6) Cấu trúc 5 thư mục giao diện người dùng đầy đủ." -ForegroundColor Green
+$inputDir = Join-Path $repoRoot "01_THA_APP_VAO_DAY"
+$immutabilityViolations = @()
+if (Test-Path -LiteralPath $inputDir) {
+    $forbiddenExts = @(".tmp", ".bak", ".log", ".class", ".dex", ".o", ".obj", ".map", ".swp", ".lock")
+    $forbiddenDirNames = @("build", "out", "target", "bin", "obj", "node_modules", ".gradle", "__pycache__", ".backup", "dist")
+    $items = @(Get-ChildItem -LiteralPath $inputDir -Recurse -Force -ErrorAction SilentlyContinue)
+    foreach ($item in $items) {
+        if ($forbiddenExts -contains $item.Extension.ToLower()) {
+            $immutabilityViolations += "Tệp cấm trong 01_: $($item.Name)"
+        }
+        if ($item.PSIsContainer -and ($forbiddenDirNames -contains $item.Name.ToLower())) {
+            $immutabilityViolations += "Thư mục cấm trong 01_: $($item.Name)"
+        }
+    }
+}
+if ($allDirsOk -and $immutabilityViolations.Count -eq 0) {
+    Write-Host "[OK] (1/6) Cấu trúc 5 thư mục người dùng đầy đủ & 01_THA_APP_VAO_DAY bất biến (Immutability verified)." -ForegroundColor Green
     $score++
-} else {
+} elseif (-not $allDirsOk) {
     Write-Host "[!] (1/6) Thiếu một số thư mục người dùng." -ForegroundColor Red
+} else {
+    Write-Host "[!] (1/6) Vi phạm tính bất biến tại 01_THA_APP_VAO_DAY/ ($($immutabilityViolations.Count) tệp/thư mục bị cấm)." -ForegroundColor Red
 }
 
 # 2. Kiểm tra tài liệu hướng dẫn và luật chơi cốt lõi
@@ -198,6 +215,64 @@ if ($adbCmd) {
     Write-Host "[i] ADB Tool: Chưa cấu hình trong PATH (yêu cầu cho tương tác thiết bị Android thật / AVD)." -ForegroundColor Yellow
 }
 
+$nodeCmd = Get-Command node -ErrorAction SilentlyContinue
+$nodeVerStr = ""
+if ($nodeCmd) {
+    try {
+        $nodeVerStr = (& node --version 2>&1).ToString().Trim()
+        Write-Host "[OK] Node.js Runtime: Khả dụng ($nodeVerStr - Cho phép 'node --check' kiểm tra cú pháp AST JavaScript)." -ForegroundColor Green
+    } catch {
+        Write-Host "[OK] Node.js Runtime: Khả dụng ($($nodeCmd.Source))." -ForegroundColor Green
+    }
+} else {
+    Write-Host "[i] Node.js Runtime: Chưa phát hiện trong PATH (verify_code.ps1 sẽ fallback sang kiểm tra cặp ngoặc nhọn heuristic thay vì AST compiler)." -ForegroundColor Yellow
+}
+
+$apksignerCmd = Get-Command apksigner -ErrorAction SilentlyContinue
+if (-not $apksignerCmd) { $apksignerCmd = Get-Command apksigner.bat -ErrorAction SilentlyContinue }
+if ($apksignerCmd) {
+    Write-Host "[OK] apksigner: Khả dụng ($($apksignerCmd.Source) - Xác thực chữ ký số APK v1/v2/v3/v4)." -ForegroundColor Green
+} else {
+    Write-Host "[i] apksigner: Chưa phát hiện trong PATH (Cần cho Route B/C để kiểm định chữ ký và cài đặt APK sau khi rebuild/patch mà không bị từ chối)." -ForegroundColor Yellow
+}
+
+$keytoolCmd = Get-Command keytool -ErrorAction SilentlyContinue
+if ($keytoolCmd) {
+    Write-Host "[OK] keytool: Khả dụng ($($keytoolCmd.Source) - Quản lý Keystore và chứng chỉ số ký APK)." -ForegroundColor Green
+} else {
+    Write-Host "[i] keytool: Chưa phát hiện trong PATH (Cần JDK bin trong PATH để tạo debug/release keystore khi build hoặc ký lại APK)." -ForegroundColor Yellow
+}
+
+$readelfCmd = Get-Command readelf -ErrorAction SilentlyContinue
+if (-not $readelfCmd) { $readelfCmd = Get-Command llvm-readelf -ErrorAction SilentlyContinue }
+if ($readelfCmd) {
+    Write-Host "[OK] readelf: Khả dụng ($($readelfCmd.Source) - Hỗ trợ kiểm tra PT_LOAD ELF segment căn chỉnh 16 KB page-size cho file .so)." -ForegroundColor Green
+} else {
+    Write-Host "[i] readelf: Chưa phát hiện trong PATH (Không thể tự động kiểm tra ELF 16 KB page-size cho thư viện native .so trên Android 15+; cần NDK/LLVM toolchain)." -ForegroundColor Yellow
+}
+
+$gradleCmd = Get-Command gradle -ErrorAction SilentlyContinue
+$gradlewPath = $null
+$candidateGradlews = @(
+    (Join-Path $repoRoot "05_MA_NGUON_PHAT_TRIEN/android/gradlew.bat"),
+    (Join-Path $repoRoot "05_MA_NGUON_PHAT_TRIEN/android/gradlew"),
+    (Join-Path $repoRoot "gradlew.bat"),
+    (Join-Path $repoRoot "gradlew")
+)
+foreach ($cg in $candidateGradlews) {
+    if (Test-Path -LiteralPath $cg) {
+        $gradlewPath = $cg
+        break
+    }
+}
+if ($gradlewPath) {
+    Write-Host "[OK] Gradle Wrapper (gradlew): Khả dụng ($gradlewPath - Sẵn sàng cho Android Route B lint/test/build)." -ForegroundColor Green
+} elseif ($gradleCmd) {
+    Write-Host "[OK] Gradle Build Tool: Khả dụng ($($gradleCmd.Source) - Hệ thống build Android Native Route B)." -ForegroundColor Green
+} else {
+    Write-Host "[i] Gradle Build Tool (gradlew): Chưa có gradlew trong 05_MA_NGUON_PHAT_TRIEN/android/ hoặc gradle trong PATH (Cần cho Route B để chạy './gradlew lint' và './gradlew test')." -ForegroundColor Yellow
+}
+
 Write-Host "==========================================================" -ForegroundColor Cyan
 if ($score -eq $total) {
     Write-Host " KẾT QUẢ: WORKSPACE & RUNTIME SẴN SÀNG ($score/$total) - BẠN CÓ THỂ BẮT ĐẦU!" -ForegroundColor Green
@@ -212,6 +287,21 @@ if (Test-Path $activeCasePath) {
     try {
         $case = Get-Content $activeCasePath -Raw -Encoding UTF8 | ConvertFrom-Json
         if ($case) {
+            # Kiểm tra tệp ứng dụng trong 01_THA_APP_VAO_DAY
+            $appInputObj = $null
+            if (Test-Path -LiteralPath $inputDir) {
+                $ignoredFiles = @("readme.md", ".gitkeep", ".gitignore", ".ds_store", "thumbs.db")
+                $appFiles = @(Get-ChildItem -LiteralPath $inputDir -File -ErrorAction SilentlyContinue | Where-Object { $ignoredFiles -notcontains $_.Name.ToLower() })
+                if ($appFiles.Count -gt 0) {
+                    $targetFile = $appFiles[0]
+                    $appSha = (Get-FileHash -LiteralPath $targetFile.FullName -Algorithm SHA256).Hash.ToUpper()
+                    $appInputObj = [PSCustomObject]@{
+                        Name = $targetFile.Name
+                        Sha256 = $appSha
+                    }
+                }
+            }
+
             Write-Host ""
             Write-Host "--- TIẾN ĐỘ DỰ ÁN (LIFECYCLE STATUS) ---" -ForegroundColor Yellow
             Write-Host " Case ID        : $($case.case_id) (Revision $($case.revision))" -ForegroundColor White
@@ -219,12 +309,23 @@ if (Test-Path $activeCasePath) {
             Write-Host " Target Class   : $($case.target_class)" -ForegroundColor White
             Write-Host " Bước hiện tại  : $($case.current_step)" -ForegroundColor White
             Write-Host " Trạng thái Gate: $($case.current_gate_status)" -ForegroundColor White
+            Write-Host " 01_ Bất biến   : $(if ($immutabilityViolations.Count -eq 0) { 'BẢO TOÀN (Immutability enforced)' } else { 'VI PHẠM (Phát hiện tệp cấm)' })" -ForegroundColor $(if ($immutabilityViolations.Count -eq 0) { 'Green' } else { 'Red' })
+            Write-Host " Ứng dụng nạp   : $(if ($appInputObj) { "$($appInputObj.Name) (SHA: $($appInputObj.Sha256.Substring(0,12))...)" } else { "Chờ nạp app vào 01_THA_APP_VAO_DAY/" })" -ForegroundColor $(if ($appInputObj) { 'Green' } else { 'Yellow' })
+            if ($appInputObj -and $case.workflow -and $case.workflow.target_fingerprint) {
+                $isMatch = ($appInputObj.Sha256 -eq $case.workflow.target_fingerprint)
+                Write-Host " Vân tay khớp   : $(if ($isMatch) { 'ĐỒNG BỘ 100%' } else { 'LỆCH VÂN TAY (Sẽ tự động lưu trữ ca cũ khi chạy sync)' })" -ForegroundColor $(if ($isMatch) { 'Green' } else { 'Yellow' })
+            }
             Write-Host " JDK 17+        : $(if ($javaOk) { "KHẢ DỤNG (v$javaVerStr)" } else { "CHƯA SẴN SÀNG" })" -ForegroundColor $(if ($javaOk) { 'Green' } else { 'Yellow' })
             Write-Host " JADX           : $(if ($jadxCmd) { 'KHẢ DỤNG' } else { 'Chưa có trong PATH' })" -ForegroundColor $(if ($jadxCmd) { 'Green' } else { 'Gray' })
             Write-Host " Apktool        : $(if ($apktoolCmd) { 'KHẢ DỤNG' } else { 'Chưa có trong PATH' })" -ForegroundColor $(if ($apktoolCmd) { 'Green' } else { 'Gray' })
             Write-Host " zipalign       : $(if ($zipalignCmd) { 'KHẢ DỤNG (16 KB support)' } else { 'Chưa có trong PATH' })" -ForegroundColor $(if ($zipalignCmd) { 'Green' } else { 'Gray' })
             Write-Host " Android CLI    : $(if ($androidCmd) { 'SẴN SÀNG (AVD / Device Hub / layout / screen capture)' } else { 'STATIC FALLBACK (JADX + Apktool + Artifact Inventory)' })" -ForegroundColor $(if ($androidCmd) { 'Green' } else { 'Yellow' })
             Write-Host " ADB Tool       : $(if ($adbCmd) { 'KHẢ DỤNG' } else { 'Chưa cấu hình trong PATH' })" -ForegroundColor $(if ($adbCmd) { 'Green' } else { 'Gray' })
+            Write-Host " Node.js        : $(if ($nodeCmd) { "KHẢ DỤNG ($nodeVerStr)" } else { "Chưa có trong PATH (Heuristic JS)" })" -ForegroundColor $(if ($nodeCmd) { 'Green' } else { 'Yellow' })
+            Write-Host " apksigner      : $(if ($apksignerCmd) { 'KHẢ DỤNG' } else { 'Chưa có trong PATH' })" -ForegroundColor $(if ($apksignerCmd) { 'Green' } else { 'Gray' })
+            Write-Host " keytool        : $(if ($keytoolCmd) { 'KHẢ DỤNG' } else { 'Chưa có trong PATH' })" -ForegroundColor $(if ($keytoolCmd) { 'Green' } else { 'Gray' })
+            Write-Host " readelf        : $(if ($readelfCmd) { 'KHẢ DỤNG (16 KB support)' } else { 'Chưa có trong PATH' })" -ForegroundColor $(if ($readelfCmd) { 'Green' } else { 'Gray' })
+            Write-Host " Gradle/gradlew : $(if ($gradlewPath -or $gradleCmd) { 'SẴN SÀNG' } else { 'Chưa cấu hình trong dự án' })" -ForegroundColor $(if ($gradlewPath -or $gradleCmd) { 'Green' } else { 'Gray' })
             Write-Host " Hướng dẫn tiếp : $($case.next_prompt_guide)" -ForegroundColor Cyan
             Write-Host "----------------------------------------" -ForegroundColor Yellow
         }

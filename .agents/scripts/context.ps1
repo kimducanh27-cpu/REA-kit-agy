@@ -170,8 +170,12 @@ function Resolve-ProfileName {
     $t = if ($TaskText) { $TaskText.ToLower() } else { "" }
 
     # Vietnamese & English intent classification
+    # Prioritize compound UI phrases: prevent "tối ưu" from hijacking UI requests -> route to "design"
+    if ($t -match "(tối ưu giao diện|tối ưu layout|tối ưu ui|tối ưu ux|tối ưu animation|tối ưu icon)" -or $t -match "\boptim\w*\s+(ui|ux|layout|animation|icon)\b") { return "design" }
+
     if ($t -match "\b(secur|audit|vulnerab|cve|secret|hardcod|permiss)\b" -or $t -match "(bảo mật|lỗ hổng|mã hóa|quyền truy cập|an toàn)") { return "security" }
-    if ($t -match "\b(optim|perf|speed|memory|battery|leak|profil)\b" -or $t -match "(tối ưu|hiệu năng|tiêu thụ ram|ngốn ram|hao pin|tiết kiệm pin|tốc độ|mượt|lag|giật)") { return "optimization" }
+    # Reserve "optimization" for performance/resource intents
+    if ($t -match "\b(perf\w*|speed|memory|battery|leak\w*|profil\w*|fps)\b" -or $t -match "(tối ưu hiệu năng|tối ưu ram|tối ưu pin|tối ưu tốc độ|tối ưu fps|hiệu năng|tiêu thụ ram|ngốn ram|hao pin|tiết kiệm pin|tốc độ|mượt|lag|giật|fps)" -or ($t -match "\b(optim\w*|tối ưu)\b" -and $t -notmatch "\b(design|ui|ux|token|layout|copy|anti-slop|giao diện|thiết kế|thẩm mỹ|đổi màu|bố cục|responsive|tỷ lệ màn hình|trực quan)\b")) { return "optimization" }
     if ($t -match "\b(design|ui|ux|token|layout|copy|anti-slop)\b" -or $t -match "(giao diện|thiết kế|thẩm mỹ|đổi màu|bố cục|responsive|tỷ lệ màn hình|trực quan)") { return "design" }
     if ($t -match "\b(validat|smoke|hard-verify|matrix|handoff|release)\b" -or $t -match "(nghiệm thu|kiểm thử|xác minh|kiểm định|bàn giao|phát hành)") { return "validation" }
     if ($t -match "\b(feature|rebuild|implement|build|code|add|screen)\b" -or $t -match "(thêm tính năng|chức năng mới|viết lại|phát triển|xây dựng|màn hình mới)") { return "feature-addition" }

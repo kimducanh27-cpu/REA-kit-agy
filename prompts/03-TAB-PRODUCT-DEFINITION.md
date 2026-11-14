@@ -1,6 +1,6 @@
 # PROMPT 03: ĐỊNH HÌNH SẢN PHẨM & THIẾT KẾ ANTI-SLOP (TAB 03 — PRODUCT DEFINITION)
 
-*Dán đoạn lệnh này vào AI Agent sau khi hoàn thành Stage 02 (Gate 02 đã thông qua hợp lệ).*
+*Dán đoạn lệnh này vào AI Agent sau khi hoàn thành Stage 02 (Gate 02 đã được giải phóng hợp lệ).*
 
 ---
 
@@ -11,21 +11,22 @@ Read and follow `AGENTS.md`, `REVIEW.md`, `.agents/state/MEMORY.md`, and `docs/W
 
 ## Active Skills for this Tab:
 - Local Kit Skills (Bắt buộc): `rea-interview` (Bước 06–07), `rea-plan` (Bước 08)
+- Optional Host Plugins (Nếu máy có cài đặt): `ui-styling`, `design-system`
 
 ## Ranh giới Kiến trúc Tuyệt đối (Spec-First Boundary):
 Trong toàn bộ Tab 03, **TUYỆT ĐỐI KHÔNG ĐƯỢC VIẾT CODE SẢN PHẨM, KHÔNG TẠO WORKING PROTOTYPE**.
 Toàn bộ đầu ra là các tài liệu Markdown đặc tả hợp đồng thiết kế chống UI Slop và hồ sơ quyết định kiến trúc.
 
-## Điều kiện tiên quyết:
+## Điều kiện tiên quyết & Kiểm tra Cổng (Preflight Gate Check):
 Đọc `.agents/state/active_case.json` hoặc chạy `powershell -NoProfile -ExecutionPolicy Bypass -File .agents/scripts/gate.ps1 status`.
 Cổng 02 (`gate_02_audit_passed`) phải ở một trong các trạng thái hợp lệ đã được giải phóng:
 - `PASS` (Hoàn thành kiểm toán đầy đủ Bước 05).
 - `PASS_WITH_LIMITATIONS` (Vượt qua với giới hạn phân tích tĩnh).
 - `REUSED_VALIDATED` (Tái sử dụng bằng chứng hợp lệ từ case trước).
 - `SKIPPED` (Bỏ qua hợp lệ có lý do, ví dụ: chế độ Source Repository `WF03`).
-- `NOT_APPLICABLE` (Không áp dụng cho chế độ ca làm việc hiện tại).
+- `NOT_APPLICABLE` (Không áp dụng cho chế độ ca làm việc hiện tại, ví dụ: `ANALYSIS_ONLY`).
 - `WAIVED` (Được phê duyệt miễn trừ có lý do giải trình).
-Nếu Cổng 02 ở trạng thái `FAILED`, `BLOCKED`, `NOT_STARTED` hoặc `INVALIDATED`, dừng lại và xử lý Cổng 02 trước.
+Nếu Cổng 02 ở trạng thái `FAILED`, `BLOCKED`, `NOT_STARTED` hoặc `INVALIDATED`, dừng lại và xử lý Cổng 02 trước. Xác nhận công cụ an toàn `HOAN_TAC.bat` (hoặc `hoan_tac.sh`) sẵn sàng.
 
 You are executing **STAGE_03 · PRODUCT DEFINITION**:
 
@@ -36,6 +37,7 @@ You are executing **STAGE_03 · PRODUCT DEFINITION**:
      `powershell -NoProfile -ExecutionPolicy Bypass -File .agents/scripts/context.ps1 pack -PlanId "<PlanId>"`
    - Đọc đồng thời các tài liệu đầu vào:
      * `02_YEU_CAU_CUA_TOI/ho-so-va-muc-tieu.md`
+     * `03_KET_QUA_KIEM_TRA/baseline/` (ảnh chụp và layout baseline gốc)
      * `03_KET_QUA_KIEM_TRA/bao-cao-hien-trang.md` (nếu có)
      * `03_KET_QUA_KIEM_TRA/UNKNOWNS_AND_COVERAGE.md` (nếu có)
      * `.agents/state/interview_state.json`
@@ -67,8 +69,19 @@ You are executing **STAGE_03 · PRODUCT DEFINITION**:
      * Không ép chọn. Đề xuất giải pháp an toàn kèm lý do kỹ thuật.
      * Ghi nhận vào Assumption Record: `powershell -File .agents/scripts/interview.ps1 record-assumption ...`
 
-5. **Định Tuyến Khám Phá Thiết Kế (Design Exploration Mode)**:
-   - `DESIGN_REUSE_EXACT`: Tái lập 1-1 giao diện cũ. Bỏ qua 3 concepts. Bắt buộc áp dụng Sanitary Ergonomic Lint (48dp touch targets) và Legal Asset Decoupling.
+5. **Chốt 1 trong 4 Build Routes & Ánh Xạ Sang 3 Delivery Routes (Stage 04)**:
+   - **4 Hướng tiếp cận phỏng vấn (Conceptual Routes)**:
+     * *Route 1 (Extend)*: Tiếp tục phát triển trên source hiện tại của ứng dụng. ➔ Ánh xạ sang Delivery Route C (Patch APK/Resources) hoặc Route B (Native).
+     * *Route 2 (Feature Branch)*: Tạo nhánh riêng để phát triển cô lập tính năng mới. ➔ Ánh xạ sang Delivery Route C hoặc Route B.
+     * *Route 3 (Compatible Clean-room)*: Xây dựng bản tương thích mới hoàn toàn độc lập pháp lý. ➔ Ánh xạ sang Delivery Route A (Web Zero-Install) hoặc Route B (Android Native).
+     * *Route 4 (Full Rewrite)*: Viết lại hoàn toàn kiến trúc mới từ đầu. ➔ Ánh xạ sang Delivery Route A hoặc Route B.
+   - **3 Hướng triển khai vật lý tại Stage 04 (Delivery Routes)**:
+     * `ROUTE_A_WEB_ZERO_INSTALL`: Web App độc lập (`index.html`, `styles.css`, `app.js` hoặc `preview.html`) chạy trực tiếp trên trình duyệt.
+     * `ROUTE_B_ANDROID_NATIVE`: Dự án Android Native chuẩn (qua plugin `Android CLI` `android create` hoặc Gradle + Kotlin + Compose) chạy trên AVD/thiết bị.
+     * `ROUTE_C_PATCH_HYBRID`: Vá APK (smali/resources) hoặc đóng gói ứng dụng Hybrid (Capacitor/PWA).
+
+6. **Định Tuyến Khám Phá Thiết Kế (Design Exploration Mode)**:
+   - `DESIGN_REUSE_EXACT`: Tái lập 1-1 giao diện cũ (đối chiếu `03_KET_QUA_KIEM_TRA/baseline/`). Bỏ qua 3 concepts. Bắt buộc áp dụng Sanitary Ergonomic Lint (48dp touch targets) và Legal Asset Decoupling.
    - `DESIGN_STYLE_SPECIFIED`: Áp dụng đúng phong cách người dùng đã chọn (ví dụ: Material You, Minimalist). Bỏ qua 3 concepts.
    - `DESIGN_STRUCTURAL_EXPLORATION`: Bắt buộc xây dựng 3 Concept có cấu trúc thông tin khác biệt sâu sắc (Concept A: Task-Centric, Concept B: Content-First, Concept C: Contextual Flow) theo `templates/12-ART-DIRECTION-TEMPLATE.md`.
    - 👉 **Human Gate 1 (Bố cục giao diện)**: Chờ người dùng duyệt bố cục:
@@ -79,8 +92,8 @@ You are executing **STAGE_03 · PRODUCT DEFINITION**:
 2. **Xuất Bố cục Màn hình & Responsive Spec**:
    - `03_KET_QUA_KIEM_TRA/01_SCREEN_COMPOSITION.md` (Thứ tự ưu tiên thị giác, phân vùng, khoảng cách).
    - `03_KET_QUA_KIEM_TRA/02_RESPONSIVE_SPEC.md` (Window size classes, Insets, Foldables).
-3. **Xuất 4 Trạng Thái Bắt Buộc (State Composition)**:
-   - `03_KET_QUA_KIEM_TRA/03_STATE_COMPOSITION.md`: Loading (Skeleton), Empty (CTA), Success, Error Recovery (bảo toàn form input theo `RULE-INIT-001`), Permission Denied, Destructive Confirmation.
+3. **Xuất 6 Trạng Thái UI Bắt Buộc (State Composition)**:
+   - `03_KET_QUA_KIEM_TRA/03_STATE_COMPOSITION.md`: Loading (Skeleton), Empty (CTA), Success, Error Recovery, In-Progress / Draft (bảo toàn form input theo `RULE-INIT-001`), Offline / Reconnecting. Thêm Permission Denied và Destructive Confirmation nếu có.
 4. **Xuất Hợp Đồng Nội Dung Thực Tế (Copy Deck)**:
    - `03_KET_QUA_KIEM_TRA/04_COPY_DECK.md` theo `templates/13-COPY-DECK-TEMPLATE.md`.
    - CẤM 100% `Lorem ipsum`, `Sample text`, hoặc `Welcome back!`. Quy định giới hạn ký tự và ngắt dòng.
@@ -103,10 +116,13 @@ You are executing **STAGE_03 · PRODUCT DEFINITION**:
    - Người dùng đóng băng đặc tả bằng câu lệnh:
      `FREEZE UI SPEC`
    - Khi nhận lệnh, chạy script mở cổng:
-     `powershell -NoProfile -ExecutionPolicy Bypass -File .\.agents\scripts\gate.ps1 open 3 -Evidence 03_KET_QUA_KIEM_TRA/dac-ta-yeu-cau-da-chot.md -ApprovedBy "user"`
+     `powershell -NoProfile -ExecutionPolicy Bypass -File .agents/scripts/gate.ps1 open 3 -Evidence 03_KET_QUA_KIEM_TRA/dac-ta-yeu-cau-da-chot.md -ApprovedBy "user"`
    - Đồng bộ `docs/PROGRESS.md`.
+   - **Trường hợp Miễn trừ / Bỏ qua Cổng 03**:
+     * Nếu người dùng yêu cầu miễn trừ hoặc bỏ qua Cổng 03 (chạy `gate.ps1 waive 3` hoặc `gate.ps1 skip 3`), Coordinator bắt buộc tự động tạo file đặc tả dự phòng:
+       👉 `03_KET_QUA_KIEM_TRA/WAIVER_SPEC_FALLBACK.md` (theo chuẩn `prompts/08-SKIP-WAIVER-POLICY.md`) để Stage 04 Build và Stage 05 Validation có cơ sở đối chiếu, không làm tê liệt quy trình hạ nguồn.
    - **Nếu người dùng từ chối / yêu cầu sửa lại (Reject Loop)**:
      Chạy lệnh tự động thu hồi:
-     `powershell -NoProfile -ExecutionPolicy Bypass -File .\.agents\scripts\gate.ps1 reject 3 -Reason "Người dùng yêu cầu chỉnh sửa lại đặc tả hoặc giao diện."`
+     `powershell -NoProfile -ExecutionPolicy Bypass -File .agents/scripts/gate.ps1 reject 3 -Reason "Người dùng yêu cầu chỉnh sửa lại đặc tả hoặc giao diện."`
      Tạo bản `_v2.md` và lùi về Bước 06.
 ```

@@ -99,6 +99,52 @@ function Get-ShannonEntropy {
     return $entropy
 }
 
+function Convert-HexToRgb {
+    param([string]$Hex)
+    if ([string]::IsNullOrWhiteSpace($Hex)) { return $null }
+    $clean = $Hex.Trim().TrimStart('#')
+    if ($clean.Length -eq 3) {
+        $r = [Convert]::ToInt32("$($clean[0])$($clean[0])", 16)
+        $g = [Convert]::ToInt32("$($clean[1])$($clean[1])", 16)
+        $b = [Convert]::ToInt32("$($clean[2])$($clean[2])", 16)
+        return @{ R = $r; G = $g; B = $b }
+    } elseif ($clean.Length -ge 6) {
+        $r = [Convert]::ToInt32($clean.Substring(0, 2), 16)
+        $g = [Convert]::ToInt32($clean.Substring(2, 2), 16)
+        $b = [Convert]::ToInt32($clean.Substring(4, 2), 16)
+        return @{ R = $r; G = $g; B = $b }
+    }
+    return $null
+}
+
+function Get-RelativeLuminance {
+    param($Rgb)
+    if (-not $Rgb) { return 0.0 }
+    $channels = @($Rgb.R, $Rgb.G, $Rgb.B)
+    $linear = @()
+    foreach ($c in $channels) {
+        $s = [double]$c / 255.0
+        if ($s -le 0.03928) {
+            $linear += ($s / 12.92)
+        } else {
+            $linear += [Math]::Pow((($s + 0.055) / 1.055), 2.4)
+        }
+    }
+    return (0.2126 * $linear[0]) + (0.7152 * $linear[1]) + (0.0722 * $linear[2])
+}
+
+function Get-WcagContrastRatio {
+    param([string]$Hex1, [string]$Hex2)
+    $rgb1 = Convert-HexToRgb -Hex $Hex1
+    $rgb2 = Convert-HexToRgb -Hex $Hex2
+    if (-not $rgb1 -or -not $rgb2) { return 0.0 }
+    $l1 = Get-RelativeLuminance -Rgb $rgb1
+    $l2 = Get-RelativeLuminance -Rgb $rgb2
+    $lighter = [Math]::Max($l1, $l2)
+    $darker = [Math]::Min($l1, $l2)
+    return [Math]::Round((($lighter + 0.05) / ($darker + 0.05)), 2)
+}
+
 # 1. Kiểm tra kiến trúc & file khởi động (Route A Web Zero-Install vs Route B/C Android)
 Write-Host "`n[1. KIẾN TRÚC & FILE ENTRY]" -ForegroundColor Yellow
 $htmlFiles = @(Get-ChildItem -LiteralPath $resolvedTarget -Filter "*.html" -Recurse | Where-Object { $_.FullName -notmatch $backupPathRegex })
@@ -382,6 +428,281 @@ if ($isAndroidProject) {
         Write-Host " [PASS] Đã phát hiện $($sourceFiles.Count) file mã nguồn Android (.kt / .java)." -ForegroundColor Green
     }
 }
+
+# 7. Kiểm tra Token Drift & CDN Bên Ngoài trong Route A (Token Drift & Route A Offline Check)
+Write-Host "`n[7. KIỂM TRA ĐỘ LỆCH TOKEN & OFFLINE ROUTE A (TOKEN DRIFT CHECK)]" -ForegroundColor Yellow
+
+$tokenFileNames = @("tokens.css", "tokens.json", "color.kt", "colors.xml", "dimens.xml", "type.kt", "shape.kt", "design.md")
+$isTokenFile = {
+    param([System.IO.FileInfo]$FileInfo)
+    $name = $FileInfo.Name.ToLower()
+    if ($tokenFileNames -contains $name) { return $true }
+    if ($name -match 'token') { return $true }
+    return $false
+}
+
+$tokenDriftFound = $false
+$cdnFound = $false
+
+$uiFiles = @(Get-ChildItem -LiteralPath $resolvedTarget -Recurse -File -Force | Where-Object {
+    $_.FullName -notmatch $backupPathRegex -and
+    @(".html", ".css", ".js", ".ts", ".kt", ".java", ".xml") -contains $_.Extension.ToLower()
+})
+
+foreach ($f in $uiFiles) {
+    $rawContent = Get-Content -LiteralPath $f.FullName -Raw -Encoding UTF8
+    if ([string]::IsNullOrWhiteSpace($rawContent)) { continue }
+    $codeClean = Remove-CommentsOnly -Code $rawContent
+
+    # 7.1 Kiểm tra nhúng external CDN trong Route A (bắt buộc 100% offline-first)
+    if ($htmlFiles.Count -gt 0 -and ($f.Extension.ToLower() -eq ".html" -or $f.Extension.ToLower() -eq ".css" -or $f.Extension.ToLower() -eq ".js")) {
+        $cdnPatterns = @(
+            'https?://(?:cdn\.|cdnjs\.|unpkg\.|cdn\.jsdelivr\.net|maxcdn\.|stackpath\.|fonts\.googleapis\.com|cdn\.tailwindcss\.com)',
+            '(?i)<(?:script|link)\b[^>]*(?:src|href)\s*=\s*["'']https?://'
+        )
+        foreach ($cp in $cdnPatterns) {
+            $cdnMatches = [regex]::Matches($codeClean, $cp)
+            foreach ($cm in $cdnMatches) {
+                Write-Host " [FAIL] Tuyến Route A phát hiện nhúng CDN bên ngoài tại $($f.Name): $($cm.Value)" -ForegroundColor Red
+                Write-Host "        -> Route A bắt buộc 100% offline-first zero-install, cấm nhúng CDN mạng ngoài." -ForegroundColor Red
+                $cdnFound = $true
+                $hasError = $true
+            }
+        }
+    }
+
+    # 7.2 Kiểm tra gán cứng mã màu hex / rgb ngoài file compiled tokens
+    if (-not (& $isTokenFile $f)) {
+        if ($f.Extension.ToLower() -in @(".css", ".html", ".js", ".ts")) {
+            $hexMatches = [regex]::Matches($codeClean, '(?i)(?:color|background|border|fill|stroke)\s*:\s*(#[0-9a-fA-F]{3,8})\b')
+            foreach ($hm in $hexMatches) {
+                $colorVal = $hm.Groups[1].Value
+                Write-Host " [FAIL] Token Drift tại $($f.Name): Phát hiện mã màu hex gán cứng '$colorVal'" -ForegroundColor Red
+                Write-Host "        -> Bắt buộc sử dụng CSS variable token (ví dụ: var(--color-primary)) thay vì hex cứng." -ForegroundColor Red
+                $tokenDriftFound = $true
+                $hasError = $true
+            }
+            $rgbMatches = [regex]::Matches($codeClean, '(?i)(?:color|background|border|fill|stroke)\s*:\s*(rgba?\s*\([^)]+\))')
+            foreach ($rm in $rgbMatches) {
+                $colorVal = $rm.Groups[1].Value
+                Write-Host " [FAIL] Token Drift tại $($f.Name): Phát hiện màu rgb/rgba gán cứng '$colorVal'" -ForegroundColor Red
+                Write-Host "        -> Bắt buộc sử dụng CSS variable token thay vì rgb() cứng." -ForegroundColor Red
+                $tokenDriftFound = $true
+                $hasError = $true
+            }
+        } elseif ($f.Extension.ToLower() -in @(".kt", ".java")) {
+            $colorNativeMatches = [regex]::Matches($codeClean, '(?i)\b(?:Color\s*\(\s*0x[0-9a-fA-F]{6,8}\b|Color\s*\.\s*(?:parseColor|rgb|argb)\s*\()')
+            foreach ($cnm in $colorNativeMatches) {
+                Write-Host " [FAIL] Token Drift tại $($f.Name): Phát hiện gán cứng $($cnm.Value)" -ForegroundColor Red
+                Write-Host "        -> Bắt buộc sử dụng ColorTokens từ Design Token compiled file." -ForegroundColor Red
+                $tokenDriftFound = $true
+                $hasError = $true
+            }
+        } elseif ($f.Extension.ToLower() -eq ".xml" -and $f.Name -ne "colors.xml") {
+            $xmlColorMatches = [regex]::Matches($codeClean, '(?i)(?:android:(?:textColor|background|tint|color)|app:(?:tint|backgroundTint))\s*=\s*["''](#[0-9a-fA-F]{3,8})["'']')
+            foreach ($xcm in $xmlColorMatches) {
+                $colorVal = $xcm.Groups[1].Value
+                Write-Host " [FAIL] Token Drift tại $($f.Name): Phát hiện mã màu gán cứng '$colorVal'" -ForegroundColor Red
+                Write-Host "        -> Bắt buộc tham chiếu @color/... từ colors.xml thay vì gán trực tiếp." -ForegroundColor Red
+                $tokenDriftFound = $true
+                $hasError = $true
+            }
+        }
+    }
+}
+
+if (-not $cdnFound) {
+    if ($htmlFiles.Count -gt 0) {
+        Write-Host " [PASS] Tuyến Route A đạt chuẩn 100% Offline-First: Không phát hiện nhúng CDN bên ngoài." -ForegroundColor Green
+    }
+}
+if (-not $tokenDriftFound) {
+    Write-Host " [PASS] Token Drift Check: Toàn bộ mã màu UI đều tuân thủ Design Tokens hợp lệ." -ForegroundColor Green
+}
+
+# 8. Kiểm tra Độ Tương Phản WCAG AA (WCAG AA Contrast Check >= 4.5:1)
+Write-Host "`n[8. KIỂM TRA ĐỘ TƯƠNG PHẢN WCAG AA (>= 4.5:1 TEXT/BG CONTRAST)]" -ForegroundColor Yellow
+$contrastFailures = @()
+$pairsChecked = 0
+
+$tokenFiles = @(Get-ChildItem -LiteralPath $resolvedTarget -Recurse -File -Force | Where-Object {
+    $_.FullName -notmatch $backupPathRegex -and (& $isTokenFile $_)
+})
+$specTokenDir = Join-Path $repoRoot "02_YEU_CAU_CUA_TOI"
+if (Test-Path -LiteralPath $specTokenDir) {
+    $tokenFiles += @(Get-ChildItem -LiteralPath $specTokenDir -File | Where-Object {
+        $_.Name -match 'token' -or $_.Name -eq "design.md"
+    })
+}
+
+$colorMap = @{}
+foreach ($tf in $tokenFiles) {
+    $tText = Get-Content -LiteralPath $tf.FullName -Raw -Encoding UTF8
+    if ([string]::IsNullOrWhiteSpace($tText)) { continue }
+    $cssVarMatches = [regex]::Matches($tText, '(?m)--([a-zA-Z0-9_-]+)\s*:\s*(#[0-9a-fA-F]{3,8})')
+    foreach ($m in $cssVarMatches) {
+        $varName = $m.Groups[1].Value.ToLower()
+        $varVal = $m.Groups[2].Value
+        $colorMap[$varName] = $varVal
+    }
+    $jsonValMatches = [regex]::Matches($tText, '(?i)"(?:color[_-])?([a-zA-Z0-9_-]+)"\s*:\s*\{\s*"value"\s*:\s*"(#[0-9a-fA-F]{3,8})"')
+    foreach ($m in $jsonValMatches) {
+        $varName = $m.Groups[1].Value.ToLower()
+        $varVal = $m.Groups[2].Value
+        $colorMap[$varName] = $varVal
+    }
+    $xmlValMatches = [regex]::Matches($tText, '(?i)<color\s+name=["'']([^"'']+)["'']>(#[0-9a-fA-F]{3,8})</color>')
+    foreach ($m in $xmlValMatches) {
+        $varName = $m.Groups[1].Value.ToLower()
+        $varVal = $m.Groups[2].Value
+        $colorMap[$varName] = $varVal
+    }
+}
+
+$textKeyPatterns = @("text", "foreground", "on-background", "on-surface", "on-primary", "content")
+$bgKeyPatterns   = @("background", "surface", "bg", "container", "card")
+
+$textKeys = @($colorMap.Keys | Where-Object {
+    $k = $_
+    $matched = $false
+    foreach ($tp in $textKeyPatterns) { if ($k -match $tp) { $matched = $true; break } }
+    $matched
+})
+$bgKeys = @($colorMap.Keys | Where-Object {
+    $k = $_
+    $matched = $false
+    foreach ($bp in $bgKeyPatterns) { if ($k -match $bp) { $matched = $true; break } }
+    $matched
+})
+
+foreach ($tk in $textKeys) {
+    foreach ($bk in $bgKeys) {
+        $textColor = $colorMap[$tk]
+        $bgColor = $colorMap[$bk]
+        if ($textColor -and $bgColor -and $textColor -ne $bgColor) {
+            $ratio = Get-WcagContrastRatio -Hex1 $textColor -Hex2 $bgColor
+            if ($ratio -gt 0) {
+                $pairsChecked++
+                if ($ratio -lt 4.5) {
+                    $contrastFailures += "Cặp [$tk ($textColor) / $bk ($bgColor)]: Tỷ lệ ${ratio}:1 (< 4.5:1)"
+                }
+            }
+        }
+    }
+}
+
+$cssFiles = @(Get-ChildItem -LiteralPath $resolvedTarget -Filter "*.css" -Recurse | Where-Object { $_.FullName -notmatch $backupPathRegex })
+foreach ($cf in $cssFiles) {
+    $cssRaw = Get-Content -LiteralPath $cf.FullName -Raw -Encoding UTF8
+    $ruleMatches = [regex]::Matches($cssRaw, '(?s)([^{}]+)\{([^}]+)\}')
+    foreach ($rm in $ruleMatches) {
+        $body = $rm.Groups[2].Value
+        $fgM = [regex]::Match($body, '(?i)(?<![a-zA-Z-])color\s*:\s*(#[0-9a-fA-F]{3,8})')
+        $bgM = [regex]::Match($body, '(?i)background(?:-color)?\s*:\s*(#[0-9a-fA-F]{3,8})')
+        if ($fgM.Success -and $bgM.Success) {
+            $fgVal = $fgM.Groups[1].Value
+            $bgVal = $bgM.Groups[1].Value
+            $ratio = Get-WcagContrastRatio -Hex1 $fgVal -Hex2 $bgVal
+            if ($ratio -gt 0) {
+                $pairsChecked++
+                if ($ratio -lt 4.5) {
+                    $contrastFailures += "$($cf.Name) [selector: $($rm.Groups[1].Value.Trim())]: $fgVal trên $bgVal tỷ lệ ${ratio}:1 (< 4.5:1)"
+                }
+            }
+        }
+    }
+}
+
+if ($contrastFailures.Count -gt 0) {
+    Write-Host " [FAIL] Phát hiện $($contrastFailures.Count) trường hợp vi phạm độ tương phản WCAG AA (< 4.5:1):" -ForegroundColor Red
+    foreach ($cfMsg in $contrastFailures) {
+        Write-Host "     - $cfMsg" -ForegroundColor Red
+    }
+    $hasError = $true
+} elseif ($pairsChecked -gt 0) {
+    Write-Host " [PASS] Đã kiểm tra $pairsChecked cặp màu text/bg; toàn bộ đều đạt độ tương phản WCAG AA (>= 4.5:1)." -ForegroundColor Green
+} else {
+    Write-Host " [INFO] Không tìm thấy cặp màu tĩnh text/bg trực tiếp trong mã nguồn để đo tương phản." -ForegroundColor Gray
+}
+
+# 9. Kiểm tra Nguồn Gốc Tài Nguyên (Asset Provenance Check)
+Write-Host "`n[9. KIỂM TRA NGUỒN GỐC TÀI NGUYÊN (ASSET PROVENANCE CHECK)]" -ForegroundColor Yellow
+$assetExtensions = @(".png", ".jpg", ".jpeg", ".svg", ".webp", ".gif", ".ico", ".bmp", ".ttf", ".otf", ".woff", ".woff2")
+$assetsInTarget = @(Get-ChildItem -LiteralPath $resolvedTarget -Recurse -File -Force | Where-Object {
+    $_.FullName -notmatch $backupPathRegex -and $assetExtensions -contains $_.Extension.ToLower()
+})
+
+if ($assetsInTarget.Count -eq 0) {
+    Write-Host " [INFO] Không có tệp hình ảnh/font/icon trong $resolvedTarget cần kiểm tra nguồn gốc." -ForegroundColor Gray
+} else {
+    $provenanceDirs = @(
+        (Join-Path $repoRoot "01_THA_APP_VAO_DAY"),
+        (Join-Path $repoRoot "04_SAO_LUU_AN_TOAN")
+    )
+    $knownAssetNames = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
+    $knownAssetHashes = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
+
+    foreach ($pDir in $provenanceDirs) {
+        if (Test-Path -LiteralPath $pDir) {
+            $pFiles = @(Get-ChildItem -LiteralPath $pDir -Recurse -File -Force -ErrorAction SilentlyContinue | Where-Object {
+                $assetExtensions -contains $_.Extension.ToLower()
+            })
+            foreach ($pf in $pFiles) {
+                [void]$knownAssetNames.Add($pf.Name)
+                try {
+                    $hash = (Get-FileHash -LiteralPath $pf.FullName -Algorithm SHA256).Hash
+                    [void]$knownAssetHashes.Add($hash)
+                } catch {}
+            }
+        }
+    }
+
+    $allowlistLocations = @(
+        (Join-Path $repoRoot "ASSET_ALLOWLIST.md"),
+        (Join-Path $repoRoot "02_YEU_CAU_CUA_TOI/ASSET_ALLOWLIST.md"),
+        (Join-Path $repoRoot "05_MA_NGUON_PHAT_TRIEN/ASSET_ALLOWLIST.md"),
+        (Join-Path $repoRoot "docs/ASSET_ALLOWLIST.md")
+    )
+    $allowlistContent = ""
+    foreach ($alLoc in $allowlistLocations) {
+        if (Test-Path -LiteralPath $alLoc) {
+            $allowlistContent += "`n" + (Get-Content -LiteralPath $alLoc -Raw -Encoding UTF8)
+        }
+    }
+
+    $unauthorizedAssets = @()
+    foreach ($af in $assetsInTarget) {
+        $matched = $false
+        if ($knownAssetNames.Contains($af.Name)) { $matched = $true }
+        if (-not $matched) {
+            try {
+                $afHash = (Get-FileHash -LiteralPath $af.FullName -Algorithm SHA256).Hash
+                if ($knownAssetHashes.Contains($afHash)) { $matched = $true }
+            } catch {}
+        }
+        if (-not $matched -and -not [string]::IsNullOrWhiteSpace($allowlistContent)) {
+            if ($allowlistContent -match [regex]::Escape($af.Name)) {
+                $matched = $true
+            }
+        }
+
+        if (-not $matched) {
+            $unauthorizedAssets += $af
+        }
+    }
+
+    if ($unauthorizedAssets.Count -gt 0) {
+        Write-Host " [FAIL] Phát hiện $($unauthorizedAssets.Count) tài nguyên không rõ nguồn gốc (Asset Provenance Violation):" -ForegroundColor Red
+        foreach ($ua in $unauthorizedAssets) {
+            Write-Host "     - $($ua.Name) ($($ua.FullName))" -ForegroundColor Red
+            Write-Host "       -> Tài nguyên này không có trong 01_THA_APP_VAO_DAY/, 04_SAO_LUU_AN_TOAN/ và chưa được khai báo trong ASSET_ALLOWLIST.md!" -ForegroundColor Red
+        }
+        $hasError = $true
+    } else {
+        Write-Host " [PASS] Toàn bộ $($assetsInTarget.Count) tài nguyên (ảnh, font, icon) đều có nguồn gốc hợp lệ từ ứng dụng gốc hoặc ASSET_ALLOWLIST.md." -ForegroundColor Green
+    }
+}
+
 
 Write-Host "`n==========================================================" -ForegroundColor Cyan
 if ($hasError) {

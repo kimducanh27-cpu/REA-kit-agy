@@ -133,95 +133,9 @@
                                                  "skip_reason":  null
                                              }
               },
-    "artifacts":  {
-                      "backup_file":  null,
-                      "baseline_evidence":  null,
-                      "interview_state":  ".agents/state/interview_state.json",
-                      "scan_report":  "03_KET_QUA_KIEM_TRA/bao-cao-hien-trang.md",
-                      "unknowns_and_coverage":  "03_KET_QUA_KIEM_TRA/UNKNOWNS_AND_COVERAGE.md",
-                      "design_contract":  "02_YEU_CAU_CUA_TOI/design.md",
-                      "frozen_spec":  "03_KET_QUA_KIEM_TRA/dac-ta-yeu-cau-da-chot.md",
-                      "implementation_plan":  "03_KET_QUA_KIEM_TRA/KE_HOACH_TRIEN_KHAI.md",
-                      "build_qa_report":  "03_KET_QUA_KIEM_TRA/KET_QUA_KIEM_THU.md",
-                      "hard_verify_report":  "03_KET_QUA_KIEM_TRA/BAO_CAO_NGHIEM_THU_HARD_VERIFY.md",
-                      "handoff_bundle":  "05_MA_NGUON_PHAT_TRIEN/BAN_GIAO_SAN_PHAM.md"
-                  },
-    "interview":  {
-                      "state_file":  ".agents/state/interview_state.json",
-                      "status":  "IN_PROGRESS",
-                      "session_id":  "INT-SESSION-20261114-120852",
-                      "active_goals_count":  0,
-                      "decisions_count":  0,
-                      "unresolved_conflicts_count":  0,
-                      "critical_assumptions_count":  0,
-                      "sufficiency_verdict":  "PENDING"
-                  },
     "metrics":  {
-                    "coverage_score":  null,
-                    "unknowns_count":  0,
                     "risk_level":  "UNASSESSED",
                     "review_convergence_rounds":  0,
                     "max_convergence_rounds":  2
-                },
-    "gate_invalidation_map":  {
-                                  "REJECT_GATE_01":  {
-                                                         "revert_to_phase":  "STAGE_01_DISCOVERY",
-                                                         "revert_to_step":  "01_APP_INTAKE",
-                                                         "revoke_gates":  [
-                                                                              "gate_01_baseline_verified",
-                                                                              "gate_02_audit_passed",
-                                                                              "gate_03_spec_frozen",
-                                                                              "gate_04_build_qa_passed",
-                                                                              "gate_05_hard_verify_passed",
-                                                                              "gate_06_handoff_signed"
-                                                                          ]
-                                                     },
-                                  "REJECT_GATE_02":  {
-                                                         "revert_to_phase":  "STAGE_02_REVERSE_ENGINEERING",
-                                                         "revert_to_step":  "03_REA_SCAN",
-                                                         "revoke_gates":  [
-                                                                              "gate_02_audit_passed",
-                                                                              "gate_03_spec_frozen",
-                                                                              "gate_04_build_qa_passed",
-                                                                              "gate_05_hard_verify_passed",
-                                                                              "gate_06_handoff_signed"
-                                                                          ]
-                                                     },
-                                  "REJECT_GATE_03":  {
-                                                         "revert_to_phase":  "STAGE_03_PRODUCT_DEFINITION",
-                                                         "revert_to_step":  "06_REA_INTERVIEW",
-                                                         "revoke_gates":  [
-                                                                              "gate_03_spec_frozen",
-                                                                              "gate_04_build_qa_passed",
-                                                                              "gate_05_hard_verify_passed",
-                                                                              "gate_06_handoff_signed"
-                                                                          ]
-                                                     },
-                                  "REJECT_GATE_04":  {
-                                                         "revert_to_phase":  "STAGE_04_IMPLEMENTATION",
-                                                         "revert_to_step":  "09_REA_BUILD",
-                                                         "revoke_gates":  [
-                                                                              "gate_04_build_qa_passed",
-                                                                              "gate_05_hard_verify_passed",
-                                                                              "gate_06_handoff_signed"
-                                                                          ]
-                                                     },
-                                  "REJECT_GATE_05":  {
-                                                         "revert_to_phase":  "STAGE_04_IMPLEMENTATION",
-                                                         "revert_to_step":  "09_REA_BUILD",
-                                                         "revoke_gates":  [
-                                                                              "gate_04_build_qa_passed",
-                                                                              "gate_05_hard_verify_passed",
-                                                                              "gate_06_handoff_signed"
-                                                                          ]
-                                                     },
-                                  "REJECT_GATE_06":  {
-                                                         "revert_to_phase":  "STAGE_05_VALIDATION",
-                                                         "revert_to_step":  "12_HARD_VERIFY",
-                                                         "revoke_gates":  [
-                                                                              "gate_06_handoff_signed"
-                                                                          ]
-                                                     }
-                              },
-    "notes":  "Hệ thống máy trạng thái RWO v2 (Conditional DAG, 6 Giai đoạn, 14 Bước, 11 Trạng thái Gate, Dynamic Lineage)"
+                }
 }

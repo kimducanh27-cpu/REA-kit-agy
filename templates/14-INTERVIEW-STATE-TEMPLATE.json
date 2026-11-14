@@ -47,6 +47,8 @@
             null
           ]
         },
+        "max_clarification_per_goal": { "type": "integer", "default": 2 },
+        "max_total_questions": { "type": "integer", "default": 15 },
         "created_at": { "type": "string" },
         "updated_at": { "type": "string" }
       }
@@ -63,7 +65,7 @@
           "priority": { "type": "string", "enum": ["P0_CRITICAL", "P1_HIGH", "P2_MEDIUM", "P3_LOW"] },
           "status": {
             "type": "string",
-            "enum": ["PROPOSED", "ACTIVE", "RESOLVED", "APPROVED", "DEFERRED", "ASSUMED_WITH_APPROVAL", "BLOCKED", "ACHIEVED", "ABANDONED"]
+            "enum": ["PROPOSED", "ACTIVE", "NEEDS_INPUT", "RESOLVED", "APPROVED", "DEFERRED", "ASSUMED_WITH_APPROVAL", "BLOCKED", "ACHIEVED", "ABANDONED"]
           },
           "related_requirements": { "type": "array", "items": { "type": "string" } }
         }
@@ -82,8 +84,13 @@
           "related_goal_ids": { "type": "array", "items": { "type": "string" } },
           "related_decision_ids": { "type": "array", "items": { "type": "string" } },
           "expected_information": { "type": "string" },
+          "topic_key": { "type": ["string", "null"] },
+          "answer_format": {
+            "type": "string",
+            "enum": ["FREE_TEXT", "SINGLE_CHOICE", "MULTIPLE_CHOICE", "CONFIRMATION"]
+          },
           "priority": { "type": "string", "enum": ["HIGH", "MEDIUM", "LOW"] },
-          "status": { "type": "string", "enum": ["DRAFT", "ASKED", "ANSWERED", "SKIPPED", "DEFERRED"] },
+          "status": { "type": "string", "enum": ["DRAFT", "ASKED", "ANSWERED", "SKIPPED", "DEFERRED", "NEEDS_CLARIFICATION"] },
           "asked_at": { "type": ["string", "null"] }
         }
       }
@@ -111,9 +118,11 @@
               "OUT_OF_SCOPE",
               "NEW_REQUIREMENT",
               "SCOPE_CHANGE",
-              "SPONTANEOUS_INFO"
+              "SPONTANEOUS_INFO",
+              "DELEGATED_CHOICE"
             ]
           },
+          "conflict_id": { "type": ["string", "null"] },
           "answer_source": { "type": "string", "enum": ["USER_EXPLICIT", "REPO_EVIDENCE", "DERIVED", "USER_SPONTANEOUS"] },
           "confidence": { "type": "string", "enum": ["HIGH", "MEDIUM", "LOW"] },
           "recorded_at": { "type": "string" }
@@ -187,7 +196,10 @@
           "impact": { "type": "string" },
           "priority": { "type": "string", "enum": ["CRITICAL", "HIGH", "MEDIUM", "LOW", "BENIGN"] },
           "status": { "type": "string", "enum": ["OPEN", "RESOLVED", "DEFERRED"], "default": "OPEN" },
-          "resolution_strategy": { "type": "string" }
+          "resolution_strategy": { "type": "string" },
+          "justification": { "type": ["string", "null"] },
+          "approval": { "type": ["string", "null"] },
+          "approval_status": { "type": ["string", "null"] }
         }
       }
     },

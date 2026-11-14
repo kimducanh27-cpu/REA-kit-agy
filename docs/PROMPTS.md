@@ -9,14 +9,18 @@ Mỗi Tab Prompt được khai báo tường minh danh mục **Active Skills** (
 
 ## 📋 BẢNG DANH MỤC CÂU LỆNH CHÍNH THỨC (PROMPTS CATALOG)
 
-| Tab / Prompt | Đường Dẫn Tệp (File Path) | Giai Đoạn (Stage) & Bước | Cổng Kiểm Soát | Active Skills (Kỹ Năng Kích Hoạt) |
+| Tab / Prompt | Đường Dẫn Tệp (File Path) | Giai Đoạn & Bước / Nhiệm Vụ | Tuân Thủ Cổng (Gate Compliance) | Active Skills (Kỹ Năng Kích Hoạt) |
 | :--- | :--- | :--- | :--- | :--- |
+| **QUICK PROMPTS** | [`prompts/QUICK-PROMPTS.md`](../prompts/QUICK-PROMPTS.md) | **TÁC VỤ VI MÔ / DUAL-MODE**<br/>(8 Micro-Prompts QP-01 – QP-08) | **Scoped Gate Compliance**:<br/>• *Read-Only (QP-01, 02, 06, 07, 08)*: Độc lập, không reset Cổng.<br/>• *Mutating (QP-03, 04, 05)*: Snapshot + verify_code + ghi log. | `rea-scan`, `rea-audit`, `rea-interview`, `rea-build`, `memory-consolidation`<br/>*Host:* `android-cli` |
 | **TAB 00** | [`prompts/00-SESSION-CONTINUITY.md`](../prompts/00-SESSION-CONTINUITY.md) | **STAGE_00_BOOTSTRAP**<br/>(Đa phiên / Auto-Resume) | Quản trị phiên & Máy trạng thái | *Đọc State, Config & Health Check* |
 | **TAB 01** | [`prompts/01-TAB-DISCOVERY.md`](../prompts/01-TAB-DISCOVERY.md) | **STAGE_01_DISCOVERY**<br/>(Bước 01 & Bước 02) | **CỔNG 01** (`gate_01_baseline_verified`) | `rea-scan`, `reverse-engineer-anything`<br/>*Host:* `android-cli`, `android-device-hub` |
 | **TAB 02** | [`prompts/02-TAB-REVERSE-ENGINEERING.md`](../prompts/02-TAB-REVERSE-ENGINEERING.md) | **STAGE_02_REVERSE_ENGINEERING**<br/>(Bước 03, 04 & Bước 05) | **CỔNG 02** (`gate_02_audit_passed`) | `rea-scan`, `reverse-engineer-anything`<br/>*Host:* `android-cli` |
 | **TAB 03** | [`prompts/03-TAB-PRODUCT-DEFINITION.md`](../prompts/03-TAB-PRODUCT-DEFINITION.md) | **STAGE_03_PRODUCT_DEFINITION**<br/>(Bước 06, 07 & Bước 08) | **CỔNG 03** (`gate_03_spec_frozen`) | `rea-interview`<br/>*Host:* `ui-styling`, `design-system` |
 | **TAB 04** | [`prompts/04-TAB-IMPLEMENTATION.md`](../prompts/04-TAB-IMPLEMENTATION.md) | **STAGE_04_IMPLEMENTATION**<br/>(Bước 09 & Bước 10) | **CỔNG 04** (`gate_04_build_qa_passed`) | `rea-build`<br/>*Host:* `surgical-patch`, `lean-build`, `ui-styling` |
 | **TAB 05** | [`prompts/05-TAB-VALIDATION.md`](../prompts/05-TAB-VALIDATION.md) | **STAGE_05_VALIDATION**<br/>(Bước 11, 12 & Bước 13) | **CỔNG 05** (`gate_05_hard_verify_passed`)<br/>**CỔNG 06** (`gate_06_handoff_signed`) | `rea-build`<br/>*Host:* `code-review`, `android-cli`, `android-device-hub` |
+| **ROUTER** | [`prompts/00-WORKFLOW-ROUTER.md`](../prompts/00-WORKFLOW-ROUTER.md) | **ĐIỀU PHỐI ĐỘNG (RWO v2)**<br/>(6 Chế độ + Rejoin) | Lập Kế hoạch Thực thi (Execution Plan) | *Coordinator DAG / Cascade Invalidation* |
+| **CHANGE REQ** | [`prompts/07-CHANGE-REQUEST.md`](../prompts/07-CHANGE-REQUEST.md) | **QUẢN LÝ THAY ĐỔI**<br/>(Impact Analysis & Rejoin) | Thu hồi Cổng có chọn lọc qua Invalidation Map | `rea-interview`, `rea-build`<br/>*CLI:* `gate.ps1 reject` |
+| **SKIP/WAIVER**| [`prompts/08-SKIP-WAIVER-POLICY.md`](../prompts/08-SKIP-WAIVER-POLICY.md)| **CHÍNH SÁCH MIỄN TRỪ**<br/>(Waiver & Limitations) | Ghi nhận `WAIVED`, `PASS_WITH_LIMITATIONS` | *CLI:* `gate.ps1 waive/skip`, `WAIVER_SPEC_FALLBACK` |
 
 ---
 
@@ -82,7 +86,7 @@ You are executing **STAGE_01 · DISCOVERY**:
 1. **Nếu mục tiêu là Android APK (`.apk`)**:
    - Kiểm tra Antigravity Device Hub và máy ảo AVD:
      * Nếu có máy ảo AVD hoặc thiết bị thật kết nối: Khởi chạy app với `start_adb_app` hoặc lệnh Android CLI.
-     * Chụp ảnh màn hình giao diện baseline bằng lệnh `android screen capture -o <file_path>` hoặc `capture_adb_screen` và lưu vào `01_THA_APP_VAO_DAY/baseline/`.
+     * Chụp ảnh màn hình giao diện baseline bằng lệnh `android screen capture -o <file_path>` hoặc `capture_adb_screen` và lưu vào `03_KET_QUA_KIEM_TRA/baseline/`.
      * Bóc tách phân cấp giao diện (UI Component Hierarchy) bằng lệnh `android layout` để lập danh mục màn hình gốc.
    - **Cơ chế Fallback tĩnh**: Nếu máy người dùng chưa có AVD / Device Hub / thiết bị thật kết nối, tự động chuyển sang bóc tách tài nguyên tĩnh với `inspect_android_package` (layout XML, strings.xml, icons, drawable, AndroidManifest.xml) và đánh dấu trạng thái runtime là `SKIPPED (Tĩnh)`. Tuyệt đối không dừng lại hay báo lỗi crash terminal.
 2. **Nếu là các định dạng khác (Web, Electron ASAR, Desktop)**:
@@ -298,7 +302,7 @@ You are executing **STAGE_05 · VALIDATION**:
 3. Kiểm tra nhanh các luồng thao tác chính (Happy Path) để đảm bảo không bị crash hoặc vỡ giao diện.
 
 ### BƯỚC 12: HARD VERIFY (Đối Chiếu 1-1 Với App Gốc)
-1. Đặt app mới cạnh app gốc (hoặc đối chiếu với ảnh chụp/tài nguyên tại `01_THA_APP_VAO_DAY/baseline/`):
+1. Đặt app mới cạnh app gốc (hoặc đối chiếu với ảnh chụp/tài nguyên tại `03_KET_QUA_KIEM_TRA/baseline/`):
    - **Với Android Native / APK**:
      * Chụp ảnh màn hình app mới bằng lệnh `android screen capture -o <file_path>` hoặc `capture_adb_screen`.
      * Trích xuất cây phân cấp giao diện bằng lệnh `android layout` và đối chiếu 1-1 với cây layout baseline của app gốc ghi nhận từ Bước 02.

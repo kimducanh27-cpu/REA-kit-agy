@@ -13,9 +13,9 @@ Tài liệu này xác lập các quy chuẩn kỹ thuật bắt buộc khi xử 
 ## 1. Cô Lập Môi Trường Tạm & Quản Trị Bộ Nhớ JADX (JADX Isolation & Memory Governance)
 
 1. **Khắc phục lỗi treo/xung đột JADX (morluto/rea Issue #5237)**:
-   - Trên hệ điều hành Windows x64, trình dịch ngược JADX có thể gặp xung đột đường dẫn hoặc khóa file khi sử dụng thư mục tạm mặc định của hệ thống.
+   - Trên hệ điều hành Windows x64 và môi trường Unix, trình dịch ngược JADX có thể gặp xung đột đường dẫn hoặc khóa file khi sử dụng thư mục tạm mặc định của hệ thống.
    - **Quy tắc bắt buộc**:
-     * Mọi lệnh tiền xử lý hoặc script gọi JADX phải cô lập biến môi trường `TEMP` và `TMP` trỏ về `%LOCALAPPDATA%\Temp` (như đã thiết lập trong `KIEM_TRA.bat`).
+     * Mọi lệnh tiền xử lý hoặc script gọi JADX phải cô lập biến môi trường `TEMP` và `TMP` độc lập theo hệ điều hành: trên Windows trỏ về `%LOCALAPPDATA%\Temp` hoặc `$env:TEMP` (như đã thiết lập trong `KIEM_TRA.bat`); trên Linux/macOS trỏ về `${TMPDIR:-/tmp}` (như đã thiết lập trong `kiem_tra.sh`). Không dùng thư mục chia sẻ hoặc thư mục mặc định có thể bị khóa quyền.
      * Không bao giờ trỏ thư mục làm việc tạm của JADX vào các đường dẫn chứa khoảng trắng không được bao nháy hoặc thư mục chia sẻ mạng.
      * Tự động dọn dẹp các tệp tạm do JADX sinh ra sau khi kết thúc phiên quét để giải phóng dung lượng đĩa.
 
@@ -87,11 +87,11 @@ Tài liệu này xác lập các quy chuẩn kỹ thuật bắt buộc khi xử 
 
 ---
 
-## 4. Quy Chuẩn Dự Án Android Native (Route B Implementation)
+## 4. Quy Chuẩn Dự Án Android Native (Route B) & Bản Vá APK (Route C)
 
-Khi đặc tả chốt lựa chọn Build Route B (Android Native Project):
+Khi đặc tả chốt lựa chọn Build Route B (Android Native Project) hoặc Route C (Patch APK / Hybrid):
 
-1. **Cấu trúc mã nguồn chuẩn**:
+1. **Cấu trúc mã nguồn chuẩn (Route B)**:
    - Khởi tạo dự án chuẩn hóa bằng `android create` hoặc cấu trúc Android Gradle tiêu chuẩn trong `05_MA_NGUON_PHAT_TRIEN/android/`:
      * `app/src/main/java/` (hoặc `kotlin/`)
      * `app/src/main/res/layout/`, `values/strings.xml`, `values/colors.xml`
@@ -102,6 +102,32 @@ Khi đặc tả chốt lựa chọn Build Route B (Android Native Project):
    - Tuân thủ hướng dẫn Material Design 3.
    - Hỗ trợ xử lý viền màn hình (Edge-to-Edge WindowInsets) và cử chỉ vuốt lùi (Predictive Back).
    - Đảm bảo kích thước vùng bấm tối thiểu đạt `48x48 dp` cho khả năng tiếp cận (Accessibility).
+
+3. **Bắt Buộc Hậu Tố Định Danh Gói Tránh Xung Đột Chữ Ký (Application ID Suffix Guard)**:
+   - **Vấn đề cốt lõi**: Khi cài đặt APK mới biên dịch (Route B) hoặc đóng gói lại (Route C) lên thiết bị thật hoặc AVD đang có sẵn ứng dụng gốc, Android Package Manager sẽ **từ chối cài đặt ngay lập tức** với mã lỗi:
+     ```text
+     INSTALL_FAILED_UPDATE_INCOMPATIBLE: Package <pkg> signatures do not match previously installed version; ignoring!
+     ```
+     Lỗi này xảy ra do chứng chỉ số dùng để ký bản build/patch (debug keystore hoặc self-signed key) không khớp với chứng chỉ số của nhà phát hành gốc.
+   - **Quy tắc bắt buộc áp dụng hậu tố mặc định**:
+     * **Với Route B (Rebuild Native)**: Bắt buộc cấu hình hậu tố `.rebuild` trên `applicationId` trong `app/build.gradle.kts` (hoặc `build.gradle`):
+       ```kotlin
+       android {
+           defaultConfig {
+               applicationId = "com.example.app.rebuild" // Gốc: com.example.app -> Bắt buộc thêm .rebuild
+               // ...
+           }
+       }
+       ```
+     * **Với Route C (Patch APK / Repack)**: Khi điều chỉnh `AndroidManifest.xml` trước khi đóng gói lại bằng Apktool, bắt buộc đổi package name với hậu tố `.patched`:
+       ```xml
+       <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+           package="com.example.app.patched">
+       ```
+   - **Lợi ích kép**:
+     * Triệt tiêu hoàn toàn lỗi `INSTALL_FAILED_UPDATE_INCOMPATIBLE`.
+     * Cho phép cài đặt song song cả app gốc và app mới trên cùng một thiết bị/AVD, phục vụ trực tiếp cho việc đối chiếu 1-1 tại Bước 12 (Hard Verify).
+   - **Ngoại lệ duy nhất**: Chỉ cho phép giữ nguyên `applicationId` gốc khi người dùng đã chủ động gỡ bỏ app gốc (`adb uninstall <original_package>`) VÀ có chỉ thị bằng văn bản trong đặc tả.
 
 ---
 

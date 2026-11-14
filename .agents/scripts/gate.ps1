@@ -3,7 +3,7 @@
 
 param(
     [Parameter(Position=0)]
-    [ValidateSet("status", "validate", "open", "waive", "skip", "reject", "event")]
+    [ValidateSet("status", "validate", "open", "waive", "skip", "reject", "event", "archive-case", "check-app")]
     [string]$Action = "status",
 
     [Parameter(Position=1)]
@@ -78,21 +78,23 @@ function Get-NormalizedFileHash {
 function Save-CaseStateAtomic {
     param(
         [object]$State,
-        [int]$ExpectedRevision = -1
+        [int]$ExpectedRevision = -1,
+        [switch]$Force
     )
 
-    if ($ExpectedRevision -le 0 -and $State.revision) {
-        $ExpectedRevision = [int]$State.revision
-    }
-
-    if ($ExpectedRevision -gt 0 -and (Test-Path -LiteralPath $stateFile)) {
+    if (-not $Force -and $ExpectedRevision -gt 0 -and (Test-Path -LiteralPath $stateFile)) {
         $diskState = Get-CaseState
         if ($diskState.revision -and [int]$diskState.revision -ne $ExpectedRevision) {
             throw [ConcurrencyConflictException]::new("[ConcurrencyConflictException] active_case.json đã bị tiến trình khác cập nhật (Đĩa: Rev $($diskState.revision), Kỳ vọng: Rev $ExpectedRevision). Thao tác bị hủy để tránh mất dữ liệu!")
         }
     }
 
-    $State.last_updated = (Get-Date).ToString("yyyy-MM-ddTHH:mm:sszzz")
+    $nowStr = (Get-Date).ToString("yyyy-MM-ddTHH:mm:sszzz")
+    if ($State.PSObject.Properties['last_updated']) {
+        $State.last_updated = $nowStr
+    } else {
+        $State | Add-Member -NotePropertyName 'last_updated' -NotePropertyValue $nowStr -Force
+    }
     $currentRev = if ($State.revision) { [int]$State.revision } else { 1 }
     $State.revision = $currentRev + 1
 
@@ -300,6 +302,175 @@ $cascadeMap = @{
     }
 }
 
+function Test-InputDirectoryImmutability {
+    param([string]$RepoRoot)
+    $inputDir = Join-Path $RepoRoot "01_THA_APP_VAO_DAY"
+    if (-not (Test-Path -LiteralPath $inputDir)) {
+        return [PSCustomObject]@{
+            IsClean = $true
+            Violations = @()
+        }
+    }
+    
+    $violations = @()
+    $forbiddenExts = @(".tmp", ".bak", ".log", ".class", ".dex", ".o", ".obj", ".map", ".swp", ".lock")
+    $forbiddenDirNames = @("build", "out", "target", "bin", "obj", "node_modules", ".gradle", "__pycache__", ".backup", "dist")
+
+    $allItems = @(Get-ChildItem -LiteralPath $inputDir -Recurse -Force -ErrorAction SilentlyContinue)
+    foreach ($item in $allItems) {
+        $ext = $item.Extension.ToLower()
+        if ($forbiddenExts -contains $ext) {
+            $violations += "Tệp tạo tự động/tạm thời bị cấm trong 01_THA_APP_VAO_DAY: $($item.FullName)"
+        }
+        if ($item.PSIsContainer -and ($forbiddenDirNames -contains $item.Name.ToLower())) {
+            $violations += "Thư mục build/tạm thời bị cấm trong 01_THA_APP_VAO_DAY: $($item.FullName)"
+        }
+    }
+
+    return [PSCustomObject]@{
+        IsClean = ($violations.Count -eq 0)
+        Violations = $violations
+    }
+}
+
+function Get-TargetAppInfo {
+    param([string]$RepoRoot)
+    $inputDir = Join-Path $RepoRoot "01_THA_APP_VAO_DAY"
+    if (-not (Test-Path -LiteralPath $inputDir)) {
+        return $null
+    }
+    $ignored = @("readme.md", ".gitkeep", ".gitignore", ".ds_store", "thumbs.db")
+    $files = @(Get-ChildItem -LiteralPath $inputDir -File -ErrorAction SilentlyContinue | Where-Object { $ignored -notcontains $_.Name.ToLower() })
+    
+    if ($files.Count -eq 0) {
+        $subDirs = @(Get-ChildItem -LiteralPath $inputDir -Directory -ErrorAction SilentlyContinue | Where-Object { -not $_.Name.StartsWith(".") })
+        if ($subDirs.Count -gt 0) {
+            $firstDir = $subDirs[0]
+            $allSubFiles = @(Get-ChildItem -LiteralPath $firstDir.FullName -Recurse -File -ErrorAction SilentlyContinue)
+            $combined = ($allSubFiles | ForEach-Object { "$($_.Name):$($_.Length)" }) -join ";"
+            $bytes = [System.Text.Encoding]::UTF8.GetBytes($combined)
+            $hasher = [System.Security.Cryptography.SHA256]::Create()
+            try {
+                $hash = [System.BitConverter]::ToString($hasher.ComputeHash($bytes)).Replace("-", "").ToUpper()
+            } finally { $hasher.Dispose() }
+            return [PSCustomObject]@{
+                Name = $firstDir.Name
+                Path = $firstDir.FullName
+                RelativePath = "01_THA_APP_VAO_DAY/$($firstDir.Name)"
+                Sha256 = $hash
+                Type = "DIRECTORY"
+                Length = $allSubFiles.Count
+            }
+        }
+        return $null
+    }
+
+    $appFile = $files[0]
+    $sha = (Get-FileHash -LiteralPath $appFile.FullName -Algorithm SHA256).Hash.ToUpper()
+    return [PSCustomObject]@{
+        Name = $appFile.Name
+        Path = $appFile.FullName
+        RelativePath = "01_THA_APP_VAO_DAY/$($appFile.Name)"
+        Sha256 = $sha
+        Type = "FILE"
+        Length = $appFile.Length
+    }
+}
+
+function Archive-CurrentCaseAndReset {
+    param(
+        [Parameter(Mandatory=$true)]
+        [object]$State,
+        [Parameter(Mandatory=$true)]
+        [object]$TargetApp,
+        [string]$Reason = "Phát hiện ứng dụng đầu vào mới trong 01_THA_APP_VAO_DAY/ có SHA-256 khác biệt với phiên trước."
+    )
+    $oldCaseId = if ($State.case_id) { $State.case_id } else { "CASE-LEGACY" }
+    $oldFingerprint = if ($State.workflow -and $State.workflow.target_fingerprint) { $State.workflow.target_fingerprint } else { "NONE" }
+    $newFingerprint = $TargetApp.Sha256
+
+    Write-Host "================================================================================" -ForegroundColor Yellow
+    Write-Host "[!] TIẾN TRÌNH LƯU TRỮ CA CŨ (CASE ARCHIVING ENGINE - RWO)" -ForegroundColor Yellow
+    Write-Host "    Ca đang lưu trữ : $oldCaseId" -ForegroundColor White
+    Write-Host "    Lý do lưu trữ   : $Reason" -ForegroundColor White
+    Write-Host "    Vân tay cũ      : $oldFingerprint" -ForegroundColor Gray
+    Write-Host "    Ứng dụng mới    : $($TargetApp.Name) (SHA-256: $newFingerprint)" -ForegroundColor Cyan
+    Write-Host "================================================================================" -ForegroundColor Yellow
+
+    $caseFolder = Join-Path $casesDir $oldCaseId
+    if (-not (Test-Path -LiteralPath $caseFolder)) {
+        New-Item -ItemType Directory -Path $caseFolder -Force | Out-Null
+    }
+
+    $utf8NoBom = [System.Text.UTF8Encoding]::new($false)
+    $json = $State | ConvertTo-Json -Depth 15
+    $caseManifest = Join-Path $caseFolder "manifest.json"
+    [System.IO.File]::WriteAllText($caseManifest, $json, $utf8NoBom)
+
+    $interviewStatePath = Join-Path $repoRoot ".agents/state/interview_state.json"
+    if (Test-Path -LiteralPath $interviewStatePath) {
+        $destInterview = Join-Path $caseFolder "interview_state.json"
+        Copy-Item -LiteralPath $interviewStatePath -Destination $destInterview -Force
+    }
+
+    $archiveInfo = [ordered]@{
+        archived_at = (Get-Date).ToString("yyyy-MM-ddTHH:mm:sszzz")
+        archived_case_id = $oldCaseId
+        archived_reason = $Reason
+        previous_target_fingerprint = $oldFingerprint
+        new_target_name = $TargetApp.Name
+        new_target_fingerprint = $newFingerprint
+    }
+    $destArchiveInfo = Join-Path $caseFolder "archive_info.json"
+    [System.IO.File]::WriteAllText($destArchiveInfo, ($archiveInfo | ConvertTo-Json -Depth 5), $utf8NoBom)
+
+    Append-Event -ActionName "CASE_ARCHIVED" -Actor "coordinator" -Phase $State.current_phase -Step $State.current_step -EventDetails "Lưu trữ ca $oldCaseId sang cases/$oldCaseId/ do SHA-256 ứng dụng thay đổi. Lý do: $Reason" -EvidenceSha $newFingerprint -State $State
+
+    # Khởi tạo ca mới
+    $newCaseId = "CASE-" + (Get-Date).ToString("yyyyMMdd-HHmmss")
+    $State.case_id = $newCaseId
+    $State.target_name = $TargetApp.Name
+    $State.current_phase = "STAGE_01_DISCOVERY"
+    $State.current_step = "01_APP_INTAKE"
+    $State.current_gate_status = "GATE_00_READY"
+    $State.revision = 1
+    $nowStr = (Get-Date).ToString("yyyy-MM-ddTHH:mm:sszzz")
+    if ($State.PSObject.Properties['last_updated']) {
+        $State.last_updated = $nowStr
+    } else {
+        $State | Add-Member -NotePropertyName 'last_updated' -NotePropertyValue $nowStr -Force
+    }
+
+    if (-not $State.workflow) { $State.workflow = [ordered]@{} }
+    $State.workflow.mode = "NEW_CASE"
+    $State.workflow.parent_case_id = $oldCaseId
+    $State.workflow.run_id = "RUN-001"
+    $State.workflow.target_fingerprint = $newFingerprint
+
+    foreach ($g in $gateOrder) {
+        $State.gates.$g = [ordered]@{
+            state = "NOT_STARTED"
+            evidence = @()
+            evidence_sha256 = $null
+            approved_by = $null
+            approved_at = $null
+            revoked_reason = $null
+            waived_reason = $null
+            skip_reason = $null
+        }
+    }
+
+    if ($State.metrics) {
+        $State.metrics.review_convergence_rounds = 0
+    }
+
+    Save-CaseStateAtomic -State $State -Force
+    Append-Event -ActionName "CASE_INITIALIZED" -Actor "coordinator" -Phase "STAGE_01_DISCOVERY" -Step "01_APP_INTAKE" -EventDetails "Khởi tạo ca mới $newCaseId cho ứng dụng $($TargetApp.Name) (SHA-256: $newFingerprint)" -EvidenceSha $newFingerprint -State $State
+
+    Write-Host "[OK] Đã lưu trữ $oldCaseId và khởi tạo ca mới: $newCaseId" -ForegroundColor Green
+    return $State
+}
+
 switch ($Action) {
     "status" {
         $state = Get-CaseState
@@ -428,6 +599,25 @@ switch ($Action) {
                         Write-Host " [PASS] Cổng ${g}: Trạng thái $gState và SHA-256 hợp lệ." -ForegroundColor Green
                     }
                 }
+
+                # Kiểm tra bổ sung riêng cho gate_02_audit_passed: APP_FLOW_SPEC.md và Evidence Anchors
+                if ($g -eq "gate_02_audit_passed") {
+                    $appFlowRel = "03_KET_QUA_KIEM_TRA/APP_FLOW_SPEC.md"
+                    $appFlowPath = Join-Path $repoRoot $appFlowRel
+                    if (-not (Test-Path -LiteralPath $appFlowPath)) {
+                        Write-Host " [FAIL] Cổng gate_02_audit_passed: Thiếu tệp đặc tả luồng $appFlowRel!" -ForegroundColor Red
+                        $hasError = $true
+                    } else {
+                        $appFlowText = [System.IO.File]::ReadAllText($appFlowPath, [System.Text.Encoding]::UTF8)
+                        $evMatches = [regex]::Matches($appFlowText, '\[EV:\s*[^\]]+\]')
+                        if ($evMatches.Count -eq 0) {
+                            Write-Host " [FAIL] Cổng gate_02_audit_passed: $appFlowRel thiếu mỏ neo bằng chứng Evidence Anchor ([EV: ...])!" -ForegroundColor Red
+                            $hasError = $true
+                        } else {
+                            Write-Host " [PASS] Cổng gate_02_audit_passed: $appFlowRel hợp lệ ($($evMatches.Count) mỏ neo bằng chứng [EV: ...])." -ForegroundColor Green
+                        }
+                    }
+                }
             } elseif ($gState -eq "WAIVED") {
                 if (-not $gateObj.waived_reason) {
                     Write-Host " [FAIL] Cổng $g là WAIVED nhưng thiếu lý do waived_reason!" -ForegroundColor Red
@@ -450,6 +640,36 @@ switch ($Action) {
             } else {
                 Write-Host " [INFO] Cổng ${g}: Trạng thái $gState." -ForegroundColor Gray
             }
+        }
+
+        # 4. Kiểm tra tính bất biến của thư mục đầu vào 01_THA_APP_VAO_DAY/
+        $immCheck = Test-InputDirectoryImmutability -RepoRoot $repoRoot
+        if (-not $immCheck.IsClean) {
+            Write-Host " [FAIL] Vi phạm tính bất biến (Immutability) tại 01_THA_APP_VAO_DAY/:" -ForegroundColor Red
+            foreach ($v in $immCheck.Violations) {
+                Write-Host "        - $v" -ForegroundColor Red
+            }
+            $hasError = $true
+        } else {
+            Write-Host " [PASS] Tính bất biến của 01_THA_APP_VAO_DAY/ được bảo toàn 100%." -ForegroundColor Green
+        }
+
+        # 5. Kiểm tra đối chiếu vân tay SHA-256 của ứng dụng đầu vào
+        $targetApp = Get-TargetAppInfo -RepoRoot $repoRoot
+        if ($targetApp) {
+            $currentFp = if ($state.workflow -and $state.workflow.target_fingerprint) { $state.workflow.target_fingerprint } else { $null }
+            if ($currentFp -and $currentFp -ne $targetApp.Sha256) {
+                Write-Host " [WARN] Phát hiện ứng dụng trong 01_THA_APP_VAO_DAY/ ($($targetApp.Name)) có SHA-256 khác với active_case.json!" -ForegroundColor Yellow
+                Write-Host "        SHA-256 trong active_case.json: $currentFp" -ForegroundColor Gray
+                Write-Host "        SHA-256 tệp thực tế trên đĩa  : $($targetApp.Sha256)" -ForegroundColor Gray
+                Write-Host "        -> Khuyến nghị: Chạy 'gate.ps1 check-app' hoặc 'gate.ps1 archive-case' để tự động lưu trữ ca cũ sang .agents/state/cases/." -ForegroundColor Cyan
+            } elseif (-not $currentFp) {
+                Write-Host " [INFO] Ứng dụng đầu vào: $($targetApp.Name) (SHA-256: $($targetApp.Sha256)) - Sẵn sàng nạp vào ca." -ForegroundColor Cyan
+            } else {
+                Write-Host " [PASS] Vân tay SHA-256 ứng dụng ($($targetApp.Name)) khớp hoàn toàn với active_case.json." -ForegroundColor Green
+            }
+        } else {
+            Write-Host " [INFO] 01_THA_APP_VAO_DAY: Chưa có file app đầu vào (chỉ có README.md)." -ForegroundColor Gray
         }
 
         Write-Host ("-" * 80) -ForegroundColor Gray
@@ -502,6 +722,42 @@ switch ($Action) {
         $sha = Get-NormalizedFileHash -FilePath $evPath
         $relPath = if ($evPath.StartsWith($repoRoot)) { $evPath.Substring($repoRoot.Length).TrimStart('\', '/') } else { $Evidence }
         $evList = @($relPath)
+
+        # Kiểm tra tính bất biến của 01_THA_APP_VAO_DAY/ (chỉ cho phép gate_01 tham chiếu đầu vào)
+        if ($resolvedGate -ne "gate_01_baseline_verified") {
+            $normPath = $relPath.Replace("\", "/").TrimStart("/")
+            if ($normPath.StartsWith("01_THA_APP_VAO_DAY/")) {
+                Write-Host "[FAIL] Vi phạm tính bất biến (Immutability Violation)! Thư mục 01_THA_APP_VAO_DAY/ chỉ dành riêng cho đầu vào nguyên bản của người dùng, không được dùng làm nơi chứa bằng chứng tạo ra cho cổng $resolvedGate!" -ForegroundColor Red
+                exit 1
+            }
+        }
+
+        # 2.1 Kiểm tra chuyên biệt và bắt buộc cho gate_02_audit_passed: APP_FLOW_SPEC.md & Evidence Anchors
+        if ($resolvedGate -eq "gate_02_audit_passed") {
+            $appFlowRel = "03_KET_QUA_KIEM_TRA/APP_FLOW_SPEC.md"
+            $appFlowPath = Join-Path $repoRoot $appFlowRel
+            if (-not (Test-Path -LiteralPath $appFlowPath)) {
+                if ($Evidence -match "APP_FLOW_SPEC\.md$" -and (Test-Path -LiteralPath $evPath)) {
+                    $appFlowPath = $evPath
+                    $appFlowRel = $relPath
+                } else {
+                    Write-Host "[FAIL] Không thể mở gate_02_audit_passed vì thiếu tệp đặc tả luồng ứng dụng: $appFlowRel" -ForegroundColor Red
+                    Write-Host "       Yêu cầu bắt buộc: Phải tạo từ templates/15-APP-FLOW-SPEC-TEMPLATE.md và lưu tại 03_KET_QUA_KIEM_TRA/APP_FLOW_SPEC.md." -ForegroundColor Yellow
+                    exit 1
+                }
+            }
+            $appFlowText = [System.IO.File]::ReadAllText($appFlowPath, [System.Text.Encoding]::UTF8)
+            $evMatches = [regex]::Matches($appFlowText, '\[EV:\s*[^\]]+\]')
+            if ($evMatches.Count -eq 0) {
+                Write-Host "[FAIL] Không thể mở gate_02_audit_passed: Tệp $appFlowRel không chứa mỏ neo bằng chứng Evidence Anchor hợp lệ!" -ForegroundColor Red
+                Write-Host "       Yêu cầu cú pháp bắt buộc: [EV: <class_or_file>#<method_or_line>] (Ví dụ: [EV: MainActivity.java#onCreate])." -ForegroundColor Yellow
+                exit 1
+            }
+            Write-Host " [PASS] Đã xác thực APP_FLOW_SPEC.md: Tệp tồn tại và chứa $($evMatches.Count) mỏ neo bằng chứng [EV: ...] hợp lệ." -ForegroundColor Green
+            if ($evList -notcontains $appFlowRel) {
+                $evList += $appFlowRel
+            }
+        }
 
         $approver = if ($ApprovedBy) { $ApprovedBy } else { "coordinator" }
         $now = (Get-Date).ToString("yyyy-MM-ddTHH:mm:sszzz")
@@ -738,5 +994,46 @@ switch ($Action) {
         Append-Event -ActionName "CUSTOM_LOG" -Actor $actor -Phase $state.current_phase -Step $state.current_step -EventDetails $Details -EvidenceSha $null -State $state
         Write-Host "[OK] Đã ghi sự kiện vào .agents/state/events.jsonl" -ForegroundColor Green
         exit 0
+    }
+
+    "archive-case" {
+        $state = Get-CaseState
+        $targetApp = Get-TargetAppInfo -RepoRoot $repoRoot
+        if (-not $targetApp) {
+            $targetApp = [PSCustomObject]@{
+                Name = if ($state.target_name) { $state.target_name } else { "UNKNOWN_APP" }
+                Sha256 = "MANUAL_ARCHIVE_" + (Get-Date).ToString("yyyyMMddHHmmss")
+            }
+        }
+        $archiveReason = if ($Reason) { $Reason } else { "Chủ động lưu trữ ca làm việc qua lệnh archive-case" }
+        $newState = Archive-CurrentCaseAndReset -State $state -TargetApp $targetApp -Reason $archiveReason
+        exit 0
+    }
+
+    "check-app" {
+        $state = Get-CaseState
+        $expectedRev = if ($state.revision) { [int]$state.revision } else { -1 }
+        $targetApp = Get-TargetAppInfo -RepoRoot $repoRoot
+        if (-not $targetApp) {
+            Write-Host "[INFO] Không phát hiện tệp ứng dụng mới nào trong 01_THA_APP_VAO_DAY/ (chỉ có README.md)." -ForegroundColor Gray
+            exit 0
+        }
+        Write-Host "Phát hiện ứng dụng trong 01_THA_APP_VAO_DAY/: $($targetApp.Name) (SHA-256: $($targetApp.Sha256))" -ForegroundColor Cyan
+        $currentFp = if ($state.workflow -and $state.workflow.target_fingerprint) { $state.workflow.target_fingerprint } else { $null }
+        if (-not $currentFp) {
+            $state.workflow.target_fingerprint = $targetApp.Sha256
+            $state.target_name = $targetApp.Name
+            Save-CaseStateAtomic -State $state -ExpectedRevision $expectedRev
+            Append-Event -ActionName "APP_FINGERPRINT_SET" -Actor "coordinator" -Phase $state.current_phase -Step $state.current_step -EventDetails "Gắn vân tay ứng dụng $($targetApp.Name) ($($targetApp.Sha256)) vào ca $($state.case_id)" -EvidenceSha $targetApp.Sha256 -State $state
+            Write-Host "[OK] Đã gắn vân tay ứng dụng $($targetApp.Name) vào ca hiện tại ($($state.case_id))." -ForegroundColor Green
+            exit 0
+        } elseif ($currentFp -ne $targetApp.Sha256) {
+            $archiveReason = if ($Reason) { $Reason } else { "Phát hiện ứng dụng mới ($($targetApp.Name)) có SHA-256 ($($targetApp.Sha256)) khác với ca hiện tại ($currentFp)." }
+            $newState = Archive-CurrentCaseAndReset -State $state -TargetApp $targetApp -Reason $archiveReason
+            exit 0
+        } else {
+            Write-Host "[OK] Vân tay SHA-256 ứng dụng khớp 100% với active_case.json ($currentFp)." -ForegroundColor Green
+            exit 0
+        }
     }
 }

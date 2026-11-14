@@ -1,7 +1,7 @@
-﻿# REA-kit-agy v1.1
+﻿# REA-kit-agy v1.2
 
-[![Release](https://img.shields.io/badge/Release-v1.1-blue.svg)](https://github.com/kimducanh27-cpu/REA-kit-agy/releases/tag/v1.1)
-[![Tests](https://img.shields.io/badge/Tests-35%2F35%20PASS-brightgreen.svg)](.agents/scripts/test_interview.ps1)
+[![Release](https://img.shields.io/badge/Release-v1.2-blue.svg)](https://github.com/kimducanh27-cpu/REA-kit-agy/releases/tag/v1.2)
+[![Tests](https://img.shields.io/badge/Tests-52%2F52%20PASS-brightgreen.svg)](.agents/scripts/test_interview.ps1)
 [![Health Check](https://img.shields.io/badge/Health%20Check-6%2F6%20OK-brightgreen.svg)](.agents/scripts/health_check.ps1)
 [![ADR](https://img.shields.io/badge/ADR-7%2F7%20MADR-blueviolet.svg)](docs/adrs/)
 [![Target](https://img.shields.io/badge/Target-Android%20APK%20%7C%20Web%20%7C%20Desktop-orange.svg)](docs/PRD.md)

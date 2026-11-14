@@ -124,21 +124,21 @@ KHÔNG ĐẠT    ──► LOẠI BỎ / TỰ PHÂN TÍCH / ÁP DỤNG GIẢ Đ�
 
 Mọi thông số kỹ thuật tối ưu hóa trong REA-kit-agy v1.1 **CẤM bị áp đặt dưới dạng giả định mặc định không qua kiểm chứng**. Toàn bộ các chỉ số phải được phân loại chặt chẽ vào một trong 5 nhóm cấu trúc:
 
-1. `REFERENCE_BENCHMARK`: Điểm chuẩn tham chiếu từ tiêu chuẩn ngành hoặc tài liệu chính thức (Android Vitals, W3C, Google Play Policy).
-2. `CANDIDATE_RECOMMENDATION`: Đề xuất giải pháp kiến trúc tối ưu do Agent đưa ra dựa trên bối cảnh hiện trạng, cần sự đồng thuận hoặc kiểm chứng.
+1. `REFERENCE_BENCHMARK`: Điểm chuẩn tham chiếu từ tiêu chuẩn ngành hoặc tài liệu chính thức (Android Vitals, W3C, Google Play Policy). Đây là mốc định chuẩn cần đo lường Baseline thực tế, không phải mệnh lệnh phổ quát (universal mandate) áp đặt mù quáng cho mọi ứng dụng.
+2. `CANDIDATE_RECOMMENDATION`: Đề xuất giải pháp kiến trúc hoặc quy tắc heuristic tối ưu do Agent đưa ra dựa trên bối cảnh hiện trạng (ví dụ: heuristic cache 20% heap), cần sự đồng thuận hoặc kiểm chứng thực tế.
 3. `USER_REQUIREMENT`: Yêu cầu định lượng cụ thể do người dùng trực tiếp chỉ định trong phỏng vấn.
-4. `VERIFIED_CONSTRAINT`: Rào cản kỹ thuật bắt buộc đã được chứng minh qua bằng chứng (minSdk, kiến trúc CPU 64-bit, căn chỉnh trang bộ nhớ 16 KB).
+4. `VERIFIED_CONSTRAINT`: Rào cản kỹ thuật bắt buộc đã được chứng minh qua bằng chứng kiểm tra nhị phân/hệ thống thực tế (minSdk, kiến trúc CPU 64-bit, căn chỉnh trang 16 KB qua kiểm tra ELF/zipalign - lưu ý targetSdk 35 đơn thuần chỉ là chính sách nền tảng Platform Policy chứ chưa đủ để xác minh tuân thủ 16 KB).
 5. `UNAPPROVED_ASSUMPTION`: Giả định kỹ thuật tạm thời áp dụng khi người dùng ủy quyền, bắt buộc có rào chắn kiểm chứng tại Bước 10 QA.
 
 ### Bảng Phân Loại Chỉ Số Kỹ Thuật Điển Hình:
 
 | Hạng Mục | Giá Trị / Đề Xuất | Phân Loại Cấu Trúc | Cơ Sở & Điều Kiện Nâng Cấp |
 | :--- | :--- | :--- | :--- |
-| **FPS Target** | 60 FPS cố định (16.6ms frame budget) | `REFERENCE_BENCHMARK` | Chuẩn Android Vitals; nâng thành `USER_REQUIREMENT` khi người dùng phê duyệt DECISION-OPT. |
-| **Cold Start** | < 1.2s trên Mid-tier | `REFERENCE_BENCHMARK` | Ngưỡng cảnh báo xấu (Bad Behavior) của Play Console; cần đo Baseline thực tế. |
-| **Memory Policy**| Giới hạn cache ảnh ở 20% heap | `CANDIDATE_RECOMMENDATION` | Giải pháp an toàn tránh OOM; chuyển thành `UNAPPROVED_ASSUMPTION` (Risk: BENIGN) nếu người dùng ủy quyền. |
+| **FPS Target** | 60 FPS cố định (16.6ms frame budget) | `REFERENCE_BENCHMARK` | Điểm chuẩn tham chiếu ngành (Android Vitals); yêu cầu đo Baseline thực tế, không phải mệnh lệnh phổ quát (universal mandate) cho mọi ứng dụng. Nâng thành `USER_REQUIREMENT` khi người dùng phê duyệt DECISION-OPT. |
+| **Cold Start** | < 1.2s trên Mid-tier | `REFERENCE_BENCHMARK` | Ngưỡng tham chiếu Android Vitals / Play Console (Bad Behavior); bắt buộc đo lường Baseline thực tế của app, không phải mệnh lệnh phổ quát áp đặt mù quáng. |
+| **Memory Policy**| Giới hạn cache ảnh ở 20% heap | `CANDIDATE_RECOMMENDATION` | Quy tắc heuristic tối ưu bộ nhớ ban đầu nhằm phòng tránh OOM; cần tinh chỉnh theo dung lượng heap thực tế. Chuyển thành `UNAPPROVED_ASSUMPTION` (Risk: BENIGN) nếu người dùng ủy quyền. |
 | **Network Sync** | Gộp batch qua WorkManager khi sạc/Wi-Fi | `CANDIDATE_RECOMMENDATION` | Khuyến nghị kiến trúc tiết kiệm pin; cần xác nhận từ người dùng nếu ảnh hưởng độ trễ dữ liệu. |
-| **16 KB Alignment** | Biên dịch NDK với max-page-size=16384 | `VERIFIED_CONSTRAINT` | Yêu cầu bắt buộc của Android 15 Play Store; trích xuất từ APK targetSdk 35. |
+| **16 KB Alignment** | Căn chỉnh trang 16 KB (NDK max-page-size=16384 & zipalign 16 KB) | `VERIFIED_CONSTRAINT` *(sau kiểm tra nhị phân)* | Lưu ý: TargetSdk 35 đơn thuần chỉ là yêu cầu chính sách nền tảng (Platform Policy requirement), KHÔNG tự động xác minh ứng dụng đã tuân thủ 16 KB. Chỉ trở thành `VERIFIED_CONSTRAINT` sau khi kiểm tra nhị phân thực tế (ELF inspection `readelf -l` đạt `p_align = 0x4000` và `zipalign -c -P 16 -v 4`). |
 | **Offline Cache** | Lưu trữ tạm thời 7 ngày gần nhất | `UNAPPROVED_ASSUMPTION` | Giả định có thể đảo ngược (`Reversibility: HIGH`); kiểm chứng dung lượng đĩa tại Bước 10. |
 | **Low-End Mode** | Tự động hạ thấp visual shadow/blur | `CANDIDATE_RECOMMENDATION` | Chính sách Graceful Degradation; áp dụng khi phát hiện thiết bị Low-RAM. |
 

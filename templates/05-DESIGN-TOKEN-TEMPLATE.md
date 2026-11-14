@@ -126,6 +126,90 @@ val Shapes = Shapes(
 </resources>
 ```
 
+### 5. Động lực học & Chuyển động (Motion Tokens)
+*(Tham chiếu docs/UI_IMPLEMENTATION_MAP.md — Quy chuẩn thời lượng 150ms / 250ms / 400ms và đường cong gia tốc chuẩn)*
+
+#### a) Web CSS Tokens (Route A)
+```css
+:root {
+  /* Thời lượng chuyển động */
+  --motion-duration-fast: 150ms;       /* Micro-interactions: switch, checkbox, tooltip */
+  --motion-duration-base: 250ms;       /* Chuyển đổi thành phần: dropdown, sheet, dialog */
+  --motion-duration-slow: 400ms;       /* Chuyển trang, cấu trúc layout lớn */
+
+  /* Đường cong gia tốc (Easing curves) */
+  --motion-easing-standard: cubic-bezier(0.2, 0, 0, 1);       /* Di chuyển trên màn hình */
+  --motion-easing-emphasized: cubic-bezier(0.05, 0.7, 0.1, 1); /* Xuất hiện vào màn hình */
+  --motion-easing-accelerate: cubic-bezier(0.3, 0, 0.8, 0.15); /* Rời khỏi màn hình */
+}
+
+/* Hỗ trợ chế độ giảm chuyển động (Reduced Motion) */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --motion-duration-fast: 0.01ms;
+    --motion-duration-base: 0.01ms;
+    --motion-duration-slow: 0.01ms;
+  }
+}
+```
+
+#### b) Android Native Tokens (Route B — Jetpack Compose & XML)
+```kotlin
+// Compose Motion Tokens (ui/theme/Motion.kt)
+object MotionTokens {
+    const val DurationFast = 150
+    const val DurationBase = 250
+    const val DurationSlow = 400
+
+    val EasingStandard = CubicBezierEasing(0.2f, 0.0f, 0.0f, 1.0f)
+    val EasingEmphasized = CubicBezierEasing(0.05f, 0.7f, 0.1f, 1.0f)
+    val EasingAccelerate = CubicBezierEasing(0.3f, 0.0f, 0.8f, 0.15f)
+}
+```
+
+```xml
+<!-- Android XML Motion (res/values/motion.xml & integers.xml) -->
+<resources>
+    <integer name="motion_duration_fast">150</integer>
+    <integer name="motion_duration_base">250</integer>
+    <integer name="motion_duration_slow">400</integer>
+</resources>
+```
+
+### 6. Biểu tượng & Icon Tokens (Icon Tokens)
+*(Tham chiếu docs/UI_IMPLEMENTATION_MAP.md — Route A dùng Lucide Icons, Route B dùng Material Symbols; TUYỆT ĐỐI CẤM DÙNG EMOJI LÀM ICON)*
+
+#### a) Web CSS & Sizing Tokens (Route A — Lucide Icons)
+```css
+:root {
+  --icon-size-sm: 16px;             /* Inline icon cạnh text nhỏ, badge */
+  --icon-size-base: 24px;           /* Nút chuẩn, toolbar, navigation item */
+  --icon-size-lg: 32px;             /* Empty state illustration, banner */
+  --icon-stroke-width: 2px;         /* Độ dày nét chuẩn của Lucide */
+}
+```
+*Thư viện áp dụng*: `lucide-react` (Ví dụ: `<Search size={24} />`, `<ArrowLeft size={24} />`). Cấm dùng emoji.
+
+#### b) Android Native Tokens (Route B — Jetpack Compose & XML)
+```kotlin
+// Compose Icon Dimens (ui/theme/Dimens.kt)
+object IconTokens {
+    val SizeSmall = 16.dp
+    val SizeBase = 24.dp
+    val SizeLarge = 32.dp
+}
+```
+
+```xml
+<!-- Android Dimens (res/values/dimens.xml) -->
+<resources>
+    <dimen name="icon_size_sm">16dp</dimen>
+    <dimen name="icon_size_base">24dp</dimen>
+    <dimen name="icon_size_lg">32dp</dimen>
+</resources>
+```
+*Thư viện áp dụng*: `androidx.compose.material.icons:material-icons-extended` (Ví dụ: `Icons.Outlined.Search`, `Icons.AutoMirrored.Outlined.ArrowBack`) hoặc Vector Drawable XML (`res/drawable/ic_*.xml`). Cấm dùng emoji.
+
 ---
 
 ## TẦNG 2: QUY CHUẨN COMPONENTS DÙNG CHUNG (SHARED COMPONENT STYLES)
@@ -133,7 +217,7 @@ val Shapes = Shapes(
 
 1. **Nút bấm chính (Primary Button)**:
    - Nền: `var(--color-primary)`, Chữ: trắng, Bo góc: `var(--radius-sm)`, Padding: 10px 20px.
-   - Hover: `var(--color-primary-hover)`, chuyển động mượt `transition: 0.2s`.
+   - Hover: `var(--color-primary-hover)`, chuyển động mượt `transition: background-color var(--motion-duration-fast) var(--motion-easing-standard)`.
 2. **Nút phụ / Nút thứ cấp (Secondary Button)**:
    - Nền: trong suốt hoặc `var(--color-surface)`, Viền: 1px solid `var(--color-border)`, Chữ: `var(--color-text-main)`.
 3. **Thẻ nội dung (Card Container)**:
@@ -146,8 +230,8 @@ val Shapes = Shapes(
 
 ---
 
-## TẦNG 3: QUY CHUẨN 4 TRẠNG THÁI GIAO DIỆN (UI STATE PATTERNS)
-*(Tham chiếu app-adr-ui: Giao diện không bao giờ được phép để màn hình trắng hoặc đơ khi tải dữ liệu)*
+## TẦNG 3: QUY CHUẨN 6 TRẠNG THÁI GIAO DIỆN (UI STATE PATTERNS)
+*(Tham chiếu app-adr-ui & design-governance.md: Giao diện không bao giờ được phép để màn hình trắng hoặc đơ khi tải dữ liệu)*
 
 ### 1. Trạng thái Đang tải (Loading State)
 - **Quy chuẩn**: Hiển thị hiệu ứng khung xương nhấp nháy (Skeleton Loading) hoặc biểu tượng xoay (Spinner) ở vị trí thao tác.
@@ -166,4 +250,12 @@ val Shapes = Shapes(
 
 ### 4. Trạng thái Báo lỗi & Khôi phục (Error Recovery State)
 - **Quy chuẩn**: Banner cảnh báo màu đỏ (`var(--color-danger)`), giải thích nguyên nhân bằng ngôn ngữ người dùng dễ hiểu (tránh in mã lỗi kỹ thuật phức tạp).
-- **Yêu cầu bắt buộc**: Phải có nút **"Thử lại" (Retry)** và **bảo toàn 100% dữ liệu đã nhập** trong các ô input để người dùng không phải gõ lại từ đầu.
+- **Yêu cầu bắt buộc**: Phải có nút **"Thử lại" (Retry)**.
+
+### 5. Trạng thái Đang xử lý / Bản nháp (In-Progress / Draft State)
+- **Quy chuẩn**: Hiển thị chỉ báo lưu tạm thời gian thực ("Đang lưu nháp...", "Đã lưu nháp lúc HH:mm").
+- **Yêu cầu bắt buộc**: **Bảo toàn 100% dữ liệu đã nhập** trong các ô input theo `RULE-INIT-001`, tự động lưu tạm sau 500ms vào LocalStorage hoặc SharedPreferences.
+
+### 6. Trạng thái Ngoại tuyến / Đang kết nối lại (Offline / Reconnecting State)
+- **Quy chuẩn**: Banner thông báo ngoại tuyến màu vàng (`var(--color-warning)`) hoặc xám, thông báo ứng dụng đang hoạt động ở chế độ ngoại tuyến.
+- **Yêu cầu bắt buộc**: Chuyển các thao tác ghi dữ liệu vào hàng đợi cục bộ (Local Outbox Queue) và tự động kích hoạt đồng bộ khi có mạng trở lại.
