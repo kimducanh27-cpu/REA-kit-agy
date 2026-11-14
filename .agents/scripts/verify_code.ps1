@@ -660,6 +660,7 @@ if ($assetsInTarget.Count -eq 0) {
     $allowlistLocations = @(
         (Join-Path $repoRoot "ASSET_ALLOWLIST.md"),
         (Join-Path $repoRoot "02_YEU_CAU_CUA_TOI/ASSET_ALLOWLIST.md"),
+        (Join-Path $repoRoot "03_KET_QUA_KIEM_TRA/ASSET_ALLOWLIST.md"),
         (Join-Path $repoRoot "05_MA_NGUON_PHAT_TRIEN/ASSET_ALLOWLIST.md"),
         (Join-Path $repoRoot "docs/ASSET_ALLOWLIST.md")
     )
@@ -670,36 +671,47 @@ if ($assetsInTarget.Count -eq 0) {
         }
     }
 
-    $unauthorizedAssets = @()
+    $infringingAssets = @()
     foreach ($af in $assetsInTarget) {
-        $matched = $false
-        if ($knownAssetNames.Contains($af.Name)) { $matched = $true }
-        if (-not $matched) {
-            try {
-                $afHash = (Get-FileHash -LiteralPath $af.FullName -Algorithm SHA256).Hash
-                if ($knownAssetHashes.Contains($afHash)) { $matched = $true }
-            } catch {}
-        }
-        if (-not $matched -and -not [string]::IsNullOrWhiteSpace($allowlistContent)) {
-            if ($allowlistContent -match [regex]::Escape($af.Name)) {
-                $matched = $true
+        $isOriginalAsset = $false
+        $afHash = $null
+        try {
+            $afHash = (Get-FileHash -LiteralPath $af.FullName -Algorithm SHA256).Hash
+            if ($knownAssetHashes.Contains($afHash)) {
+                $isOriginalAsset = $true
             }
+        } catch {}
+
+        if (-not $isOriginalAsset -and $knownAssetNames.Contains($af.Name)) {
+            $isOriginalAsset = $true
         }
 
-        if (-not $matched) {
-            $unauthorizedAssets += $af
+        # Nếu tài nguyên trong 05_ trùng hash hoặc tên với tài nguyên gốc từ 01_/04_, bắt buộc phải có trong ASSET_ALLOWLIST.md
+        if ($isOriginalAsset) {
+            $isPermitted = $false
+            if (-not [string]::IsNullOrWhiteSpace($allowlistContent)) {
+                if ($allowlistContent -match [regex]::Escape($af.Name) -or ($afHash -and $allowlistContent -match $afHash)) {
+                    $isPermitted = $true
+                }
+            }
+            if (-not $isPermitted) {
+                $infringingAssets += [PSCustomObject]@{
+                    File = $af
+                    Hash = $afHash
+                }
+            }
         }
     }
 
-    if ($unauthorizedAssets.Count -gt 0) {
-        Write-Host " [FAIL] Phát hiện $($unauthorizedAssets.Count) tài nguyên không rõ nguồn gốc (Asset Provenance Violation):" -ForegroundColor Red
-        foreach ($ua in $unauthorizedAssets) {
-            Write-Host "     - $($ua.Name) ($($ua.FullName))" -ForegroundColor Red
-            Write-Host "       -> Tài nguyên này không có trong 01_THA_APP_VAO_DAY/, 04_SAO_LUU_AN_TOAN/ và chưa được khai báo trong ASSET_ALLOWLIST.md!" -ForegroundColor Red
+    if ($infringingAssets.Count -gt 0) {
+        Write-Host " [FAIL] Phát hiện $($infringingAssets.Count) tài nguyên sao chép trực tiếp từ ứng dụng gốc chưa được miễn trừ (Legal Asset Decoupling Violation):" -ForegroundColor Red
+        foreach ($ia in $infringingAssets) {
+            Write-Host "     - $($ia.File.Name) ($($ia.File.FullName))" -ForegroundColor Red
+            Write-Host "       -> Tài nguyên này trùng hash/tên với tài nguyên trong 01_THA_APP_VAO_DAY/ hoặc 04_SAO_LUU_AN_TOAN/ nhưng chưa được phê duyệt trong ASSET_ALLOWLIST.md!" -ForegroundColor Red
         }
         $hasError = $true
     } else {
-        Write-Host " [PASS] Toàn bộ $($assetsInTarget.Count) tài nguyên (ảnh, font, icon) đều có nguồn gốc hợp lệ từ ứng dụng gốc hoặc ASSET_ALLOWLIST.md." -ForegroundColor Green
+        Write-Host " [PASS] Toàn bộ $($assetsInTarget.Count) tài nguyên (ảnh, font, icon) đều tuân thủ Legal Asset Decoupling (tự tạo mới hoặc đã được phê duyệt trong ASSET_ALLOWLIST.md)." -ForegroundColor Green
     }
 }
 

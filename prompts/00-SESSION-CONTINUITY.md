@@ -46,7 +46,7 @@ Dựa trực tiếp trên `current_phase` và `current_step` thu được từ T
   * Nạp prompt: `prompts/03-TAB-PRODUCT-DEFINITION.md`.
   * Nạp quy tắc quản trị thiết kế: `.agents/rules/design-governance.md` (7 nguyên tắc Anti-Slop, cấm viết mã sản phẩm trước Gate 03, Copy Deck bắt buộc).
   * Nạp hồ sơ yêu cầu: `02_YEU_CAU_CUA_TOI/ho-so-va-muc-tieu.md`.
-  * Mục tiêu bắt nhịp: Tiến hành phỏng vấn ngắn (3–5 câu), chốt Design System 3 tầng, xuất bản đặc tả và kế hoạch chia task để người dùng phê duyệt đóng băng **Cổng 03**.
+  * Mục tiêu bắt nhịp: Tiến hành phỏng vấn thích ứng định hướng quyết định (Adaptive Interview Engine), chốt Design System 3 tầng, xuất bản đặc tả và kế hoạch chia task để người dùng phê duyệt đóng băng **Cổng 03**.
 
 - **Nếu đang ở `STAGE_04_IMPLEMENTATION` (Bước 09–10)**:
   * Nạp prompt: `prompts/04-TAB-IMPLEMENTATION.md`.
@@ -57,7 +57,7 @@ Dựa trực tiếp trên `current_phase` và `current_step` thu được từ T
 - **Nếu đang ở `STAGE_05_VALIDATION` (Bước 11–13)**:
   * Nạp prompt: `prompts/05-TAB-VALIDATION.md`.
   * Nạp quy tắc nghiệm thu: `.agents/rules/release.md` (Hợp đồng môi trường kiểm thử, đối chiếu 1-1 Hard Verify, kiểm tra sẵn sàng `HOAN_TAC.bat`, bản giải thích đời thường).
-  * Nạp tài liệu đối chiếu: `01_THA_APP_VAO_DAY/baseline/` hoặc `03_KET_QUA_KIEM_TRA/BAO_CAO_NGHIEM_THU_HARD_VERIFY.md`.
+  * Nạp tài liệu đối chiếu: `03_KET_QUA_KIEM_TRA/baseline/` hoặc `03_KET_QUA_KIEM_TRA/BAO_CAO_NGHIEM_THU_HARD_VERIFY.md`.
   * Mục tiêu bắt nhịp: Chạy Smoke Test, thực hiện đối chiếu 1-1, kiểm tra cơ chế hoàn tác `HOAN_TAC.bat`, xuất tài liệu bàn giao để người dùng ký duyệt **Cổng 05 & Cổng 06**.
 
 ---

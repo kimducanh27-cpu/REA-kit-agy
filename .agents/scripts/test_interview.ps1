@@ -84,6 +84,9 @@ $casesDir = Join-Path $repoRoot ".agents/state/cases"
 $initialCaseBackups = if (Test-Path -LiteralPath $casesDir) {
     @(Get-ChildItem -Path $casesDir -Filter "*.json" -ErrorAction SilentlyContinue | ForEach-Object { $_.FullName })
 } else { @() }
+$initialCaseDirs = if (Test-Path -LiteralPath $casesDir) {
+    @(Get-ChildItem -Path $casesDir -Directory -ErrorAction SilentlyContinue | ForEach-Object { $_.FullName })
+} else { @() }
 
 # Wrapper chạy context.ps1 plan có ghi nhận Plan ID phục vụ dọn dẹp an toàn (DIFF-03)
 function Invoke-ContextPlanSafe([string]$taskText) {
@@ -592,12 +595,18 @@ try {
             Remove-Item -LiteralPath $pPath -Force -ErrorAction SilentlyContinue
         }
     }
-    # DIFF-03 Test Safety: Dọn dẹp CHỈ các bản sao lưu case state do test sinh ra trong .agents/state/cases/
+    # DIFF-03 Test Safety: Dọn dẹp CHỈ các bản sao lưu case state và thư mục case do test sinh ra trong .agents/state/cases/
     if (Test-Path -LiteralPath $casesDir) {
         $currentCaseBackups = @(Get-ChildItem -Path $casesDir -Filter "*.json" -ErrorAction SilentlyContinue | ForEach-Object { $_.FullName })
         foreach ($bk in $currentCaseBackups) {
             if ($initialCaseBackups -notcontains $bk) {
                 Remove-Item -LiteralPath $bk -Force -ErrorAction SilentlyContinue
+            }
+        }
+        $currentCaseDirs = @(Get-ChildItem -Path $casesDir -Directory -ErrorAction SilentlyContinue | ForEach-Object { $_.FullName })
+        foreach ($cd in $currentCaseDirs) {
+            if ($initialCaseDirs -notcontains $cd) {
+                Remove-Item -LiteralPath $cd -Recurse -Force -ErrorAction SilentlyContinue
             }
         }
     }

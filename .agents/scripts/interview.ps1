@@ -214,12 +214,29 @@ function Write-Utf8NoBom {
     }
 
     for ($attempt = 1; $attempt -le 10; $attempt++) {
+        $tmpFile = [System.IO.Path]::Combine($destDir, ([System.IO.Path]::GetRandomFileName() + ".tmp"))
         try {
-            [System.IO.File]::WriteAllText($destFull, $Content, $utf8NoBom)
+            [System.IO.File]::WriteAllText($tmpFile, $Content, $utf8NoBom)
+            if (Test-Path -LiteralPath $destFull) {
+                try {
+                    [System.IO.File]::Replace($tmpFile, $destFull, $null)
+                } catch {
+                    Move-Item -LiteralPath $tmpFile -Destination $destFull -Force
+                }
+            } else {
+                Move-Item -LiteralPath $tmpFile -Destination $destFull -Force
+            }
             break
         } catch [System.IO.IOException], [System.UnauthorizedAccessException] {
+            if (Test-Path -LiteralPath $tmpFile) {
+                Remove-Item -LiteralPath $tmpFile -Force -ErrorAction SilentlyContinue
+            }
             if ($attempt -eq 10) { throw }
             Start-Sleep -Milliseconds (50 * $attempt)
+        } finally {
+            if (Test-Path -LiteralPath $tmpFile) {
+                Remove-Item -LiteralPath $tmpFile -Force -ErrorAction SilentlyContinue
+            }
         }
     }
 }
