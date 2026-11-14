@@ -180,6 +180,33 @@ describe("Stream 2: Gate Engine, Directory Fingerprinting & Concurrency Tests", 
       const s3 = await saveCaseStateAtomic(tmpDir, aheadState, -1, true);
       expect(s3.revision).toBe(6);
     });
+
+    it("should safely handle missing diskState, malformed non-numeric revision, or NaN revision", async () => {
+      const stateFile = path.join(tmpDir, ".agents", "state", "active_case.json");
+      const state = await loadCaseState(tmpDir);
+
+      // 1. Malformed string revision on disk
+      const corruptDisk = { ...state, revision: "malformed_rev_string" as any };
+      await fs.writeFile(stateFile, JSON.stringify(corruptDisk, null, 2), "utf8");
+
+      const s1 = await saveCaseStateAtomic(tmpDir, { ...state, revision: 3 }, -1, true);
+      expect(Number.isFinite(s1.revision)).toBe(true);
+      expect(s1.revision).toBe(4);
+
+      // 2. Both disk and state have NaN revision
+      const nanDisk = { ...state, revision: null as any };
+      await fs.writeFile(stateFile, JSON.stringify(nanDisk, null, 2), "utf8");
+
+      const s2 = await saveCaseStateAtomic(tmpDir, { ...state, revision: NaN as any }, -1, true);
+      expect(Number.isFinite(s2.revision)).toBe(true);
+      expect(s2.revision).toBe(2); // disk=0, state fallback=1 -> max(0, 1) + 1 = 2
+
+      // 3. File missing on disk (fresh initialization)
+      await fs.unlink(stateFile);
+      const s3 = await saveCaseStateAtomic(tmpDir, { ...state, revision: undefined as any }, -1, true);
+      expect(Number.isFinite(s3.revision)).toBe(true);
+      expect(s3.revision).toBe(2);
+    });
   });
 
   describe("archiveCurrentCaseAndReset with interview_state.json file lock", () => {

@@ -50,7 +50,7 @@ export function removeCommentsOnly(code: string): string {
 export function hasEsmSyntax(code: string): boolean {
   if (!code) return false;
   const clean = removeCommentsAndStrings(code);
-  if (/(?:^|[;\n])\s*import\s+(?:(?:[\w*\s{},]+)\s+from\s+)?['"][^'"]+['"]/m.test(clean)) {
+  if (/(?:^|[;\n])\s*import\s+(?:(?:[\w*\s{},]+)\s+from\s+)?['"][^'"]*['"]/m.test(clean)) {
     return true;
   }
   if (/(?:^|[;\n])\s*export\s+(?:default\b|\*|\{|\b(?:const|let|var|function|class|async)\b)/m.test(clean)) {
@@ -94,11 +94,11 @@ export function convertHexToRgb(
 ): { r: number; g: number; b: number } | null {
   if (!hex || typeof hex !== "string") return null;
   const clean = hex.trim().replace(/^#/, "");
-  // Validate hex characters and valid lengths (3, 6, 8)
-  if (!/^[0-9a-fA-F]{3}$|^[0-9a-fA-F]{6}$|^[0-9a-fA-F]{8}$/.test(clean)) {
+  // Validate hex characters and valid lengths (3, 4, 6, 8)
+  if (!/^[0-9a-fA-F]{3,4}$|^[0-9a-fA-F]{6}$|^[0-9a-fA-F]{8}$/.test(clean)) {
     return null;
   }
-  if (clean.length === 3) {
+  if (clean.length === 3 || clean.length === 4) {
     const r = parseInt(clean[0] + clean[0], 16);
     const g = parseInt(clean[1] + clean[1], 16);
     const b = parseInt(clean[2] + clean[2], 16);
@@ -670,7 +670,9 @@ export async function verifyCode(
         }
         if (Array.isArray(val.components) && val.components.length >= 3) {
           const toHex = (n: number) => {
-            const clamped = Math.max(0, Math.min(255, Math.round(Number(n) * 255)));
+            const num = Number(n);
+            const val = Number.isNaN(num) ? 0 : num;
+            const clamped = Math.max(0, Math.min(255, Math.round(val * 255)));
             return clamped.toString(16).padStart(2, "0");
           };
           const r = toHex(val.components[0]);

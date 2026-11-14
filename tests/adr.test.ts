@@ -266,6 +266,10 @@ Context...
     expect(showAfterT2.content).toContain("* Superseded by [ADR-0002]");
     expect(showAfterT2.content).toContain("* Reason for transition: Distributed database scaling requirements");
 
+    // Reciprocal bidirectional link verification: ADR-0002 should link back to ADR-0001
+    const showAdr2 = await showAdr("ADR_0002", adrDir);
+    expect(showAdr2.content).toContain("* Supersedes [ADR-0001]");
+
     // Both ADRs must remain compliant with MADR validation
     const valRes = await validateAdrs(adrDir);
     expect(valRes.valid).toBe(true);

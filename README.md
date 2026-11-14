@@ -1,7 +1,7 @@
 ﻿# REA-kit-agy v2.0.2 (Hardened & Upstream Aligned)
 
 [![Release](https://img.shields.io/badge/Release-v2.0.2-blue.svg)](https://github.com/kimducanh27-cpu/REA-kit-agy/releases/tag/v2.0.2)
-[![Tests](https://img.shields.io/badge/Tests-171%2F171%20PASS%20(100%25)-brightgreen.svg)](tests/)
+[![Tests](https://img.shields.io/badge/Tests-179%2F179%20PASS%20(100%25)-brightgreen.svg)](tests/)
 [![Architecture](https://img.shields.io/badge/Architecture-Hybrid%20CLI%20%2B%20MCP%20Server-purple.svg)](src/)
 [![Health Check](https://img.shields.io/badge/Health%20Check-6%2F6%20OK-brightgreen.svg)](src/core/health-check.ts)
 [![Tokens](https://img.shields.io/badge/Design%20Tokens-W3C%20DTCG%202025.10%20(3--Tier)-yellow.svg)](02_YEU_CAU_CUA_TOI/tokens.json)
@@ -42,7 +42,7 @@
    - Chặn triệt để CDN ngoại lai bao gồm `fonts.gstatic.com` và `@import` CSS.
 7. **Quản trị Vòng Đời Kiến Trúc MADR**:
    - Hỗ trợ đầy đủ hàm `transitionAdr` chuyển đổi trạng thái quyết định (`proposed -> accepted`, `accepted -> superseded`).
-8. **Bộ Kiểm Thử Tự Động Vitest 171/171 PASS (100%)**:
+8. **Bộ Kiểm Thử Tự Động Vitest 179/179 PASS (100%)**:
    - Toàn bộ 9 test suites chạy cô lập 100% trong `os.tmpdir()`, không làm biến đổi hay ô nhiễm `.agents/state/` của repo.
 
 ---
@@ -150,7 +150,7 @@ REA-kit-agy/
 │       ├── context.ts                 # L0-L5 Context engineering & Token estimator
 │       ├── interview.ts               # Adaptive Interview Engine (Regex Isolation & One-Way Door)
 │       └── adr.ts                     # MADR Architectural Decision Records (Status Transitions)
-├── tests/                             # Bộ kiểm thử Vitest tự động (171 tests PASS 100%)
+├── tests/                             # Bộ kiểm thử Vitest tự động (179 tests PASS 100%)
 │   ├── phase1.test.ts                 # Tokens, verify, health, state-lock
 │   ├── phase2.test.ts                 # Rollback, gate DAG, context
 │   ├── interview.test.ts              # 52 bài test phỏng vấn thích ứng 3 tầng
@@ -190,7 +190,7 @@ npm install
 # 2. Biên dịch TypeScript sang JavaScript
 npm run build
 
-# 3. Chạy toàn bộ 171 bài kiểm thử tự động
+# 3. Chạy toàn bộ 179 bài kiểm thử tự động
 npm test
 ```
 

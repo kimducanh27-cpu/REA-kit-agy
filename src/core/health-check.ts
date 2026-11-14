@@ -4,7 +4,7 @@ import crypto from "node:crypto";
 import { exec } from "node:child_process";
 import { promisify } from "node:util";
 import { findRepoRoot } from "./workspace.js";
-import { getNormalizedFileHash } from "./gate.js";
+import { getNormalizedFileHash, getTargetAppInfo } from "./gate.js";
 
 const execAsync = promisify(exec);
 
@@ -419,24 +419,14 @@ export async function runHealthCheck(
 
   if (await fileExists(inputDir)) {
     try {
-      const ignored = [
-        "readme.md",
-        ".gitkeep",
-        ".gitignore",
-        ".ds_store",
-        "thumbs.db",
-      ];
-      const items = await fs.readdir(inputDir);
-      const appFiles = items.filter((f) => !ignored.includes(f.toLowerCase()));
-      if (appFiles.length > 0) {
-        const targetFile = appFiles[0];
-        const filePath = path.join(inputDir, targetFile);
-        const sha256 = (await getNormalizedFileHash(filePath)).toUpperCase();
+      const targetApp = await getTargetAppInfo(repoRoot);
+      if (targetApp) {
         const matched =
-          activeCase?.workflow?.target_fingerprint?.toUpperCase() === sha256;
+          activeCase?.workflow?.target_fingerprint?.toUpperCase() ===
+          targetApp.sha256.toUpperCase();
         appInput = {
-          name: targetFile,
-          sha256,
+          name: targetApp.name,
+          sha256: targetApp.sha256,
           matchedFingerprint: matched,
         };
       }

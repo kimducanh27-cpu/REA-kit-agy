@@ -531,6 +531,16 @@ describe("Work Stream 2: Security Boundaries, WCAG Leaf Collision, Gate & Rollba
       expect(fsSync.existsSync(path.join(destFolder, "old.txt"))).toBe(false);
       expect(fsSync.existsSync(srcFolder)).toBe(false);
     });
+
+    it("should handle safeMove when src and dest are identical without deleting target", async () => {
+      const filePath = path.join(tmpDir, "same-file.txt");
+      await fs.writeFile(filePath, "identical path content", "utf8");
+
+      await safeMove(filePath, filePath);
+
+      expect(fsSync.existsSync(filePath)).toBe(true);
+      expect(await fs.readFile(filePath, "utf8")).toBe("identical path content");
+    });
   });
 
   describe("Task 4: State Lock Compare-and-Delete & PID Liveness", () => {
@@ -640,6 +650,34 @@ describe("Work Stream 2: Security Boundaries, WCAG Leaf Collision, Gate & Rollba
       expect(buffer[0] !== 0xef || buffer[1] !== 0xbb || buffer[2] !== 0xbf).toBe(true);
       expect(buffer.toString("utf8")).toBe("Hello Windows World!");
     });
+
+    it("should not confuse a numeric-prefix token with a dead PID when lockfile has 2 lines", async () => {
+      const targetFile = path.join(tmpDir, "token-numeric-prefix.json");
+      const lockFile = `${targetFile}.lock`;
+
+      // Plant a 2-line lockfile where line 0 is a token starting with digits (e.g. 1234abcd-...)
+      // and line 1 is our live PID. The lock is fresh (<10s).
+      const tokenWithNumericPrefix = "1234abcd-fake-uuid";
+      await fs.writeFile(
+        lockFile,
+        `${tokenWithNumericPrefix}\n${process.pid}\n`,
+        "utf8"
+      );
+
+      // Release lock after 350ms
+      setTimeout(async () => {
+        try {
+          await fs.unlink(lockFile);
+        } catch {}
+      }, 350);
+
+      let acquired = false;
+      await withFileLock(targetFile, async () => {
+        acquired = true;
+      });
+
+      expect(acquired).toBe(true);
+    });
   });
 
   describe("Task 5: Health Check & Workspace Init Hardening", () => {
@@ -681,6 +719,21 @@ describe("Work Stream 2: Security Boundaries, WCAG Leaf Collision, Gate & Rollba
       const parsedTime = new Date(firstLine.timestamp).getTime();
       expect(parsedTime).toBeGreaterThanOrEqual(beforeTime);
       expect(parsedTime).toBeLessThanOrEqual(afterTime);
+    });
+
+    it("should compute appInput for target directory in 01_THA_APP_VAO_DAY without EISDIR in runHealthCheck", async () => {
+      await initWorkspace({ dir: tmpDir });
+
+      const inputDir = path.join(tmpDir, "01_THA_APP_VAO_DAY");
+      const targetDir = path.join(inputDir, "sample-unpacked-app");
+      await fs.mkdir(targetDir, { recursive: true });
+      await fs.writeFile(path.join(targetDir, "index.html"), "<h1>App</h1>", "utf8");
+
+      const res = await runHealthCheck({ repoRoot: tmpDir, checkExternalTools: false });
+      expect(res.appInput).toBeDefined();
+      expect(res.appInput?.name).toBe("sample-unpacked-app");
+      expect(typeof res.appInput?.sha256).toBe("string");
+      expect(res.appInput?.sha256.length).toBe(64);
     });
   });
 });

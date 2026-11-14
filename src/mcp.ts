@@ -139,6 +139,7 @@ const adrInputSchema = {
     status: { type: "string", description: "Target status (for transition action)" },
     targetStatus: { type: "string", description: "Alias for status in transition action" },
     supersededBy: { type: "string", description: "Superseding ADR ID" },
+    supersedes: { type: "string", description: "ID of ADR that this ADR supersedes" },
     reason: { type: "string", description: "Transition reason" },
     repoRoot: { type: "string", description: "Repository root directory (optional)" },
   },

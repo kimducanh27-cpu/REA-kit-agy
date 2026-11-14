@@ -249,6 +249,10 @@ export async function createSnapshot(
  * by cleaning the destination first or falling back to copyDirClean / copyFile + removeSafeItem.
  */
 export async function safeMove(src: string, dest: string): Promise<void> {
+  if (path.resolve(src) === path.resolve(dest)) {
+    return;
+  }
+
   // Ensure parent directory of destination exists
   await fs.mkdir(path.dirname(dest), { recursive: true });
 
@@ -315,7 +319,7 @@ export function isPathTraversal(filePath: string): boolean {
 export async function rotateSnapshots(backupDir: string, maxSnapshots: number): Promise<void> {
   if (!fsSync.existsSync(backupDir)) return;
 
-  const limit = Math.max(1, maxSnapshots);
+  const limit = Math.max(1, Number(maxSnapshots) || 1);
   const entries = await fs.readdir(backupDir, { withFileTypes: true });
   const snapshotPattern = /^\d{8}_\d{6}_\d{3}$/;
 
@@ -521,8 +525,8 @@ export async function restoreSnapshot(
     for (const entry of stagedEntries) {
       const srcPath = path.join(stagingDir, entry.name);
       const destPath = path.join(buildDir, entry.name);
-      await safeMove(srcPath, destPath);
       stagedItemsMoved.push(destPath);
+      await safeMove(srcPath, destPath);
     }
 
     // Clean up temporary safety and staging directories

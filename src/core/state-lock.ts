@@ -44,15 +44,25 @@ export async function withFileLock<T>(
           const content = await fs.readFile(lockPath, "utf8");
           const lines = content.trim().split("\n");
           // Support lockToken\npid\ntimestamp or pid\ntimestamp
-          const pidStr = lines.length >= 3 ? lines[1] : lines[0];
-          const parsedPid = parseInt(pidStr?.trim(), 10);
-          if (!isNaN(parsedPid) && parsedPid > 0) {
-            lockPid = parsedPid;
-            try {
-              process.kill(parsedPid, 0);
-            } catch (kErr: any) {
-              if (kErr.code === "ESRCH") {
-                isPidAlive = false;
+          let pidStr: string | undefined;
+          if (lines.length >= 2 && /[^\d]/.test(lines[0]?.trim() || "")) {
+            // First line is lockToken; second line is pid
+            pidStr = lines[1];
+          } else if (lines.length >= 1 && /^\d+$/.test(lines[0]?.trim() || "")) {
+            // Legacy format: first line is pid
+            pidStr = lines[0];
+          }
+
+          if (pidStr && /^\d+$/.test(pidStr.trim())) {
+            const parsedPid = parseInt(pidStr.trim(), 10);
+            if (parsedPid > 0) {
+              lockPid = parsedPid;
+              try {
+                process.kill(parsedPid, 0);
+              } catch (kErr: any) {
+                if (kErr.code === "ESRCH") {
+                  isPidAlive = false;
+                }
               }
             }
           }
@@ -131,7 +141,8 @@ export async function writeUtf8NoBomAtomic(
         await fs.rename(tempPath, targetPath);
         break;
       } catch (rErr: any) {
-        const isLockError = rErr.code === "EBUSY" || rErr.code === "EPERM";
+        const isLockError =
+          rErr.code === "EBUSY" || rErr.code === "EPERM" || rErr.code === "EACCES";
         if (isLockError && attempt < MAX_RENAME_RETRIES) {
           await new Promise((resolve) => setTimeout(resolve, 30));
         } else {

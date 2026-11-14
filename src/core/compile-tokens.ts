@@ -61,7 +61,9 @@ export function extractDtcgValue(raw: unknown): string {
     // DTCG 2025.10 Color Object with components array ([r, g, b, a?])
     if (Array.isArray(obj.components) && obj.components.length >= 3) {
       const toHex = (n: number) => {
-        const clamped = Math.max(0, Math.min(255, Math.round(Number(n) * 255)));
+        const num = Number(n);
+        const val = Number.isNaN(num) ? 0 : num;
+        const clamped = Math.max(0, Math.min(255, Math.round(val * 255)));
         return clamped.toString(16).padStart(2, "0");
       };
       const r = toHex(obj.components[0]);
@@ -156,7 +158,11 @@ export function resolveTokenRef(
 export const resolveAlias = resolveTokenRef;
 
 export function toComposeColorHex(hex: string): string {
+  if (!hex || typeof hex !== "string") return "0xFF000000";
   const clean = hex.trim().replace(/^#/, "");
+  if (!/^[0-9a-fA-F]+$/.test(clean)) {
+    return "0xFF000000";
+  }
   if (clean.length === 6) {
     return `0xFF${clean.toUpperCase()}`;
   } else if (clean.length === 8) {
@@ -176,7 +182,11 @@ export function toComposeColorHex(hex: string): string {
 }
 
 export function toXmlColorHex(hex: string): string {
+  if (!hex || typeof hex !== "string") return "#000000";
   const clean = hex.trim().replace(/^#/, "");
+  if (!/^[0-9a-fA-F]+$/.test(clean)) {
+    return "#000000";
+  }
   if (clean.length === 6) {
     return `#${clean.toUpperCase()}`;
   } else if (clean.length === 8) {
@@ -196,14 +206,22 @@ export function toXmlColorHex(hex: string): string {
 }
 
 export function toAndroidDp(dim: string): string {
+  if (!dim || typeof dim !== "string") return "0dp";
   const clean = dim.trim().toLowerCase();
+  if (!clean) return "0dp";
   const remMatch = clean.match(/^([\d.]+)\s*rem$/);
   if (remMatch) {
     const val = parseFloat(remMatch[1]);
     const dpVal = Math.round(val * 16 * 100) / 100;
     return `${dpVal}dp`;
   }
-  let converted = clean.replace(/px$/, "dp");
+  const match = clean.match(/^([\d.]+)\s*(?:px|dp)?$/);
+  if (match) {
+    const val = parseFloat(match[1]);
+    const dpVal = Math.round(val * 100) / 100;
+    return `${dpVal}dp`;
+  }
+  let converted = clean.replace(/\s*px$/, "dp");
   if (!converted.endsWith("dp")) {
     converted += "dp";
   }
@@ -211,12 +229,19 @@ export function toAndroidDp(dim: string): string {
 }
 
 export function toAndroidSp(fontSize: string, fallback = "16"): string {
-  if (!fontSize) return fallback;
+  if (!fontSize || typeof fontSize !== "string") return fallback;
   const clean = fontSize.trim().toLowerCase();
+  if (!clean) return fallback;
   const remMatch = clean.match(/^([\d.]+)\s*rem$/);
   if (remMatch) {
     const val = parseFloat(remMatch[1]);
     const spVal = Math.round(val * 16 * 100) / 100;
+    return String(spVal);
+  }
+  const match = clean.match(/^([\d.]+)\s*(?:px|sp)?$/);
+  if (match) {
+    const val = parseFloat(match[1]);
+    const spVal = Math.round(val * 100) / 100;
     return String(spVal);
   }
   const parsed = fontSize.replace(/[^0-9.]/g, "");

@@ -378,6 +378,29 @@ describe("Work Stream 1: W3C DTCG 2025.10 & Package/MCP/Health Compliance", () =
       const hex3 = "#123";
       expect(toComposeColorHex(hex3)).toBe("0xFF112233");
       expect(toXmlColorHex(hex3)).toBe("#112233");
+
+      // 4-char hex shorthand (#RGBA) expansion to #AARRGGBB
+      const hex4 = "#1238";
+      expect(toComposeColorHex(hex4)).toBe("0x88112233");
+      expect(toXmlColorHex(hex4)).toBe("#88112233");
+    });
+
+    it("should safely handle invalid, malformed, or non-hex inputs", () => {
+      expect(toComposeColorHex("")).toBe("0xFF000000");
+      expect(toComposeColorHex("not-a-color")).toBe("0xFF000000");
+      expect(toComposeColorHex("#XYZ")).toBe("0xFF000000");
+      expect(toComposeColorHex("#12")).toBe("0xFF000000");
+      expect(toComposeColorHex("#12345")).toBe("0xFF000000");
+      expect(toComposeColorHex(undefined as any)).toBe("0xFF000000");
+      expect(toComposeColorHex(null as any)).toBe("0xFF000000");
+
+      expect(toXmlColorHex("")).toBe("#000000");
+      expect(toXmlColorHex("not-a-color")).toBe("#000000");
+      expect(toXmlColorHex("#XYZ")).toBe("#000000");
+      expect(toXmlColorHex("#12")).toBe("#000000");
+      expect(toXmlColorHex("#12345")).toBe("#000000");
+      expect(toXmlColorHex(undefined as any)).toBe("#000000");
+      expect(toXmlColorHex(null as any)).toBe("#000000");
     });
   });
 
@@ -411,6 +434,14 @@ describe("Work Stream 1: W3C DTCG 2025.10 & Package/MCP/Health Compliance", () =
       };
       // 0.5*255=128 (0x80)
       expect(extractDtcgValue(colorWithAlphaProp)).toBe("#ff000080");
+
+      // Boundary clamping (< 0 clamped to 0, > 1 clamped to 255) and NaN safety
+      expect(
+        extractDtcgValue({
+          colorSpace: "srgb",
+          components: [-0.5, 1.5, NaN, 2.0],
+        })
+      ).toBe("#00ff00ff");
     });
 
     it("should resolve token references that point to DTCG components object", () => {
@@ -444,8 +475,13 @@ describe("Work Stream 1: W3C DTCG 2025.10 & Package/MCP/Health Compliance", () =
       expect(toAndroidDp("2rem")).toBe("32dp");
       expect(toAndroidDp("0.5rem")).toBe("8dp");
       expect(toAndroidDp("16px")).toBe("16dp");
+      expect(toAndroidDp("16 px")).toBe("16dp");
       expect(toAndroidDp("24dp")).toBe("24dp");
+      expect(toAndroidDp("24 dp")).toBe("24dp");
       expect(toAndroidDp("12")).toBe("12dp");
+      expect(toAndroidDp("12.3456px")).toBe("12.35dp");
+      expect(toAndroidDp("")).toBe("0dp");
+      expect(toAndroidDp(undefined as any)).toBe("0dp");
     });
 
     it("should convert rem to sp (1rem = 16sp) in toAndroidSp", () => {
@@ -453,7 +489,12 @@ describe("Work Stream 1: W3C DTCG 2025.10 & Package/MCP/Health Compliance", () =
       expect(toAndroidSp("1rem")).toBe("16");
       expect(toAndroidSp("0.875rem")).toBe("14");
       expect(toAndroidSp("16px")).toBe("16");
+      expect(toAndroidSp("16 px")).toBe("16dp" ? "16" : "16");
+      expect(toAndroidSp("18sp")).toBe("18");
       expect(toAndroidSp("20")).toBe("20");
+      expect(toAndroidSp("14.567px")).toBe("14.57");
+      expect(toAndroidSp("", "14")).toBe("14");
+      expect(toAndroidSp(undefined as any, "14")).toBe("14");
     });
 
     it("should compile tokens with rem dimensions and typography properly into Android outputs", async () => {
@@ -578,9 +619,45 @@ describe("Work Stream 1: W3C DTCG 2025.10 & Package/MCP/Health Compliance", () =
 
       expect(resolveTokenRef("{global.color.a}", rootTokens)).toBe("#4f46e5");
     });
+
+    it("should not false-alarm on diamond dependencies (A -> B, A -> C, B -> D, C -> D)", () => {
+      const rootTokens = {
+        global: {
+          color: {
+            d: { $value: "#10b981" },
+            b: { $value: "{global.color.d}" },
+            c: { $value: "{global.color.d}" },
+            a1: { $value: "{global.color.b}" },
+            a2: { $value: "{global.color.c}" },
+          },
+        },
+      };
+
+      expect(resolveTokenRef("{global.color.a1}", rootTokens)).toBe("#10b981");
+      expect(resolveTokenRef("{global.color.a2}", rootTokens)).toBe("#10b981");
+      expect(resolveAlias("{global.color.b}", rootTokens)).toBe("#10b981");
+      expect(resolveAlias("{global.color.c}", rootTokens)).toBe("#10b981");
+    });
   });
 
   describe("Code Verifier: ESM Syntax Detection", () => {
+    it("should detect static imports, exports, and top-level await in hasEsmSyntax", () => {
+      expect(hasEsmSyntax("import foo from './bar.js';")).toBe(true);
+      expect(hasEsmSyntax("import { a, b } from './mod.js';")).toBe(true);
+      expect(hasEsmSyntax("import * as all from './all.js';")).toBe(true);
+      expect(hasEsmSyntax("import './side-effect.css';")).toBe(true);
+      expect(hasEsmSyntax("export default function() {}")).toBe(true);
+      expect(hasEsmSyntax("export const foo = 42;")).toBe(true);
+      expect(hasEsmSyntax("export { bar } from './bar.js';")).toBe(true);
+    });
+
+    it("should not falsely match ESM keywords inside strings or comments", () => {
+      expect(hasEsmSyntax("const str = 'import foo from \"./bar.js\"';")).toBe(false);
+      expect(hasEsmSyntax("// import foo from './bar.js';")).toBe(false);
+      expect(hasEsmSyntax("/* export default function() {} */")).toBe(false);
+      expect(hasEsmSyntax("// const x = await fetch();")).toBe(false);
+      expect(hasEsmSyntax("console.log('export default 123');")).toBe(false);
+    });
     it("should detect top-level await in hasEsmSyntax", () => {
       expect(hasEsmSyntax("const res = await fetch('/api/data');")).toBe(true);
       expect(hasEsmSyntax("let config = await loadConfig();")).toBe(true);
@@ -697,6 +774,7 @@ describe("Work Stream 1: W3C DTCG 2025.10 & Package/MCP/Health Compliance", () =
       expect(convertHexToRgb("#XYZ123")).toBeNull();
       expect(convertHexToRgb("#12")).toBeNull();
       expect(convertHexToRgb("")).toBeNull();
+      expect(convertHexToRgb("#1238")).toEqual({ r: 17, g: 34, b: 51 });
 
       expect(getWcagContrastRatio("invalid", "#ffffff")).toBe(0.0);
       expect(getWcagContrastRatio("#000000", "not-a-color")).toBe(0.0);

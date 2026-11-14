@@ -310,8 +310,11 @@ export async function saveCaseStateAtomic(
     }
 
     state.last_updated = new Date().toISOString();
-    const currentRev = typeof state.revision === "number" ? state.revision : 1;
-    state.revision = Math.max(Number(diskState?.revision || 0), currentRev) + 1;
+    const diskRevNum = Number(diskState?.revision);
+    const diskRev = Number.isFinite(diskRevNum) && diskRevNum >= 0 ? diskRevNum : 0;
+    const currentRevNum = typeof state.revision === "number" ? state.revision : Number(state.revision);
+    const currentRev = Number.isFinite(currentRevNum) && currentRevNum >= 0 ? currentRevNum : 1;
+    state.revision = Math.max(diskRev, currentRev) + 1;
 
     const json = JSON.stringify(state, null, 2);
 
@@ -666,6 +669,9 @@ export function invalidateSubsequentGates(
 
   const now = new Date().toISOString();
   const invalidatedGates: string[] = [];
+  if (!state.gates) {
+    state.gates = {} as any;
+  }
 
   for (const rg of rule.revoke_gates) {
     const currentGateObj = state.gates[rg];
@@ -826,9 +832,10 @@ export async function runGateAction(
             );
           } else {
             for (const ev of gateObj.evidence) {
-              const evPath = path.isAbsolute(ev)
-                ? ev
-                : path.join(repoRoot, ev);
+              const normEv = typeof ev === "string" ? ev.replace(/\\/g, "/") : ev;
+              const evPath = path.isAbsolute(normEv)
+                ? normEv
+                : path.join(repoRoot, normEv);
               if (!fsSync.existsSync(evPath)) {
                 errors.push(
                   `Gate ${g} is ${gState} but evidence file does not exist: ${ev}`
@@ -841,10 +848,11 @@ export async function runGateAction(
             errors.push(`Gate ${g} is ${gState} but missing evidence_sha256!`);
           } else {
             const primaryEv = gateObj.evidence?.[0];
-            if (primaryEv) {
-              const primaryEvPath = path.isAbsolute(primaryEv)
-                ? primaryEv
-                : path.join(repoRoot, primaryEv);
+            if (primaryEv && typeof primaryEv === "string") {
+              const normPrimaryEv = primaryEv.replace(/\\/g, "/");
+              const primaryEvPath = path.isAbsolute(normPrimaryEv)
+                ? normPrimaryEv
+                : path.join(repoRoot, normPrimaryEv);
               if (fsSync.existsSync(primaryEvPath)) {
                 const actualHash = await getNormalizedFileHash(primaryEvPath);
                 if (actualHash !== gateObj.evidence_sha256) {
@@ -882,13 +890,14 @@ export async function runGateAction(
               const customRel =
                 gateObj.evidence.find(
                   (ev: string) =>
-                    ev.toLowerCase().includes("flow") ||
-                    ev.toLowerCase().includes("spec")
+                    typeof ev === "string" &&
+                    (ev.toLowerCase().includes("flow") ||
+                     ev.toLowerCase().includes("spec"))
                 ) ||
                 (fsSync.existsSync(path.join(repoRoot, "03_KET_QUA_KIEM_TRA", "APP_FLOW_SPEC.md"))
                   ? "03_KET_QUA_KIEM_TRA/APP_FLOW_SPEC.md"
-                  : gateObj.evidence[0]);
-              if (customRel) {
+                  : (typeof gateObj.evidence[0] === "string" ? gateObj.evidence[0] : null));
+              if (customRel && typeof customRel === "string") {
                 appFlowRel = customRel.replace(/\\/g, "/");
               }
             } else if (typeof gateObj.flow_spec === "string" && gateObj.flow_spec) {

@@ -136,7 +136,7 @@ export async function showAdr(
   if (!id) {
     throw new Error("[!] Vui lòng cung cấp ID của ADR. Ví dụ: rea-kit adr show 0001");
   }
-  const cleanId = id.trim().replace(/^ADR-/i, "");
+  const cleanId = id.trim().replace(/^ADR[-_]?/i, "");
   const adrDir = targetAdrDir || findAdrDir();
   const paddedId = /^\d+$/.test(cleanId) ? String(parseInt(cleanId, 10)).padStart(4, "0") : cleanId;
 
@@ -352,7 +352,7 @@ export async function newAdr(
   let newNum = maxNum + 1;
   let titleText = "New Architectural Decision";
 
-  const cleanTitleOrId = titleOrId ? titleOrId.trim().replace(/^ADR-/i, "") : undefined;
+  const cleanTitleOrId = titleOrId ? titleOrId.trim().replace(/^ADR[-_]?/i, "") : undefined;
 
   if (titleParam) {
     titleText = titleParam;
@@ -456,6 +456,7 @@ Chosen option: "[Lựa chọn được chọn]", because [lý do lựa chọn].
 
 export interface TransitionAdrOptions {
   supersededBy?: string;
+  supersedes?: string;
   reason?: string;
   repoRoot?: string;
   targetAdrDir?: string;
@@ -485,7 +486,7 @@ export async function transitionAdr(
     );
   }
 
-  const cleanId = id.trim().replace(/^ADR-/i, "");
+  const cleanId = id.trim().replace(/^ADR[-_]?/i, "");
   const adrDir =
     options.targetAdrDir ||
     (options.repoRoot ? path.join(path.resolve(options.repoRoot), "docs", "adrs") : findAdrDir());
@@ -516,13 +517,68 @@ export async function transitionAdr(
   }
 
   if (options.supersededBy) {
-    const cleanSup = options.supersededBy.trim().replace(/^ADR-/i, "");
+    const cleanSup = options.supersededBy.trim().replace(/^ADR[-_]?/i, "");
     const paddedSup = /^\d+$/.test(cleanSup) ? cleanSup.padStart(4, "0") : cleanSup;
     const linkNote = `* Superseded by [ADR-${paddedSup}](.)`;
     if (/## Links/i.test(content)) {
       content = content.replace(/(## Links\s*)/i, `$1\n${linkNote}\n`);
     } else {
       content += `\n\n## Links\n\n${linkNote}\n`;
+    }
+
+    // Bidirectional link: Update superseding ADR with "* Supersedes [ADR-xxxx](.)"
+    const supPattern = new RegExp(`^(${paddedSup}|${cleanSup})(-.*)?\\.md$`, "i");
+    const supTargetFile = mdFiles.find((f) => supPattern.test(f));
+    if (supTargetFile) {
+      const supFullPath = path.join(adrDir, supTargetFile);
+      try {
+        const supRaw = await fs.readFile(supFullPath, "utf8");
+        let supContent = supRaw.charCodeAt(0) === 0xfeff ? supRaw.slice(1) : supRaw;
+        const reciprocalLink = `* Supersedes [ADR-${paddedId}](.)`;
+        if (!supContent.includes(`* Supersedes [ADR-${paddedId}]`)) {
+          if (/## Links/i.test(supContent)) {
+            supContent = supContent.replace(/(## Links\s*)/i, `$1\n${reciprocalLink}\n`);
+          } else {
+            supContent += `\n\n## Links\n\n${reciprocalLink}\n`;
+          }
+          await writeUtf8NoBomAtomic(supFullPath, supContent);
+        }
+      } catch {
+        // Safe ignore reciprocal link error if target file cannot be updated
+      }
+    }
+  }
+
+  if (options.supersedes) {
+    const cleanSup = options.supersedes.trim().replace(/^ADR[-_]?/i, "");
+    const paddedSup = /^\d+$/.test(cleanSup) ? cleanSup.padStart(4, "0") : cleanSup;
+    const linkNote = `* Supersedes [ADR-${paddedSup}](.)`;
+    if (/## Links/i.test(content)) {
+      content = content.replace(/(## Links\s*)/i, `$1\n${linkNote}\n`);
+    } else {
+      content += `\n\n## Links\n\n${linkNote}\n`;
+    }
+
+    // Bidirectional link: Update superseded ADR with "* Superseded by [ADR-xxxx](.)"
+    const supPattern = new RegExp(`^(${paddedSup}|${cleanSup})(-.*)?\\.md$`, "i");
+    const supTargetFile = mdFiles.find((f) => supPattern.test(f));
+    if (supTargetFile) {
+      const supFullPath = path.join(adrDir, supTargetFile);
+      try {
+        const supRaw = await fs.readFile(supFullPath, "utf8");
+        let supContent = supRaw.charCodeAt(0) === 0xfeff ? supRaw.slice(1) : supRaw;
+        const reciprocalLink = `* Superseded by [ADR-${paddedId}](.)`;
+        if (!supContent.includes(`* Superseded by [ADR-${paddedId}]`)) {
+          if (/## Links/i.test(supContent)) {
+            supContent = supContent.replace(/(## Links\s*)/i, `$1\n${reciprocalLink}\n`);
+          } else {
+            supContent += `\n\n## Links\n\n${reciprocalLink}\n`;
+          }
+          await writeUtf8NoBomAtomic(supFullPath, supContent);
+        }
+      } catch {
+        // Safe ignore reciprocal link error
+      }
     }
   }
 
@@ -569,6 +625,7 @@ export async function runAdrAction(
     status?: string;
     targetStatus?: string;
     supersededBy?: string;
+    supersedes?: string;
     reason?: string;
     repoRoot?: string;
   } = {}
@@ -591,6 +648,7 @@ export async function runAdrAction(
         args.status || args.targetStatus || args.title || "",
         {
           supersededBy: args.supersededBy,
+          supersedes: args.supersedes,
           reason: args.reason,
           targetAdrDir: targetDir,
         }
