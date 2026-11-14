@@ -1,0 +1,46 @@
+{
+  "profile_id": "design",
+  "name": "Design Governance & Product Definition Profile",
+  "description": "Optimized for Stage 03 Product Definition: design token derivation, anti-slop compliance, Vietnamese copy deck enforcement, and adaptive user interview",
+  "target_stages": [
+    "STAGE_03_PRODUCT_DEFINITION"
+  ],
+  "context_budget_target": 105000,
+  "layer_weights": {
+    "L0": 4,
+    "L1": 3,
+    "L2": 10,
+    "L3": 25,
+    "L4": 40,
+    "L5": 18
+  },
+  "included_documents": [
+    { "id": "DOC-AGENTS", "mode": "FULL" },
+    { "id": "RULE-CORE-SAFETY", "mode": "FULL" },
+    { "id": "RULE-REA-WORKFLOW", "mode": "FULL" },
+    { "id": "STATE-ACTIVE-CASE", "mode": "FULL" },
+    { "id": "RULE-DESIGN-GOVERNANCE", "mode": "FULL" },
+    { "id": "DOC-ADAPTIVE-INTERVIEW", "mode": "FULL" },
+    { "id": "DOC-WORKFLOW-LIFECYCLE", "mode": "SECTION_RETRIEVAL", "sections": ["STAGE_03_PRODUCT_DEFINITION", "Bước 06 REA Interview", "Bước 07 Spec & Design Gate", "Gate 03"] },
+    { "id": "STATE-MEMORY", "mode": "SUMMARY" },
+    { "id": "USER-GOALS", "mode": "FULL" },
+    { "id": "USER-DESIGN-TOKENS", "mode": "FULL" }
+  ],
+  "included_rules": [
+    ".agents/rules/core-safety.md",
+    ".agents/rules/rea-workflow.md",
+    ".agents/rules/design-governance.md"
+  ],
+  "forbidden_contexts": [
+    "01_THA_APP_VAO_DAY/",
+    "04_SAO_LUU_AN_TOAN/",
+    ".agents/rules/implementation.md",
+    ".agents/rules/release.md"
+  ],
+  "compaction_threshold_pct": 75,
+  "untrusted_data_tags": [
+    "untrusted_binary_evidence",
+    "extracted_layout_xml",
+    "raw_asset_manifest"
+  ]
+}

@@ -4,7 +4,7 @@
 - Repository: https://github.com/kimducanh27-cpu/REA-kit-agy
 - Branch: main
 - Repo Roadmap Status: **P01 IN_PROGRESS (P00 DONE, P01 ACTIVE)**
-- Case Workflow State: **STAGE_00_BOOTSTRAP completed, ready for STAGE_01_DISCOVERY**
+- Case Workflow State: **STAGE_00_BOOTSTRAP (READY, waiting for target input)**
 - Status: READY & ALIGNED (ADRs 0001–0006 Approved, Health Check 6/6 PASSED, REA Doctor Aligned)
 
 ## 1. Product in one paragraph

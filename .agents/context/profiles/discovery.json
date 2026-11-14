@@ -1,0 +1,47 @@
+{
+  "profile_id": "discovery",
+  "name": "Target Discovery & Intake Profile",
+  "description": "Optimized for Stage 01 App Intake, APK manifest inspection, baseline static analysis, and initial feature mapping",
+  "target_stages": [
+    "STAGE_01_DISCOVERY",
+    "STAGE_02_REVERSE_ENGINEERING"
+  ],
+  "context_budget_target": 95000,
+  "layer_weights": {
+    "L0": 4,
+    "L1": 3,
+    "L2": 8,
+    "L3": 15,
+    "L4": 30,
+    "L5": 40
+  },
+  "included_documents": [
+    { "id": "DOC-AGENTS", "mode": "FULL" },
+    { "id": "RULE-CORE-SAFETY", "mode": "FULL" },
+    { "id": "RULE-REA-WORKFLOW", "mode": "FULL" },
+    { "id": "STATE-ACTIVE-CASE", "mode": "FULL" },
+    { "id": "RULE-ANDROID-TARGET", "mode": "FULL" },
+    { "id": "DOC-WORKFLOW-LIFECYCLE", "mode": "SECTION_RETRIEVAL", "sections": ["STAGE_01_DISCOVERY", "STAGE_02_REVERSE_ENGINEERING", "Gate 01", "Gate 02"] },
+    { "id": "DOC-ARCHITECTURE", "mode": "SECTION_RETRIEVAL", "sections": ["2. Logical layers", "Intake", "REA adapter"] },
+    { "id": "STATE-MEMORY", "mode": "SUMMARY" },
+    { "id": "USER-GOALS", "mode": "FULL" }
+  ],
+  "included_rules": [
+    ".agents/rules/core-safety.md",
+    ".agents/rules/rea-workflow.md",
+    ".agents/rules/android-target.md"
+  ],
+  "forbidden_contexts": [
+    "01_THA_APP_VAO_DAY/",
+    "04_SAO_LUU_AN_TOAN/",
+    ".agents/rules/design-governance.md",
+    ".agents/rules/implementation.md",
+    ".agents/rules/release.md"
+  ],
+  "compaction_threshold_pct": 75,
+  "untrusted_data_tags": [
+    "untrusted_binary_evidence",
+    "apk_manifest_raw",
+    "jadx_decompiled_snippet"
+  ]
+}

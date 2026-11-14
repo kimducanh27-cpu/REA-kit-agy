@@ -1,0 +1,48 @@
+{
+  "profile_id": "security",
+  "name": "Security Audit & Hardening Profile",
+  "description": "Optimized for static security audit, hardcoded secret scanning, Android exported component analysis, insecure network detection, and vulnerability remediation",
+  "target_stages": [
+    "STAGE_02_REVERSE_ENGINEERING",
+    "STAGE_04_IMPLEMENTATION"
+  ],
+  "context_budget_target": 115000,
+  "layer_weights": {
+    "L0": 5,
+    "L1": 3,
+    "L2": 10,
+    "L3": 22,
+    "L4": 30,
+    "L5": 30
+  },
+  "included_documents": [
+    { "id": "DOC-AGENTS", "mode": "FULL" },
+    { "id": "RULE-CORE-SAFETY", "mode": "FULL" },
+    { "id": "RULE-REA-WORKFLOW", "mode": "FULL" },
+    { "id": "STATE-ACTIVE-CASE", "mode": "FULL" },
+    { "id": "RULE-ANDROID-TARGET", "mode": "FULL" },
+    { "id": "DOC-SECURITY-REVIEW", "mode": "FULL" },
+    { "id": "DOC-SOURCE-AUDIT", "mode": "SECTION_RETRIEVAL", "sections": ["Security checks", "Permission auditing"] },
+    { "id": "DOC-WORKFLOW-LIFECYCLE", "mode": "SECTION_RETRIEVAL", "sections": ["Bước 05 REA Audit", "Gate 02"] },
+    { "id": "STATE-MEMORY", "mode": "SUMMARY" },
+    { "id": "STATE-LEARNED-RULES", "mode": "FULL" },
+    { "id": "USER-GOALS", "mode": "FULL" }
+  ],
+  "included_rules": [
+    ".agents/rules/core-safety.md",
+    ".agents/rules/rea-workflow.md",
+    ".agents/rules/android-target.md"
+  ],
+  "forbidden_contexts": [
+    "01_THA_APP_VAO_DAY/",
+    "04_SAO_LUU_AN_TOAN/",
+    ".agents/rules/design-governance.md"
+  ],
+  "compaction_threshold_pct": 70,
+  "untrusted_data_tags": [
+    "untrusted_binary_evidence",
+    "security_finding_raw",
+    "decompiled_crypto_snippet",
+    "manifest_permissions_raw"
+  ]
+}

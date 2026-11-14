@@ -1,0 +1,317 @@
+{
+  "schema_version": 1,
+  "manifest_id": "MANIFEST-REA-001",
+  "generated_at": "2026-11-14T09:55:00Z",
+  "description": "Authoritative catalog and context loading policies for REA-kit-agy workspace documents",
+  "default_budget": {
+    "model_capacity": 200000,
+    "reserved_output": 8192,
+    "reserved_tools": 6000,
+    "reserved_safety": 35808,
+    "usable_budget": 150000
+  },
+  "layer_allocations_pct": {
+    "L0": 4,
+    "L1": 3,
+    "L2": 8,
+    "L3": 15,
+    "L4": 40,
+    "L5": 30
+  },
+  "documents": [
+    {
+      "id": "DOC-AGENTS",
+      "path": "AGENTS.md",
+      "layer": "L0",
+      "load_policy": "ALWAYS",
+      "load_mode": "FULL",
+      "estimated_tokens": 3200,
+      "description": "Governing Vietnamese rules, 6-stage lifecycle, 6 quality gates",
+      "tags": ["governance", "invariants", "rules"]
+    },
+    {
+      "id": "RULE-CORE-SAFETY",
+      "path": ".agents/rules/core-safety.md",
+      "layer": "L0",
+      "load_policy": "ALWAYS",
+      "load_mode": "FULL",
+      "estimated_tokens": 1200,
+      "description": "Core safety boundaries: read-only analysis, immutable backups, zero data loss",
+      "tags": ["safety", "security", "boundaries"]
+    },
+    {
+      "id": "RULE-REA-WORKFLOW",
+      "path": ".agents/rules/rea-workflow.md",
+      "layer": "L0",
+      "load_policy": "ALWAYS",
+      "load_mode": "FULL",
+      "estimated_tokens": 1800,
+      "description": "Master workflow trigger and execution guardrails",
+      "tags": ["workflow", "engine"]
+    },
+    {
+      "id": "STATE-ACTIVE-CASE",
+      "path": ".agents/state/active_case.json",
+      "layer": "L1",
+      "load_policy": "ALWAYS",
+      "load_mode": "FULL",
+      "estimated_tokens": 1600,
+      "description": "Canonical state machine: stage, step, gate, paths, revision counter",
+      "tags": ["state", "canonical", "gates"]
+    },
+    {
+      "id": "STATE-EVENTS-LOG",
+      "path": ".agents/state/events.jsonl",
+      "layer": "L1",
+      "load_policy": "ON_DEMAND",
+      "load_mode": "REFERENCE_ONLY",
+      "estimated_tokens": 5000,
+      "description": "Append-only ground truth audit log of state transitions and tool executions",
+      "tags": ["audit", "ledger", "events"]
+    },
+    {
+      "id": "RULE-ANDROID-TARGET",
+      "path": ".agents/rules/android-target.md",
+      "layer": "L2",
+      "load_policy": "CONDITIONAL",
+      "load_mode": "FULL",
+      "estimated_tokens": 1400,
+      "condition": {
+        "target_class": ["ANDROID_APK"],
+        "stages": ["STAGE_01_DISCOVERY", "STAGE_02_REVERSE_ENGINEERING", "STAGE_04_IMPLEMENTATION", "STAGE_05_VALIDATION"]
+      },
+      "description": "Android APK analysis rules: JADX isolation, Apktool, ADB permissions",
+      "tags": ["android", "apk", "jadx"]
+    },
+    {
+      "id": "RULE-DESIGN-GOVERNANCE",
+      "path": ".agents/rules/design-governance.md",
+      "layer": "L2",
+      "load_policy": "CONDITIONAL",
+      "load_mode": "FULL",
+      "estimated_tokens": 1200,
+      "condition": {
+        "stages": ["STAGE_03_PRODUCT_DEFINITION"]
+      },
+      "description": "Stage 03 anti-slop rules, no code synthesis during stage 03, copy deck enforcement",
+      "tags": ["design", "anti-slop", "tokens"]
+    },
+    {
+      "id": "RULE-IMPLEMENTATION",
+      "path": ".agents/rules/implementation.md",
+      "layer": "L2",
+      "load_policy": "CONDITIONAL",
+      "load_mode": "FULL",
+      "estimated_tokens": 1500,
+      "condition": {
+        "stages": ["STAGE_04_IMPLEMENTATION"]
+      },
+      "description": "Stage 04 build QA, zero-install vs native rules, verify_code.ps1 enforcement",
+      "tags": ["build", "implementation", "qa"]
+    },
+    {
+      "id": "RULE-RELEASE",
+      "path": ".agents/rules/release.md",
+      "layer": "L2",
+      "load_policy": "CONDITIONAL",
+      "load_mode": "FULL",
+      "estimated_tokens": 1300,
+      "condition": {
+        "stages": ["STAGE_05_VALIDATION"]
+      },
+      "description": "Stage 05 validation & handoff rules, HOAN_TAC.bat requirement, test env contract",
+      "tags": ["release", "handoff", "smoke-test"]
+    },
+    {
+      "id": "DOC-WORKFLOW-LIFECYCLE",
+      "path": "docs/WORKFLOW_LIFECYCLE.md",
+      "layer": "L3",
+      "load_policy": "CONDITIONAL",
+      "load_mode": "SECTION_RETRIEVAL",
+      "estimated_tokens": 5800,
+      "condition": {
+        "stages": ["STAGE_00_BOOTSTRAP", "STAGE_01_DISCOVERY", "STAGE_02_REVERSE_ENGINEERING", "STAGE_03_PRODUCT_DEFINITION", "STAGE_04_IMPLEMENTATION", "STAGE_05_VALIDATION"]
+      },
+      "description": "14-Step decoupled case lifecycle and quality gate definitions",
+      "tags": ["lifecycle", "stages", "gates"]
+    },
+    {
+      "id": "DOC-ARCHITECTURE",
+      "path": "docs/ARCHITECTURE.md",
+      "layer": "L3",
+      "load_policy": "CONDITIONAL",
+      "load_mode": "SECTION_RETRIEVAL",
+      "estimated_tokens": 3800,
+      "condition": {
+        "stages": ["STAGE_02_REVERSE_ENGINEERING", "STAGE_03_PRODUCT_DEFINITION", "STAGE_04_IMPLEMENTATION"]
+      },
+      "description": "System architecture, REA engine orchestration, Android CLI integration",
+      "tags": ["architecture", "rea", "adapter"]
+    },
+    {
+      "id": "DOC-CONTEXT-ENGINEERING",
+      "path": "docs/CONTEXT_ENGINEERING.md",
+      "layer": "L3",
+      "load_policy": "ON_DEMAND",
+      "load_mode": "REFERENCE_ONLY",
+      "estimated_tokens": 4200,
+      "description": "Context engineering specification: 6 layers, budgeting, caching, compaction",
+      "tags": ["context", "budget", "compaction"]
+    },
+    {
+      "id": "DOC-ADAPTIVE-INTERVIEW",
+      "path": "docs/ADAPTIVE_INTERVIEW_FRAMEWORK.md",
+      "layer": "L3",
+      "load_policy": "CONDITIONAL",
+      "load_mode": "SECTION_RETRIEVAL",
+      "estimated_tokens": 4500,
+      "condition": {
+        "stages": ["STAGE_03_PRODUCT_DEFINITION"]
+      },
+      "description": "Adaptive interview framework, Question Necessity Engine, Decision & Constraint Engine",
+      "tags": ["interview", "questions", "decisions"]
+    },
+    {
+      "id": "STATE-MEMORY",
+      "path": ".agents/state/MEMORY.md",
+      "layer": "L3",
+      "load_policy": "ALWAYS",
+      "load_mode": "SUMMARY",
+      "estimated_tokens": 1500,
+      "description": "Verified memory notes, working tool configurations, failure/recovery traps (<= 200 lines)",
+      "tags": ["memory", "traps", "notes"]
+    },
+    {
+      "id": "STATE-LEARNED-RULES",
+      "path": ".agents/state/learned_rules.json",
+      "layer": "L3",
+      "load_policy": "CONDITIONAL",
+      "load_mode": "FULL",
+      "estimated_tokens": 900,
+      "condition": {
+        "stages": ["STAGE_02_REVERSE_ENGINEERING", "STAGE_04_IMPLEMENTATION"]
+      },
+      "description": "Machine-readable verified rules, positive patterns and antipatterns",
+      "tags": ["rules", "patterns", "antipatterns"]
+    },
+    {
+      "id": "DOC-SECURITY-REVIEW",
+      "path": "docs/SECURITY_REVIEW_MODEL.md",
+      "layer": "L3",
+      "load_policy": "CONDITIONAL",
+      "load_mode": "SECTION_RETRIEVAL",
+      "estimated_tokens": 2200,
+      "condition": {
+        "profiles": ["security"],
+        "stages": ["STAGE_02_REVERSE_ENGINEERING"]
+      },
+      "description": "Scoped security review model, risk tiers, permission analysis",
+      "tags": ["security", "audit", "vulnerabilities"]
+    },
+    {
+      "id": "DOC-SOURCE-AUDIT",
+      "path": "docs/SOURCE_AUDIT.md",
+      "layer": "L3",
+      "load_policy": "CONDITIONAL",
+      "load_mode": "SECTION_RETRIEVAL",
+      "estimated_tokens": 3100,
+      "condition": {
+        "stages": ["STAGE_02_REVERSE_ENGINEERING"]
+      },
+      "description": "Source code and binary audit methodology",
+      "tags": ["audit", "inspection"]
+    },
+    {
+      "id": "DOC-HANDOFF",
+      "path": "docs/HANDOFF.md",
+      "layer": "L3",
+      "load_policy": "CONDITIONAL",
+      "load_mode": "SECTION_RETRIEVAL",
+      "estimated_tokens": 1800,
+      "condition": {
+        "stages": ["STAGE_00_BOOTSTRAP", "STAGE_05_VALIDATION"]
+      },
+      "description": "Repo roadmap status, case workflow state synchronization, deliverable index",
+      "tags": ["handoff", "status", "sync"]
+    },
+    {
+      "id": "USER-GOALS",
+      "path": "02_YEU_CAU_CUA_TOI/ho-so-va-muc-tieu.md",
+      "layer": "L4",
+      "load_policy": "CONDITIONAL",
+      "load_mode": "FULL",
+      "estimated_tokens": 1200,
+      "condition": {
+        "stages": ["STAGE_01_DISCOVERY", "STAGE_02_REVERSE_ENGINEERING", "STAGE_03_PRODUCT_DEFINITION", "STAGE_04_IMPLEMENTATION", "STAGE_05_VALIDATION"]
+      },
+      "description": "User business goals, project boundary, target outcome",
+      "tags": ["user", "requirements", "goals"]
+    },
+    {
+      "id": "USER-DESIGN-TOKENS",
+      "path": "02_YEU_CAU_CUA_TOI/design.md",
+      "layer": "L4",
+      "load_policy": "CONDITIONAL",
+      "load_mode": "FULL",
+      "estimated_tokens": 1100,
+      "condition": {
+        "stages": ["STAGE_03_PRODUCT_DEFINITION", "STAGE_04_IMPLEMENTATION"]
+      },
+      "description": "Design tokens: color palette, typography, spacing, surface styling",
+      "tags": ["design", "tokens", "styling"]
+    },
+    {
+      "id": "SPEC-FROZEN",
+      "path": "03_KET_QUA_KIEM_TRA/spec_frozen.json",
+      "layer": "L4",
+      "load_policy": "CONDITIONAL",
+      "load_mode": "FULL",
+      "estimated_tokens": 2500,
+      "condition": {
+        "stages": ["STAGE_04_IMPLEMENTATION", "STAGE_05_VALIDATION"]
+      },
+      "description": "Frozen product specification locked at Gate 03",
+      "tags": ["spec", "frozen", "requirements"]
+    },
+    {
+      "id": "RAW-TARGET-INPUT",
+      "path": "01_THA_APP_VAO_DAY/",
+      "layer": "L5",
+      "load_policy": "NEVER_AUTO",
+      "load_mode": "REFERENCE_ONLY",
+      "estimated_tokens": 50000,
+      "description": "Raw input binaries, APKs, assets. Never auto-loaded into prompt; inspected on-demand via tools.",
+      "tags": ["raw", "binary", "untrusted"]
+    },
+    {
+      "id": "RAW-SAFE-BACKUP",
+      "path": "04_SAO_LUU_AN_TOAN/",
+      "layer": "L5",
+      "load_policy": "NEVER_AUTO",
+      "load_mode": "REFERENCE_ONLY",
+      "estimated_tokens": 50000,
+      "description": "Immutable backups of original inputs. Read-only, never auto-loaded.",
+      "tags": ["backup", "immutable"]
+    },
+    {
+      "id": "LEGACY-PROMPT-01",
+      "path": "prompts/01-TAB-SCAN.md",
+      "layer": "L2",
+      "load_policy": "DEPRECATED",
+      "load_mode": "REFERENCE_ONLY",
+      "estimated_tokens": 0,
+      "description": "Deprecated legacy prompt. Superseded by 01-TAB-DISCOVERY.md",
+      "tags": ["deprecated"]
+    },
+    {
+      "id": "LEGACY-PROMPT-05",
+      "path": "prompts/05-TAB-REVIEW.md",
+      "layer": "L2",
+      "load_policy": "DEPRECATED",
+      "load_mode": "REFERENCE_ONLY",
+      "estimated_tokens": 0,
+      "description": "Deprecated legacy prompt. Superseded by 05-TAB-VALIDATION.md",
+      "tags": ["deprecated"]
+    }
+  ]
+}

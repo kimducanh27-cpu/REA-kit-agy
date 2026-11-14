@@ -22,6 +22,14 @@
 .agents/state/cases/*
 !.agents/state/cases/.gitkeep
 
+# Runtime Context Plans, Packets & Receipts
+.agents/context/plans/*
+!.agents/context/plans/.gitkeep
+.agents/context/packets/*
+!.agents/context/packets/.gitkeep
+.agents/context/receipts/*
+!.agents/context/receipts/.gitkeep
+
 # Bí mật, khóa riêng tư, chứng chỉ, token & credentials (P2-15)
 .env*
 !.env.example

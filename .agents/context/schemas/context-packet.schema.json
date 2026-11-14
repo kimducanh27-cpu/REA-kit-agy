@@ -1,0 +1,131 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "REA Context Packet Schema",
+  "description": "Authoritative schema for assembled runtime context packets in REA-kit-agy",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "packet_id",
+    "plan_id",
+    "task",
+    "stage",
+    "profile",
+    "created_at",
+    "budget",
+    "layers",
+    "status"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "packet_id": {
+      "type": "string",
+      "pattern": "^PACK-[0-9]{8}-[0-9]{6}-[a-f0-9]+$"
+    },
+    "plan_id": {
+      "type": "string",
+      "pattern": "^PLAN-[0-9]{8}-[0-9]{6}-[a-f0-9]+$"
+    },
+    "task": {
+      "type": "string",
+      "minLength": 1
+    },
+    "stage": {
+      "type": "string",
+      "enum": [
+        "STAGE_00_BOOTSTRAP",
+        "STAGE_01_DISCOVERY",
+        "STAGE_02_REVERSE_ENGINEERING",
+        "STAGE_03_PRODUCT_DEFINITION",
+        "STAGE_04_IMPLEMENTATION",
+        "STAGE_05_VALIDATION"
+      ]
+    },
+    "profile": {
+      "type": "string",
+      "enum": [
+        "discovery",
+        "optimization",
+        "security",
+        "feature-addition",
+        "design",
+        "validation"
+      ]
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "budget": {
+      "type": "object",
+      "required": [
+        "model_capacity",
+        "reserved_output",
+        "reserved_tools",
+        "reserved_safety",
+        "usable_budget",
+        "allocated_tokens",
+        "utilization_pct"
+      ],
+      "properties": {
+        "model_capacity": { "type": "integer", "minimum": 0 },
+        "reserved_output": { "type": "integer", "minimum": 0 },
+        "reserved_tools": { "type": "integer", "minimum": 0 },
+        "reserved_safety": { "type": "integer", "minimum": 0 },
+        "usable_budget": { "type": "integer", "minimum": 0 },
+        "allocated_tokens": { "type": "integer", "minimum": 0 },
+        "utilization_pct": { "type": "number", "minimum": 0, "maximum": 100 }
+      }
+    },
+    "layers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["layer_id", "layer_name", "items"],
+        "properties": {
+          "layer_id": {
+            "type": "string",
+            "enum": ["L0", "L1", "L2", "L3", "L4", "L5"]
+          },
+          "layer_name": { "type": "string" },
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["id", "path", "load_mode", "estimated_tokens"],
+              "properties": {
+                "id": { "type": "string" },
+                "path": { "type": "string" },
+                "load_mode": {
+                  "type": "string",
+                  "enum": ["FULL", "SECTION_RETRIEVAL", "SUMMARY", "REFERENCE_ONLY"]
+                },
+                "estimated_tokens": { "type": "integer", "minimum": 0 },
+                "content": { "type": ["string", "null"] },
+                "untrusted": { "type": "boolean" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "cache_alignment": {
+      "type": "object",
+      "properties": {
+        "prefix_stable": { "type": "boolean" },
+        "dynamic_suffix_only": { "type": "boolean" },
+        "timestamp_in_prefix": { "type": "boolean" }
+      }
+    },
+    "status": {
+      "type": "string",
+      "enum": ["READY", "OVERBUDGET", "TRUNCATED"]
+    },
+    "metadata": {
+      "type": "object"
+    }
+  },
+  "additionalProperties": false
+}
