@@ -38,19 +38,27 @@ Mọi hoạt động đều phải tuân thủ tuần tự qua 6 Stage và 6 C�
      * Đo Coverage Score, ghi toàn bộ điểm mù vào `03_KET_QUA_KIEM_TRA/UNKNOWNS_AND_COVERAGE.md`.
    - 👉 **CỔNG 02 (`gate_02_audit_passed`)**: Đạt Scoped Static Audit, che mờ 100% secrets, và mọi điểm mù đều được đưa vào sổ Unknowns.
 
-4. **STAGE 03 · PRODUCT DEFINITION (Tab 03)**:
-   - Bước 06: REA Interview (Phỏng vấn 3-5 câu đời thường dựa trên hồ sơ, unknowns và chốt Build Route: Web Zero-Install, Android Native hay Patch APK).
-   - Bước 07: Spec & Design Gate (Chốt Design Tokens 3 tầng trong `design.md` và đóng băng đặc tả `dac-ta-yeu-cau-da-chot.md`).
-   - Bước 08: Implementation Plan (Chia task nguyên tử, xuất `03_KET_QUA_KIEM_TRA/KE_HOACH_TRIEN_KHAI.md`).
-   - 👉 **CỔNG 03 (`gate_03_spec_frozen`)**: Người dùng xác nhận duyệt Đặc tả, Design System và Kế hoạch.
+4. **STAGE 03 · PRODUCT DEFINITION — ANTI-SLOP CORE (Tab 03)**:
+   - *Ranh giới nghiêm ngặt*: **TUYỆT ĐỐI KHÔNG VIẾT CODE, KHÔNG TẠO WORKING PROTOTYPE**. Chỉ tạo hồ sơ đặc tả Markdown.
+   - Bước 06: REA Interview & Art Direction:
+     * Xác định cá tính sản phẩm (Product Personality) và ý tưởng thị giác (Visual Thesis).
+     * Đề xuất 3 Concept khác biệt sâu sắc về cấu trúc và phân cấp nội dung (Structural Diversity), không chỉ đổi màu.
+     * 👉 **Human Gate 1**: Người dùng duyệt lệnh `APPROVE SCREEN COMPOSITION`.
+   - Bước 07: Spec & Design Gate (Anti-Slop Screen & State Composition):
+     * Xuất bố cục màn hình `01_SCREEN_COMPOSITION.md` và co giãn `02_RESPONSIVE_SPEC.md`.
+     * Xử lý đủ 4 trạng thái bắt buộc trong `03_STATE_COMPOSITION.md`: Loading (Skeleton), Empty (có call-to-action), Success, Error/Recovery (bảo toàn form input theo `RULE-INIT-001`).
+     * Xuất Copy Deck thực tế vào `04_COPY_DECK.md` (CẤM Lorem Ipsum, Sample text, Welcome back!).
+     * Khóa Design Tokens 3 tầng trong `02_YEU_CAU_CUA_TOI/design.md`.
+     * 👉 **Human Gate 2**: Người dùng duyệt lệnh `APPROVE UI SPEC`.
+   - Bước 08: Implementation Plan (Chia 6 Vertical Slices, xuất `03_KET_QUA_KIEM_TRA/KE_HOACH_TRIEN_KHAI.md`).
+   - 👉 **CỔNG 03 (`gate_03_spec_frozen`)**: Đóng băng đặc tả qua lệnh `FREEZE UI SPEC`.
 
 5. **STAGE 04 · IMPLEMENTATION (Tab 04)**:
-   - Bước 09: REA Build (Lưu snapshot `.backup/`, viết mã theo Build Route đã duyệt):
+   - Bước 09: REA Build (Lưu snapshot nguyên tử `.backup/`, viết mã theo đúng UI Spec đã đóng băng):
      * *Route A (Mặc định)*: Web App Zero-Install (`index.html`, `styles.css`, `app.js`).
      * *Route B*: Android Native Project khởi tạo qua Antigravity Android CLI (`android create`) hoặc Gradle Android.
      * *Route C*: Patch APK / Resources hoặc Web Hybrid.
-     * Tuân thủ `design.md`, 4 trạng thái UI, xuất `preview.html` hoặc bản preview.
-   - Bước 10: Build QA / Code Review (Thẩm định độc lập 2 trục theo `REVIEW.md`, bộ lọc dẹp nhiễu, chạy `verify_code.ps1`, khống chế 2 vòng tự sửa. Chặn đứng nếu gặp cú pháp lỗi hoặc `HIGH RISK`).
+   - Bước 10: Build QA / Code Review (Thẩm định độc lập 2 trục theo `REVIEW.md`, chạy `verify_code.ps1`, khống chế 2 vòng tự sửa. Chặn đứng nếu gặp cú pháp lỗi hoặc `HIGH RISK`).
    - 👉 **CỔNG 04 (`gate_04_build_qa_passed`)**: Mã nguồn vượt qua kiểm tra cú pháp, không có cờ HIGH RISK chưa giải trình.
 
 6. **STAGE 05 · VALIDATION (Tab 05)**:
@@ -65,18 +73,33 @@ Mọi hoạt động đều phải tuân thủ tuần tự qua 6 Stage và 6 C�
 
 ---
 
-## 3. QUY TẮC SỬA SAI KHI CỔNG BỊ TỪ CHỐI (REJECT / RETRY LOOP)
+## 3. HỢP ĐỒNG THIẾT KẾ CHỐNG UI SLOP (ANTI-SLOP DESIGN CONTRACT)
+
+Mọi quá trình thiết kế giao diện tại STAGE_03 và kiểm định tại STAGE_04–05 đều phải tuân thủ 7 điều khoản:
+1. **Product-Driven Design**: Không tái sử dụng layout mẫu khuôn sáo (dashboard/card/gradient) cho nhiều sản phẩm.
+2. **Structural Diversity**: Bắt buộc tạo 3 concept khác biệt về cách tổ chức thông tin, hierarchy và composition.
+3. **No Decorative UI**: Mọi thành phần hiển thị phải phục vụ trực tiếp nhiệm vụ người dùng. Cấm card/gradient/icon trang trí vô bổ.
+4. **Platform-Native Behavior**: Tuân thủ chuẩn Android (Material 3, Insets, Navigation, Predictive Back, Window Size Classes, Accessibility 48dp).
+5. **Design System Integrity**: Không tự ý bịa token, component hay state ngoài hợp đồng đã duyệt.
+6. **Real Content (Copy Deck)**: Cấm tuyệt đối `Lorem ipsum`, `Sample text`, hoặc câu chào chung chung `Welcome back!`. Mọi văn bản hiển thị phải là nội dung thực tế có giới hạn ký tự và phương án xử lý tràn chữ.
+7. **Independent Visual Critique**: Người thiết kế không được tự quyết định đạt. Bắt buộc qua Independent Design Review với checklist đo lường cụ thể trước khi đóng băng.
+
+---
+
+## 4. QUY TẮC SỬA SAI KHI CỔNG BỊ TỪ CHỐI (REJECT / RETRY LOOP)
 - Tuyệt đối không xóa hay ghi đè mất lịch sử tài liệu cũ.
 - Đánh số phiên bản kế tiếp: `SPEC_v2.md` hoặc `FIX_PLAN_v2.md`.
-- Lùi trạng thái trong `active_case.json` về đúng bước cần khắc phục (Gate 03 lùi về Bước 06/07; Gate 05 lùi về Bước 09/10).
+- Lùi trạng thái trong `active_case.json` bằng script: `gate.ps1 reject <gate_id> -Reason <lý_do>`.
 - Giữ nguyên các bằng chứng cũ để kiểm thử hồi quy (Regression Testing).
 
 ---
 
-## 4. ĐỊNH TUYẾN THƯ MỤC HỆ THỐNG CHUẨN XÁC
+## 5. ĐỊNH TUYẾN THƯ MỤC HỆ THỐNG CHUẨN XÁC
 - `01_THA_APP_VAO_DAY/`: File app gốc và ảnh chụp/layout baseline (`baseline/`).
 - `02_YEU_CAU_CUA_TOI/`: Lưu `ho-so-va-muc-tieu.md` và hợp đồng thiết kế `design.md` (Tokens 3 tầng).
 - `03_KET_QUA_KIEM_TRA/`: Lưu toàn bộ tài liệu kiểm toán, đặc tả, kế hoạch và nghiệm thu:
+  * `01_SCREEN_COMPOSITION.md` & `02_RESPONSIVE_SPEC.md`
+  * `03_STATE_COMPOSITION.md` & `04_COPY_DECK.md`
   * `UNKNOWNS_AND_COVERAGE.md` (Bước 05 - Scoped Static Audit)
   * `dac-ta-yeu-cau-da-chot.md` (Bước 07 - Kèm Build Route)
   * `KE_HOACH_TRIEN_KHAI.md` (Bước 08)
@@ -85,13 +108,3 @@ Mọi hoạt động đều phải tuân thủ tuần tự qua 6 Stage và 6 C�
 - `04_SAO_LUU_AN_TOAN/`: Bản sao lưu dự phòng bất khả xâm phạm (Chỉ đọc).
 - `05_MA_NGUON_PHAT_TRIEN/`: Nơi triển khai mã nguồn mới (`index.html`, android project, `preview.html`, `BAN_GIAO_SAN_PHAM.md`, thư mục snapshot `.backup/`).
 - `docs/`: Tài liệu kiến trúc và tiến độ sống (`WORKFLOW_LIFECYCLE.md`, `PROGRESS.md`, `HANDOFF.md`).
-
----
-
-## 5. ĐỒNG BỘ TÀI LIỆU SỐNG & BẢO TOÀN DỮ LIỆU
-- **Tự động đồng bộ tiến độ**: Mỗi khi một Cổng (Gate) chuyển sang `true`, Agent bắt buộc tự cập nhật bảng checklist trong `docs/PROGRESS.md` và cập nhật trường `current_phase` (`STAGE_00_BOOTSTRAP`..`STAGE_05_VALIDATION`) trong `active_case.json`.
-- **Học từ sự cố (Incidents to Evals)**: Khi phát sinh lỗi hoặc hoàn tác, Agent tự động cập nhật nguyên nhân vào `.agents/state/learned_rules.json`.
-- **Khử trùng dữ liệu nhạy cảm**: 100% API keys, tokens bí mật trong báo cáo đều được che mờ thành `[REDACTED]`.
-- **Tuyên bố bảo mật chuẩn mực (Scoped Claims)**: Không cam kết "quét sạch 100% mã độc"; chỉ báo cáo kết quả kiểm toán tĩnh theo phạm vi (Scoped Static Audit) và đưa vùng chưa kiểm toán vào Sổ Unknowns.
-- **Năng lực Android CLI & REA**: Tận dụng triệt để Antigravity Android CLI plugin (`android layout`, `android screen capture -o <file_path>`, `android create`, AVD/Device Hub) kết hợp phân tích tĩnh JADX cục bộ từ REA MCP (`inspect_android_package` — lưu ý: đây là phân tích tĩnh JADX cục bộ, KHÔNG PHẢI lệnh ADB) và công cụ REA ADB (`capture_adb_screen` với `serial`, `output_directory`; `start_adb_app` với `serial`, `package`).
-- **Hoàn tác 1-Click**: Luôn duy trì nút `HOAN_TAC.bat` và thư mục `.backup/` để người dùng có thể quay lại phiên bản tốt gần nhất bất kỳ lúc nào.

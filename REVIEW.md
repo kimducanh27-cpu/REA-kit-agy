@@ -1,19 +1,19 @@
-# REVIEW.MD — HỢP ĐỒNG KIỂM SOÁT & THẨM ĐỊNH CHẤT LƯỢNG MÃ NGUỒN
-*(Chuẩn kiểm toán độc lập tham chiếu từ mô hình Anthropic Code Review Pipeline và app-adr-ui)*
+# REVIEW.MD — HỢP ĐỒNG KIỂM SOÁT, THẨM ĐỊNH THIẾT KẾ & CHẤT LƯỢNG MÃ NGUỒN
+*(Chuẩn kiểm toán độc lập tham chiếu từ mô hình Anthropic Code Review Pipeline và Anti-Slop Design Architecture)*
 
-Tài liệu này là quy chuẩn bắt buộc dành cho AI Agent khi đóng vai trò **Thẩm định viên độc lập (Independent Reviewer)** tại giai đoạn phát triển mã nguồn (`05_MA_NGUON_PHAT_TRIEN/`).
+Tài liệu này là quy chuẩn bắt buộc dành cho AI Agent khi đóng vai trò **Thẩm định viên độc lập (Independent Reviewer)** tại giai đoạn thiết kế giao diện (`STAGE_03`) và phát triển mã nguồn (`05_MA_NGUON_PHAT_TRIEN/`).
 
 ---
 
 ## 1. NGUYÊN TẮC CỐT LÕI (CORE PRINCIPLES)
 
-1. **Tách biệt Tác giả & Thẩm định (Builder vs. Reviewer)**:
-   - Agent sinh mã nguồn không được tự chứng nhận hoàn thành nếu chưa qua lượt thẩm định độc lập.
-   - Lượt thẩm định phải đọc mã nguồn với tư duy kiểm toán khách quan, đối chiếu từng dòng với hợp đồng giao diện và đặc tả.
+1. **Tách biệt Tác giả & Thẩm định (Builder/Author vs. Reviewer)**:
+   - Agent thiết kế hoặc sinh mã nguồn **tuyệt đối không được tự chứng nhận hoàn thành** nếu chưa qua lượt thẩm định độc lập.
+   - Lượt thẩm định phải được thực thi trong một phiên ngữ cảnh độc lập (Fresh Context), không mang theo suy nghĩ chủ quan của tác giả thiết kế.
 
 2. **Bộ lọc dẹp nhiễu — Chỉ báo cáo lỗi thực chất (High-Signal Filter)**:
-   - **ĐƯỢC PHÉP BÁO CÁO**: Lỗi cú pháp, sai lệch tính năng so với đặc tả, vi phạm Design Tokens, thiếu 1 trong 4 trạng thái UI (Loading/Empty/Success/Error), rò rỉ secret/API key, mất tính năng cũ.
-   - **NGHIÊM CẤM BẮT BẺ RÂU RIA (NO NITPICKS)**: Tuyệt đối không bắt bẻ phong cách viết mã (code style), không đòi thêm chú thích (comments), không bắt tách file CSS/JS riêng nếu không có lỗi, không bình luận về sở thích cá nhân làm người non-tech hoang mang.
+   - **ĐƯỢC PHÉP BÁO CÁO**: Vi phạm Anti-Slop Contract, sao chép layout rập khuôn, chữ placeholder vô nghĩa, lỗi cú pháp, sai lệch đặc tả, vi phạm Design Tokens, thiếu 1 trong 4 trạng thái UI (Loading/Empty/Success/Error), rò rỉ secret/API key, phá vỡ accessibility.
+   - **NGHIÊM CẤM BẮT BẺ RÂU RIA (NO NITPICKS)**: Không bắt bẻ phong cách viết mã cá nhân, không đòi thêm chú thích dài dòng, không bắt bẻ màu sắc khi đã nằm trong palette được duyệt.
 
 3. **Khống chế hội tụ (Review Convergence Cap)**:
    - Tối đa **2 vòng lặp tự sửa**.
@@ -21,7 +21,37 @@ Tài liệu này là quy chuẩn bắt buộc dành cho AI Agent khi đóng vai 
 
 ---
 
-## 2. CHECKLIST THẨM ĐỊNH ĐỘC LẬP 4 TẦNG
+## 2. THẨM ĐỊNH ĐỘC LẬP THIẾT KẾ GIAO DIỆN (STAGE_03 ANTI-SLOP DESIGN CRITIQUE)
+
+Thực hiện tại Bước 07 trước khi người dùng cho phép đóng băng Cổng 03. Reviewer kiểm tra đối chiếu 10 tiêu chí đo lường định tính và định lượng:
+
+| STT | Tiêu chí Kiểm Tra | Câu hỏi Thẩm Định Cốt Lõi | Tiêu chuẩn Chấp Nhận (Passing Standard) |
+| :--- | :--- | :--- | :--- |
+| 1 | **Distinctiveness** | Thiết kế có cá tính riêng hay chỉ là khuôn mẫu dashboard/card quen thuộc? | Bố cục xuất phát từ nội dung thực tế của app, không rập khuôn thẻ card dải gradient. |
+| 2 | **Visual Hierarchy** | Người dùng có biết nhìn vào đâu trước và thao tác chính ở đâu không? | Phân cấp thị giác rõ ràng qua kích thước chữ, trọng lượng và khoảng cách; 1 hành động chính nổi bật. |
+| 3 | **Composition** | Bố cục không gian có phục vụ thông tin hay chỉ để trang trí? | Không có khối giao diện nào tồn tại chỉ để lấp chỗ trống. Mọi phân vùng đều có mục đích rõ ràng. |
+| 4 | **Consistency** | Có tuân thủ Design Tokens 3 tầng trong `design.md` không? | 100% màu sắc, khoảng cách, bán kính cong đều dùng token chuẩn, không hardcode mã màu lạ. |
+| 5 | **Information Density** | Mật độ thông tin có cân đối không? | Không quá thưa thớt (loãng trang) và không quá chật chội (ngộp thông tin), phù hợp ngữ cảnh sử dụng. |
+| 6 | **Typography & Copy Deck** | Nội dung có thực tế không? Có dính placeholder không? | **CẤM 100% `Lorem ipsum`, `Sample text`, hoặc `Welcome back!` vô nghĩa**. Mọi nhãn đều có Copy Deck thực tế kèm giới hạn ký tự. |
+| 7 | **Platform Fit** | Giao diện có đúng quy luật Android Native / Material 3 không? | Tuân thủ Insets (Edge-to-Edge), Bottom Sheet chuẩn, Predictive Back, và Window Size Classes. |
+| 8 | **Accessibility** | Có đạt quy chuẩn tiếp cận không? | Kích thước vùng bấm (Tap Target) tối thiểu 48x48dp, tương phản màu chữ đạt chuẩn WCAG AA, có nhãn cho TalkBack. |
+| 9 | **Motion & States** | Có xử lý đủ 4 trạng thái giao diện và chuyển động hợp lý không? | Đủ Loading Skeleton, Empty CTA, Success, Error Recovery bảo toàn form (`RULE-INIT-001`), chuyển động mượt không lạm dụng. |
+| 10 | **Edge Cases** | Nội dung dài, danh sách rỗng, màn hình gập có làm vỡ layout không? | Quy định rõ cách ngắt dòng, xuống dòng, và hành vi co giãn trên màn hình lớn / Foldables. |
+
+### Cấu Trúc Báo Cáo Finding Chuẩn Mực:
+Mỗi khi phát hiện vấn đề trong thiết kế, Reviewer phải ghi rõ:
+- `Finding ID`: Ví dụ `DES-CRIT-01`
+- `Severity`: `BLOCKER` (chặn đóng băng) | `WARNING` | `INFO`
+- `Location`: Màn hình và thành phần cụ thể
+- `Evidence`: Trích dẫn chi tiết vi phạm
+- `Responsible Artifact`: Tệp tài liệu cần sửa đổi (ví dụ `01_SCREEN_COMPOSITION.md` hoặc `04_COPY_DECK.md`)
+- `Remediation`: Hướng khắc phục cụ thể theo phong cách Anti-Slop
+
+---
+
+## 3. CHECKLIST THẨM ĐỊNH MÃ NGUỒN ĐỘC LẬP (STAGE_04 BUILD QA)
+
+Thực hiện tại Bước 10 sau khi triển khai mã nguồn tại `05_MA_NGUON_PHAT_TRIEN/`:
 
 ### 🏗️ Tầng 1: Ranh giới Kiến trúc Đã Duyệt (Route A Zero-Install hoặc Route B Android Native)
 - **Khi chọn Route A (Web App Zero-Install — Mặc định)**:
@@ -40,14 +70,14 @@ Tài liệu này là quy chuẩn bắt buộc dành cho AI Agent khi đóng vai 
 - [ ] Với Route B: Cú pháp Kotlin/Java/XML hợp lệ, không có lỗi cấu trúc build hoặc dependencies chưa khai báo.
 - [ ] Không có API key, password, secret chuỗi thô trong mã nguồn (đạt bộ lọc Regex Redaction).
 
-### 🎨 Tầng 3.1: Hợp đồng Giao diện (Đối chiếu `02_YEU_CAU_CUA_TOI/design.md`)
+### 🎨 Tầng 3.1: Hợp đồng Giao diện (Đối chiếu `02_YEU_CAU_CUA_TOI/design.md` & UI Spec)
 - [ ] **Tokens (Tầng 1)**: Đã ánh xạ toàn bộ biến `--color-primary`, `--color-background`, `--radius-md` vào CSS `:root` và Tailwind classes. Cấm hardcode mã màu lạ.
 - [ ] **Components (Tầng 2)**: Nút bấm, thẻ Card, ô Input, Header tuân thủ đúng quy chuẩn style mẫu.
 - [ ] **4 Trạng thái UI (Tầng 3)**:
   * [ ] **Loading**: Có skeleton hoặc spinner, nút bấm bị disabled khi đang xử lý.
   * [ ] **Empty**: Có icon minh họa + lời giải thích + nút bấm hành động tạo mới (CTA).
   * [ ] **Success**: Có toast thông báo nổi hoặc tích xanh phản hồi sau khi lưu.
-  * [ ] **Error Recovery**: Có banner đỏ giải thích nguyên nhân + nút "Thử lại", giữ nguyên dữ liệu đã gõ.
+  * [ ] **Error Recovery**: Có banner đỏ giải thích nguyên nhân + nút "Thử lại", giữ nguyên dữ liệu đã gõ theo `RULE-INIT-001`.
 
 ### 📋 Tầng 3.2: Đặc tả Chức năng (Đối chiếu `03_.../dac-ta-yeu-cau-da-chot.md`)
 - [ ] Thực hiện đầy đủ 100% các tính năng đã chốt trong bản đặc tả đóng băng (Lean Build).
@@ -60,19 +90,9 @@ Tài liệu này là quy chuẩn bắt buộc dành cho AI Agent khi đóng vai 
 
 ---
 
-## 3. PHÂN TẦNG RỦI RO & BÀN GIAO (RISK TIERING)
+## 4. PHÂN BIỆT RẠCH RÒI: PROCESS 07 DESIGN CRITIQUE VS PROCESS 08 VALIDATION
 
-| Cấp độ rủi ro | Dấu hiệu nhận diện | Quy trình nghiệm thu |
-| :--- | :--- | :--- |
-| **THẤP (Low Risk)** | Chỉ sửa màu sắc, font chữ, nhãn chữ (labels), chỉnh style CSS | Tự động duyệt sau khi Tầng 2 đạt Exit Code 0 |
-| **VỪA (Medium Risk)** | Thêm màn hình mới, form tính toán, lưu trữ dữ liệu cục bộ LocalStorage | Cung cấp checklist 2-3 bước để người dùng nhấp thử |
-| **CAO (High Risk)** | Gọi API mạng ra ngoài, nạp thư viện mới, lưu mật khẩu/dữ liệu nhạy cảm | Cảnh báo đỏ nổi bật, bắt buộc người dùng xác nhận thủ công mới kích hoạt |
-
----
-
-## 4. QUY TRÌNH XEM TRƯỚC THEO GIAI ĐOẠN (STAGED PREVIEW)
-1. Khi cập nhật ứng dụng đã có, AI xuất ra `05_MA_NGUON_PHAT_TRIEN/preview.html`.
-2. Giữ nguyên `05_MA_NGUON_PHAT_TRIEN/index.html` ổn định.
-3. Người dùng mở `preview.html` xem thử.
-4. Chỉ khi người dùng duyệt, AI mới chuyển `preview.html` thành `index.html` chính thức.
-5. Nếu người dùng không ưng ý: nhấp đúp `HOAN_TAC.bat` để khôi phục 100%.
+- **Process 07 (Design Quality & Anti-Slop Critique)**: Đánh giá chất lượng thẩm mỹ, cá tính sản phẩm, tính độc đáo, sự tinh tế của trạng thái UI và nội dung Copy Deck thực tế. Đảm bảo giao diện không rập khuôn và có hồn.
+- **Process 08 (Mechanical Validation & Traceability)**: Đánh giá cơ học tính toàn vẹn của chuỗi tài liệu từ đầu đến cuối:
+  $$\text{Target Binary / Baseline} \longrightarrow \text{Evidence} \longrightarrow \text{Feature} \longrightarrow \text{Spec} \longrightarrow \text{Composition} \longrightarrow \text{Code} \longrightarrow \text{Test Evidence}$$
+  Kiểm tra khớp mã băm SHA-256, không thiếu sót màn hình hay trạng thái nào, và chứng minh mọi tuyên bố đều có bằng chứng ghi nhận.

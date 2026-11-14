@@ -1,4 +1,4 @@
-# QUY TRÌNH VÒNG ĐỜI DỰ ÁN (WORKFLOW LIFECYCLE) — REA-KIT-AGY
+﻿# QUY TRÌNH VÒNG ĐỜI DỰ ÁN (WORKFLOW LIFECYCLE) — REA-KIT-AGY
 ## Khung Chuẩn 6 Stage · 14 Bước & 6 Cổng Kiểm Soát Chất Lượng (Quality Gates)
 
 > [!IMPORTANT]
@@ -268,5 +268,6 @@ REA-kit-agy/
    - Agent tự động nạp nguyên nhân vào `.agents/state/learned_rules.json` để không lặp lại sai lầm trong các lượt build tiếp theo.
 3. **Khi kết thúc dự án (Gate 06)**:
    - Toàn bộ thông tin phiên bản, known issues và hướng dẫn chạy được đồng bộ trọn vẹn vào `docs/HANDOFF.md`.
+
 
 

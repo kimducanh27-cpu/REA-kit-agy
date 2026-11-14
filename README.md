@@ -100,7 +100,7 @@ REA-kit-agy/
 │   ├── 05-TAB-VALIDATION.md       # Phase 05: Smoke Test, Hard Verify & Handoff
 │   ├── 06-CONSOLIDATION-AND-MEMORY.md # Tầng Dreaming: Tổng hợp bộ nhớ đa phiên
 │   └── BOOTSTRAP_KIT.md           # Siêu lệnh nhân bản bộ kit
-├── templates/                     # Khung mẫu tài liệu hợp đồng chuẩn (01 đến 11)
+├── templates/                     # Khung mẫu tài liệu hợp đồng chuẩn (01 đến 13)
 │   ├── 01-REPORT-TEMPLATE.md      # Báo cáo hiện trạng
 │   ├── 02-SPEC-TEMPLATE.md        # Đặc tả yêu cầu đóng băng
 │   ├── 03-RUN-GUIDE-TEMPLATE.md   # Hướng dẫn chạy 1 trang
@@ -108,10 +108,12 @@ REA-kit-agy/
 │   ├── 05-DESIGN-TOKEN-TEMPLATE.md# Hợp đồng Design Tokens 3 tầng
 │   ├── 06-UNKNOWNS-AND-COVERAGE-TEMPLATE.md # Sổ theo dõi điểm mù & độ phủ
 │   ├── 07-IMPLEMENTATION-PLAN-TEMPLATE.md   # Kế hoạch chia task nguyên tử
-│   ├── 08-HARD-VERIFY-TEMPLATE.md # Bảng đối chiếu 1-1 với app gốc
+│   ├── 08-HARD-VERIFY-TEMPLATE.md # Bảng đối chiếu 1-1 với app gốc (Test Env Contract)
 │   ├── 09-HANDOFF-BUNDLE-TEMPLATE.md # Biên bản bàn giao sản phẩm
 │   ├── 10-CASE-MANIFEST-TEMPLATE.json # Canonical schema cho active_case.json v2
-│   └── 11-HANDOFF-CONTRACT-TEMPLATE.json # Hợp đồng bàn giao pha kèm SHA-256
+│   ├── 11-HANDOFF-CONTRACT-TEMPLATE.json # Hợp đồng bàn giao pha kèm SHA-256
+│   ├── 12-ART-DIRECTION-TEMPLATE.md # Định hướng nghệ thuật & 3 Concept cấu trúc khác biệt
+│   └── 13-COPY-DECK-TEMPLATE.md   # Hồ sơ nội dung văn bản thực tế (cấm placeholder slop)
 ├── docs/                          # Hệ thống quản lý ngữ cảnh đa phiên (Context Docs)
 │   ├── WORKFLOW_LIFECYCLE.md      # Đặc tả chuẩn hóa 6 Phase · 14 Bước
 │   ├── PROGRESS.md                # Bảng tiến độ 14 bước tự động đồng bộ
@@ -213,4 +215,5 @@ Muốn nhân bản toàn bộ bộ kit này sang một thư mục rỗng bất k
 - ⏪ **Lá chắn hoàn tác an toàn cao (ReparsePoint Safe Rollback)**: Bổ sung cơ chế chống xóa xuyên qua Symlink/Junction và xoay vòng tự động 10 bản sao lưu gần nhất.
 - 🧩 **Bộ 6 Local Skills độc quyền**: Tách bạch rõ vai trò của Investigator (`rea-scan`), Auditor (`rea-audit`), Planner (`rea-plan`), Builder (`rea-build`) và Memory Manager (`memory-consolidation`).
 - 🧠 **Cơ chế Anthropic Dreaming**: Lưu trữ tri thức bền vững vào `MEMORY.md`, đối chiếu nguồn gốc thực tế và tinh gọn ngữ cảnh nạp vào đầu phiên.
+
 

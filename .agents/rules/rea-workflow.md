@@ -1,5 +1,5 @@
 ---
-description: Bắt buộc tuân thủ quy trình REA an toàn, 6 Stage · 14 Bước và 6 Cổng kiểm soát trong workspace REA-kit-agy
+description: Bắt buộc tuân thủ quy trình REA an toàn, 6 Stage · 14 Bước, 6 Cổng kiểm soát và Hợp đồng thiết kế Anti-Slop trong workspace REA-kit-agy
 globs: "**/*"
 trigger: always_on
 ---
@@ -28,4 +28,17 @@ trigger: always_on
    - Luôn định danh kết quả kiểm toán là **Scoped Static Audit** (kiểm toán tĩnh theo phạm vi quy định): phát hiện các mẫu rủi ro đã biết, che mờ bí mật, và bắt buộc ghi nhận toàn bộ điểm mù/vùng mã chưa giải mã vào `03_KET_QUA_KIEM_TRA/UNKNOWNS_AND_COVERAGE.md`.
 
 7. **Đồng bộ tài liệu sống sau phiên (Living Docs Sync):**
-   Mỗi khi một Cổng chuyển sang `true`, Agent bắt buộc tự cập nhật bảng tiến độ trong `docs/PROGRESS.md` và đồng bộ vào `docs/HANDOFF.md` khi kết thúc.
+   Mỗi khi một Cổng chuyển sang `PASS`, Agent bắt buộc tự cập nhật bảng tiến độ trong `docs/PROGRESS.md` và đồng bộ vào `docs/HANDOFF.md` khi kết thúc.
+
+8. **Ranh giới kiến trúc đóng băng đặc tả (Spec-First Boundary):**
+   Trong `STAGE_03_PRODUCT_DEFINITION` (Bước 06–08), Agent tuyệt đối **KHÔNG được viết code sản phẩm, không tạo working prototype, không sửa đổi Design System ngoài hợp đồng**. Chỉ xuất hợp đồng đặc tả Markdown (`01_SCREEN_COMPOSITION.md`, `02_RESPONSIVE_SPEC.md`, `03_STATE_COMPOSITION.md`, `04_COPY_DECK.md`, `design.md`). Mã nguồn chỉ được phép bắt đầu tại `STAGE_04` sau khi Gate 03 được duyệt đóng băng.
+
+9. **Hợp đồng thiết kế chống giao diện khuôn sáo (Anti-Slop Design Contract):**
+   Tuân thủ nghiêm ngặt 7 nguyên tắc thiết kế chống UI Slop:
+   - **01. Product-driven design**: Không tái sử dụng layout mẫu (dashboard/card/gradient) cho nhiều sản phẩm chỉ vì AI quen thuộc.
+   - **02. Structural diversity**: Bắt buộc đề xuất 3 concept khác biệt về cấu trúc nội dung, phân cấp thị giác và trải nghiệm; không được chỉ thay đổi 3 bảng màu.
+   - **03. No decorative UI**: Mỗi thành phần phải có lý do tồn tại phục vụ trực tiếp nhiệm vụ người dùng. Không thêm card, gradient, icon trang trí lấp chỗ trống.
+   - **04. Platform-native behavior**: Tuân thủ quy chuẩn Android Native (Material 3, Insets, Navigation, Predictive Back, Window Size Classes, Accessibility tap target tối thiểu 48dp).
+   - **05. Design System integrity**: Không tự ý tạo token, component hay state ngoài hợp đồng Design System 3 tầng đã duyệt.
+   - **06. Real Content (Copy Deck)**: Cấm tuyệt đối văn bản placeholder (`Lorem ipsum`, `Sample text`, hoặc `Welcome back!` vô nghĩa). Mọi màn hình phải có Copy Deck thực tế kèm giới hạn ký tự và hành vi xử lý khi chữ dài/tràn màn hình.
+   - **07. Independent visual critique & Evidence**: Người thiết kế không được tự phong sản phẩm "đẹp" hay "hiện đại". Bắt buộc có bằng chứng lý do thiết kế và thẩm định độc lập từ reviewer trước khi người dùng cho phép đóng băng đặc tả.
